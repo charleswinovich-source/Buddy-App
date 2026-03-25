@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+google-service-account.json
+.env
+server.log
+feedback-log.json
+.claude/

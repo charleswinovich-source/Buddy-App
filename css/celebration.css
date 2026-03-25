@@ -1,0 +1,9 @@
+/* ── Milestone celebration overlay ── */
+.celebration {
+  position: fixed; inset: 0; z-index: 999; background: rgba(250,248,245,0.95);
+  display: none; align-items: center; justify-content: center; flex-direction: column;
+}
+.celebration.active { display: flex; }
+.celebration h2 { font-family: 'Nunito', sans-serif; font-size: 2rem; font-weight: 800; margin: 1.5rem 0 0.5rem; }
+.celebration p { color: var(--text-light); margin-bottom: 2rem; }
+.confetti-container { position: fixed; inset: 0; pointer-events: none; z-index: 998; }

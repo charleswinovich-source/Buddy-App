@@ -1,0 +1,19 @@
+/* ═══════════════════════════════════════
+   LIFE TAB
+═══════════════════════════════════════ */
+.life-card {
+  background: white;
+  border: 1px solid rgba(0,0,0,0.04);
+  border-radius: 18px;
+  padding: 1.25rem;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+}
+.life-card-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #9A96A8;
+  margin-bottom: 0.75rem;
+}

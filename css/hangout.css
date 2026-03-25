@@ -1,0 +1,44 @@
+/* ═══ SCREEN 6: HANGOUT ═══ */
+#hangout { padding: 0; height: 100vh; overflow-y: auto; }
+.hangout-header {
+  padding: 1.25rem 2rem; background: var(--surface); border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 1rem; position: sticky; top: 0; z-index: 10;
+}
+.hangout-room {
+  position: relative; height: 320px; background: var(--surface); border-bottom: 1px solid var(--border);
+  overflow: hidden; display: flex; align-items: flex-end; justify-content: center;
+}
+.hangout-room canvas { position: absolute; inset: 0; }
+.hangout-avatars { position: relative; z-index: 2; display: flex; gap: 1.5rem; padding-bottom: 1.5rem; flex-wrap: wrap; justify-content: center; }
+.hangout-avatar-slot {
+  display: flex; flex-direction: column; align-items: center; gap: 0.3rem; cursor: pointer; transition: transform 0.3s;
+}
+.hangout-avatar-slot:hover { transform: scale(1.08); }
+.hangout-avatar-slot .avatar-name-tag {
+  font-size: 0.7rem; font-weight: 600; background: rgba(0,0,0,0.5); padding: 0.15rem 0.5rem;
+  border-radius: 8px; color: var(--text); white-space: nowrap;
+}
+.hangout-feed { padding: 1rem 2rem 6rem; }
+.hangout-event {
+  display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border); animation: msgIn 0.3s ease;
+}
+.hangout-event .event-avatar { width: 32px; height: 32px; flex-shrink: 0; }
+.hangout-event .event-text { font-size: 0.85rem; color: var(--text-light); line-height: 1.5; }
+.hangout-event .event-text strong { color: var(--text); }
+.hangout-event .event-time { font-size: 0.7rem; color: var(--text-light); opacity: 0.5; margin-top: 0.2rem; }
+.meeting-badge {
+  display: inline-flex; align-items: center; gap: 0.3rem; background: rgba(78,205,196,0.15);
+  border: 1px solid rgba(78,205,196,0.3); border-radius: 12px; padding: 0.2rem 0.6rem;
+  font-size: 0.75rem; color: var(--accent-dark); font-weight: 600;
+}
+.hangout-buddy-3d {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.hangout-section-label {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-light); text-transform: uppercase;
+  letter-spacing: 0.08em; margin: 1rem 0 0.5rem; display: flex; align-items: center; gap: 0.5rem;
+}

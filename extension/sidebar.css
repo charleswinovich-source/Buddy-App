@@ -1,0 +1,1575 @@
+/* ═══════════════════════════════════════════════════════════════
+   Vibetran Extension — Sidebar Styles (replaces panel.css)
+   Context Bridge sidebar: slides in from right, shifts page content
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Custom Properties ── */
+:root {
+  /* Surfaces */
+  --vt-bg-warm:       #FAF8F5;
+  --vt-bg-card:       #FFFFFF;
+  --vt-bg-subtle:     #F5F2ED;
+  --vt-bg-muted:      #EDE8E1;
+
+  /* Text */
+  --vt-text-primary:  #2C2418;
+  --vt-text-mid:      #5C4F3D;
+  --vt-text-light:    #8A7E6B;
+  --vt-text-faint:    #B5AA98;
+
+  /* Accent — Lime */
+  --vt-lime:          #C8F031;
+  --vt-lime-soft:     rgba(200, 240, 49, 0.15);
+  --vt-lime-glow:     rgba(200, 240, 49, 0.35);
+
+  /* Type accents */
+  --vt-accent-call:      #E8634A;
+  --vt-accent-task:      #2A9D8F;
+  --vt-accent-insight:   #5A67D8;
+  --vt-accent-account:   #D4941A;
+  --vt-accent-alert:     #C44569;
+
+  /* Shadows */
+  --vt-shadow-sm:     0 1px 4px rgba(44, 36, 24, 0.04);
+  --vt-shadow-md:     0 4px 16px rgba(44, 36, 24, 0.08);
+  --vt-shadow-lg:     0 8px 32px rgba(44, 36, 24, 0.12);
+  --vt-shadow-fab:    0 4px 20px rgba(44, 36, 24, 0.18);
+  --vt-shadow-fab-hover: 0 6px 28px rgba(44, 36, 24, 0.25);
+
+  /* Borders */
+  --vt-border-subtle: rgba(44, 36, 24, 0.06);
+  --vt-border-light:  rgba(44, 36, 24, 0.08);
+  --vt-border-mid:    rgba(44, 36, 24, 0.12);
+
+  /* Dimensions */
+  --vt-sidebar-width: 320px;
+
+  /* Easings */
+  --vt-ease-sidebar:  cubic-bezier(0.4, 0, 0.2, 1);
+  --vt-ease-bounce:   cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Typography */
+  --vt-font-body:     'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --vt-font-heading:  'Nunito', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   PAGE SHIFT — host page content moves left when sidebar opens
+   ═══════════════════════════════════════════════════════════════ */
+html.vt-sidebar-open {
+  margin-right: var(--vt-sidebar-width) !important;
+  transition: margin-right 300ms var(--vt-ease-sidebar);
+}
+
+html:not(.vt-sidebar-open) {
+  transition: margin-right 300ms var(--vt-ease-sidebar);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ROOT CONTAINER — isolate from host page styles
+   ═══════════════════════════════════════════════════════════════ */
+#vt-root {
+  all: initial;
+  font-family: var(--vt-font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--vt-text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  box-sizing: border-box;
+}
+
+#vt-root *,
+#vt-root *::before,
+#vt-root *::after {
+  box-sizing: border-box;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   FAB — Floating Action Button (bottom-right when sidebar closed)
+   ═══════════════════════════════════════════════════════════════ */
+#vt-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483646;
+  cursor: pointer;
+  transition: transform 250ms var(--vt-ease-bounce),
+              opacity 250ms ease;
+  outline: none;
+  border: none;
+  background: none;
+  padding: 0;
+}
+
+/* Hide FAB when sidebar is open */
+.vt-sidebar-open #vt-fab,
+#vt-fab.vt-fab--hidden {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.8);
+}
+
+.vt-fab__circle {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--vt-bg-warm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--vt-shadow-fab);
+  position: relative;
+  transition: box-shadow 250ms ease,
+              transform 250ms var(--vt-ease-bounce);
+}
+
+/* Buddy face icon inside FAB */
+.vt-fab__icon {
+  width: 22px;
+  height: 22px;
+  color: var(--vt-text-primary);
+  flex-shrink: 0;
+}
+
+/* Hover: gentle scale-up + shadow increase */
+#vt-fab:hover .vt-fab__circle {
+  transform: scale(1.08);
+  box-shadow: var(--vt-shadow-fab-hover);
+}
+
+/* Breathing animation when idle */
+#vt-fab:not(:hover) .vt-fab__circle {
+  animation: vt-breathe 3s ease-in-out infinite;
+}
+
+@keyframes vt-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.02); }
+}
+
+/* Badge — lime dot for relevant content */
+.vt-fab__badge {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--vt-lime);
+  border: 2px solid var(--vt-bg-warm);
+  display: none;
+  pointer-events: none;
+}
+
+.vt-fab__badge--visible {
+  display: block;
+}
+
+/* Badge pulse animation */
+.vt-fab__badge--visible::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: var(--vt-lime);
+  animation: vt-badge-ping 2s ease-out infinite;
+  opacity: 0;
+}
+
+@keyframes vt-badge-ping {
+  0%   { transform: scale(1); opacity: 0.5; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* FAB subtle mode (on unknown pages) */
+#vt-fab.vt-fab--subtle {
+  opacity: 0.4;
+}
+
+#vt-fab.vt-fab--subtle:hover {
+  opacity: 1;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR — main container
+   ═══════════════════════════════════════════════════════════════ */
+#vt-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: var(--vt-sidebar-width);
+  height: 100vh;
+  height: 100dvh;
+  background: var(--vt-bg-warm);
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-left: 1px solid var(--vt-border-subtle);
+  box-shadow: -4px 0 24px rgba(44, 36, 24, 0.06);
+
+  /* Slide-in animation */
+  transform: translateX(100%);
+  transition: transform 300ms var(--vt-ease-sidebar);
+}
+
+#vt-sidebar.vt-sidebar--open {
+  transform: translateX(0);
+}
+
+/* Closing animation */
+#vt-sidebar.vt-sidebar--closing {
+  transform: translateX(100%);
+}
+
+
+/* ── Header ── */
+.vt-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 12px;
+  border-bottom: 1px solid var(--vt-border-subtle);
+  flex-shrink: 0;
+}
+
+.vt-header__wordmark {
+  font-family: var(--vt-font-heading);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--vt-text-primary);
+  letter-spacing: -0.02em;
+  user-select: none;
+}
+
+.vt-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vt-header__btn {
+  all: unset;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  color: var(--vt-text-faint);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  transition: color 150ms ease,
+              background 150ms ease;
+}
+
+.vt-header__btn:hover {
+  color: var(--vt-text-primary);
+  background: var(--vt-bg-subtle);
+}
+
+/* Minimize button (em-dash) */
+.vt-header__btn--minimize {
+  font-weight: 700;
+  font-size: 18px;
+}
+
+/* Close button (x) */
+.vt-header__btn--close {
+  font-size: 17px;
+}
+
+
+/* ── Context Bar ── */
+.vt-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--vt-bg-subtle);
+  border-bottom: 1px solid var(--vt-border-subtle);
+  flex-shrink: 0;
+  min-height: 36px;
+  transition: opacity 200ms ease;
+}
+
+.vt-context__icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.vt-context__platform {
+  font-family: var(--vt-font-heading);
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vt-text-mid);
+  text-transform: capitalize;
+  flex-shrink: 0;
+}
+
+.vt-context__separator {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--vt-text-faint);
+  flex-shrink: 0;
+}
+
+.vt-context__entity {
+  font-size: 12px;
+  color: var(--vt-text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+.vt-context__type {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vt-text-faint);
+  background: var(--vt-bg-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+
+/* ── Dynamic Content Area (scrollable) ── */
+.vt-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  /* Scrollbar styling */
+  scrollbar-width: thin;
+  scrollbar-color: var(--vt-border-mid) transparent;
+}
+
+.vt-content::-webkit-scrollbar {
+  width: 5px;
+}
+
+.vt-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.vt-content::-webkit-scrollbar-thumb {
+  background: var(--vt-border-mid);
+  border-radius: 10px;
+}
+
+
+/* ── Section Labels ── */
+.vt-section-label {
+  font-family: var(--vt-font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--vt-text-light);
+  padding: 4px 2px 2px;
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vt-section-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--vt-border-subtle);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CARDS — generic card surface
+   ═══════════════════════════════════════════════════════════════ */
+.vt-card {
+  position: relative;
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 12px;
+  padding: 14px;
+  padding-left: 17px; /* room for accent bar */
+  box-shadow: var(--vt-shadow-sm);
+  transition: transform 200ms ease,
+              box-shadow 200ms ease;
+  overflow: hidden;
+}
+
+/* Left color accent bar */
+.vt-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  border-radius: 12px 0 0 12px;
+  background: var(--vt-card-accent, transparent);
+}
+
+/* Card accent types via modifier classes */
+.vt-card--call    { --vt-card-accent: var(--vt-accent-call); }
+.vt-card--task    { --vt-card-accent: var(--vt-accent-task); }
+.vt-card--insight { --vt-card-accent: var(--vt-accent-insight); }
+.vt-card--account { --vt-card-accent: var(--vt-accent-account); }
+.vt-card--alert   { --vt-card-accent: var(--vt-accent-alert); }
+
+/* Card hover: lift + shadow + reveal action buttons */
+.vt-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--vt-shadow-md);
+}
+
+/* Card header row */
+.vt-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.vt-card__label {
+  font-family: var(--vt-font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vt-text-primary);
+  line-height: 1.3;
+  min-width: 0;
+}
+
+.vt-card__timestamp {
+  font-size: 11px;
+  color: var(--vt-text-faint);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.vt-card__body {
+  font-size: 13px;
+  color: var(--vt-text-primary);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.vt-card__meta {
+  font-size: 11px;
+  color: var(--vt-text-light);
+  margin-top: 6px;
+}
+
+
+/* ── Card Action Buttons — fade in from right on hover ── */
+.vt-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: opacity 200ms ease,
+              transform 200ms ease;
+  pointer-events: none;
+}
+
+.vt-card:hover .vt-card__actions {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* Insert button — lime green bg */
+.vt-btn--insert {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: var(--vt-lime);
+  color: var(--vt-text-primary);
+  font-family: var(--vt-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 150ms ease,
+              box-shadow 150ms ease;
+}
+
+.vt-btn--insert:hover {
+  box-shadow: 0 2px 8px var(--vt-lime-glow);
+}
+
+.vt-btn--insert:active {
+  transform: scale(0.96);
+}
+
+/* Copy button — outline style */
+.vt-btn--copy {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--vt-border-light);
+  background: transparent;
+  color: var(--vt-text-mid);
+  font-family: var(--vt-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 150ms ease;
+}
+
+.vt-btn--copy:hover {
+  border-color: var(--vt-border-mid);
+  background: var(--vt-bg-subtle);
+}
+
+.vt-btn--copy:active {
+  transform: scale(0.96);
+}
+
+/* Copy feedback: flash to green checkmark */
+.vt-btn--copy.vt-btn--copied {
+  border-color: var(--vt-accent-task);
+  background: rgba(42, 157, 143, 0.1);
+  color: var(--vt-accent-task);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   INSERT FEEDBACK — field glow pulse
+   ═══════════════════════════════════════════════════════════════ */
+.vt-insert-glow {
+  animation: vt-glow-pulse 500ms ease;
+}
+
+@keyframes vt-glow-pulse {
+  0%   { box-shadow: 0 0 0 0 var(--vt-lime-glow); }
+  50%  { box-shadow: 0 0 0 6px var(--vt-lime-glow); }
+  100% { box-shadow: 0 0 0 0 transparent; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   COPY FEEDBACK — confetti particles
+   ═══════════════════════════════════════════════════════════════ */
+.vt-confetti {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  pointer-events: none;
+  animation: vt-confetti-fly 600ms ease-out forwards;
+}
+
+.vt-confetti:nth-child(1) { background: var(--vt-lime);           --vt-cx: -12px; --vt-cy: -18px; }
+.vt-confetti:nth-child(2) { background: var(--vt-accent-task);    --vt-cx:  14px; --vt-cy: -22px; }
+.vt-confetti:nth-child(3) { background: var(--vt-accent-account); --vt-cx:  -8px; --vt-cy: -14px; }
+.vt-confetti:nth-child(4) { background: var(--vt-accent-insight); --vt-cx:  10px; --vt-cy: -16px; }
+
+@keyframes vt-confetti-fly {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--vt-cx), var(--vt-cy)) scale(0);
+    opacity: 0;
+  }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT INPUT — sticky bottom bar
+   ═══════════════════════════════════════════════════════════════ */
+.vt-chat-input-wrap {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--vt-border-subtle);
+  background: var(--vt-bg-warm);
+  flex-shrink: 0;
+}
+
+.vt-chat-input {
+  all: unset;
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 20px;
+  border: 1.5px solid var(--vt-border-subtle);
+  background: var(--vt-bg-card);
+  font-family: var(--vt-font-body);
+  font-size: 13px;
+  color: var(--vt-text-primary);
+  box-sizing: border-box;
+  transition: border-color 200ms ease,
+              box-shadow 200ms ease;
+}
+
+.vt-chat-input:focus {
+  border-color: var(--vt-lime);
+  box-shadow: 0 0 0 3px var(--vt-lime-soft);
+}
+
+.vt-chat-input::placeholder {
+  color: var(--vt-text-faint);
+  font-style: italic;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CHAT MESSAGES — buddy / user bubbles
+   ═══════════════════════════════════════════════════════════════ */
+.vt-chat-msg {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 88%;
+  animation: vt-msg-in 250ms var(--vt-ease-sidebar);
+  word-break: break-word;
+}
+
+@keyframes vt-msg-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* User bubble — dark, right-aligned */
+.vt-chat-msg--user {
+  background: var(--vt-text-primary);
+  color: var(--vt-bg-warm);
+  align-self: flex-end;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+/* Buddy bubble — white, left-aligned */
+.vt-chat-msg--buddy {
+  background: var(--vt-bg-card);
+  color: var(--vt-text-primary);
+  border: 1px solid var(--vt-border-subtle);
+  box-shadow: var(--vt-shadow-sm);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+/* Typing indicator inside buddy bubble */
+.vt-chat-msg--typing {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 12px 18px;
+}
+
+.vt-typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vt-text-faint);
+  animation: vt-typing-bounce 1s ease-in-out infinite;
+}
+
+.vt-typing-dot:nth-child(2) { animation-delay: 150ms; }
+.vt-typing-dot:nth-child(3) { animation-delay: 300ms; }
+
+@keyframes vt-typing-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-5px); opacity: 1; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   QUICK ACTION BUTTONS GRID
+   ═══════════════════════════════════════════════════════════════ */
+.vt-quick-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.vt-quick-action {
+  all: unset;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 10px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 150ms ease,
+              box-shadow 150ms ease,
+              transform 150ms ease;
+}
+
+.vt-quick-action:hover {
+  border-color: var(--vt-border-mid);
+  box-shadow: var(--vt-shadow-sm);
+  transform: translateY(-1px);
+}
+
+.vt-quick-action:active {
+  transform: translateY(0);
+}
+
+.vt-quick-action__icon {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.vt-quick-action__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vt-text-mid);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   TRIGGER CARDS — real-time call triggers (listening state)
+   ═══════════════════════════════════════════════════════════════ */
+.vt-trigger-card {
+  position: relative;
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 12px;
+  padding: 14px;
+  padding-left: 17px; /* room for accent bar */
+  box-shadow: var(--vt-shadow-sm);
+  animation: vt-slide-in 300ms var(--vt-ease-sidebar);
+  overflow: hidden;
+}
+
+/* Accent bar */
+.vt-trigger-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--vt-card-accent, var(--vt-accent-call));
+  border-radius: 12px 0 0 12px;
+}
+
+@keyframes vt-slide-in {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.vt-trigger-card__header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.vt-trigger-card__icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.vt-trigger-card__type {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vt-text-light);
+}
+
+.vt-trigger-card__keyword {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--vt-text-primary);
+  margin-left: auto;
+}
+
+.vt-trigger-card__quote {
+  font-size: 12px;
+  font-style: italic;
+  color: var(--vt-text-light);
+  padding: 6px 10px;
+  background: var(--vt-bg-subtle);
+  border-radius: 8px;
+  margin-bottom: 8px;
+  line-height: 1.45;
+}
+
+.vt-trigger-card__response {
+  font-size: 13px;
+  color: var(--vt-text-primary);
+  line-height: 1.55;
+  margin-bottom: 8px;
+}
+
+/* Trigger card accent type overrides */
+.vt-trigger-card--competitor { --vt-card-accent: var(--vt-accent-call); }
+.vt-trigger-card--objection  { --vt-card-accent: var(--vt-accent-account); }
+.vt-trigger-card--pricing    { --vt-card-accent: var(--vt-accent-task); }
+.vt-trigger-card--technical  { --vt-card-accent: var(--vt-accent-insight); }
+.vt-trigger-card--champion   { --vt-card-accent: var(--vt-lime); }
+.vt-trigger-card--blocker    { --vt-card-accent: var(--vt-accent-alert); }
+.vt-trigger-card--next_step  { --vt-card-accent: var(--vt-accent-task); }
+
+/* Listening state: pulse ring on FAB */
+#vt-fab.vt-fab--listening .vt-fab__circle {
+  background: var(--vt-accent-task);
+}
+
+#vt-fab.vt-fab--listening .vt-fab__icon {
+  color: var(--vt-bg-warm);
+}
+
+/* Stop breathing when listening */
+#vt-fab.vt-fab--listening:not(:hover) .vt-fab__circle {
+  animation: none;
+}
+
+.vt-fab__pulse-ring {
+  position: absolute;
+  inset: -5px;
+  border-radius: 50%;
+  border: 2px solid var(--vt-accent-task);
+  animation: vt-pulse-ring 2s ease-out infinite;
+  pointer-events: none;
+}
+
+@keyframes vt-pulse-ring {
+  0%   { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.5); opacity: 0; }
+}
+
+/* Listening banner inside sidebar */
+.vt-listening-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: rgba(42, 157, 143, 0.08);
+  border-bottom: 1px solid rgba(42, 157, 143, 0.15);
+  flex-shrink: 0;
+}
+
+.vt-listening-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--vt-accent-task);
+  animation: vt-listen-blink 1.5s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+@keyframes vt-listen-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+.vt-listening-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--vt-accent-task);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   SKELETON LOADING CARDS
+   ═══════════════════════════════════════════════════════════════ */
+.vt-skeleton {
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 12px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.vt-skeleton__line {
+  height: 12px;
+  border-radius: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--vt-bg-subtle) 25%,
+    var(--vt-bg-muted) 50%,
+    var(--vt-bg-subtle) 75%
+  );
+  background-size: 200% 100%;
+  animation: vt-shimmer 1.5s ease-in-out infinite;
+}
+
+.vt-skeleton__line--short  { width: 40%; }
+.vt-skeleton__line--medium { width: 70%; }
+.vt-skeleton__line--long   { width: 100%; }
+.vt-skeleton__line--title  { height: 14px; width: 55%; }
+
+@keyframes vt-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Skeleton variant: loading dots (legacy support) */
+.vt-loading-dots {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 24px;
+}
+
+.vt-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vt-text-faint);
+  animation: vt-dot-bounce 600ms ease infinite alternate;
+}
+
+.vt-loading-dot:nth-child(2) { animation-delay: 150ms; }
+.vt-loading-dot:nth-child(3) { animation-delay: 300ms; }
+
+@keyframes vt-dot-bounce {
+  to { opacity: 0.3; transform: translateY(-4px); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CONTEXT CHANGE — cards fade out/in staggered
+   ═══════════════════════════════════════════════════════════════ */
+.vt-card--exit {
+  animation: vt-card-exit 200ms ease forwards;
+}
+
+@keyframes vt-card-exit {
+  to { opacity: 0; transform: translateY(4px); }
+}
+
+.vt-card--enter {
+  animation: vt-card-enter 300ms var(--vt-ease-sidebar) forwards;
+  opacity: 0;
+}
+
+/* Staggered delays applied via nth-child */
+.vt-card--enter:nth-child(1) { animation-delay:   0ms; }
+.vt-card--enter:nth-child(2) { animation-delay:  50ms; }
+.vt-card--enter:nth-child(3) { animation-delay: 100ms; }
+.vt-card--enter:nth-child(4) { animation-delay: 150ms; }
+.vt-card--enter:nth-child(5) { animation-delay: 200ms; }
+.vt-card--enter:nth-child(6) { animation-delay: 250ms; }
+.vt-card--enter:nth-child(7) { animation-delay: 300ms; }
+.vt-card--enter:nth-child(8) { animation-delay: 350ms; }
+
+@keyframes vt-card-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   TOAST NOTIFICATIONS
+   ═══════════════════════════════════════════════════════════════ */
+.vt-toast-container {
+  position: fixed;
+  bottom: 20px;
+  right: calc(var(--vt-sidebar-width) / 2);
+  transform: translateX(50%);
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  pointer-events: none;
+}
+
+.vt-toast {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: var(--vt-text-primary);
+  color: var(--vt-bg-warm);
+  font-family: var(--vt-font-body);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 20px;
+  box-shadow: var(--vt-shadow-lg);
+  pointer-events: auto;
+  animation: vt-toast-in 300ms var(--vt-ease-sidebar),
+             vt-toast-out 300ms ease 1700ms forwards;
+  white-space: nowrap;
+}
+
+.vt-toast__icon {
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+@keyframes vt-toast-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes vt-toast-out {
+  to { opacity: 0; transform: translateY(8px); }
+}
+
+/* Toast variants */
+.vt-toast--success {
+  background: var(--vt-accent-task);
+  color: var(--vt-bg-card);
+}
+
+.vt-toast--error {
+  background: var(--vt-accent-alert);
+  color: var(--vt-bg-card);
+}
+
+.vt-toast--info {
+  background: var(--vt-accent-insight);
+  color: var(--vt-bg-card);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   EMPTY / UNKNOWN SITE FALLBACK — search bar prominent
+   ═══════════════════════════════════════════════════════════════ */
+.vt-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 32px 16px;
+  gap: 8px;
+  flex: 1;
+}
+
+.vt-empty__icon {
+  font-size: 28px;
+  margin-bottom: 4px;
+  opacity: 0.6;
+}
+
+.vt-empty__title {
+  font-family: var(--vt-font-heading);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--vt-text-mid);
+}
+
+.vt-empty__subtitle {
+  font-size: 12px;
+  color: var(--vt-text-faint);
+  max-width: 220px;
+  line-height: 1.45;
+}
+
+/* Prominent search for unknown sites */
+.vt-search-prominent {
+  width: 100%;
+  margin-top: 12px;
+}
+
+.vt-search-prominent .vt-chat-input {
+  border-color: var(--vt-border-mid);
+  font-size: 14px;
+  padding: 12px 16px;
+  text-align: center;
+}
+
+.vt-search-prominent .vt-chat-input:focus {
+  text-align: left;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   MEDDPICC FIELD CARDS — Salesforce view
+   ═══════════════════════════════════════════════════════════════ */
+.vt-meddpicc {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.vt-meddpicc-card {
+  position: relative;
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 10px;
+  padding: 10px 12px 10px 15px;
+  overflow: hidden;
+  transition: transform 200ms ease,
+              box-shadow 200ms ease;
+}
+
+.vt-meddpicc-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--vt-card-accent, var(--vt-accent-insight));
+  border-radius: 10px 0 0 10px;
+}
+
+.vt-meddpicc-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--vt-shadow-md);
+}
+
+.vt-meddpicc-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.vt-meddpicc-card__letter {
+  font-family: var(--vt-font-heading);
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--vt-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.vt-meddpicc-card__letter-char {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--vt-bg-subtle);
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--vt-accent-insight);
+}
+
+.vt-meddpicc-card__score {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.vt-meddpicc-card__score--high {
+  background: rgba(42, 157, 143, 0.12);
+  color: var(--vt-accent-task);
+}
+
+.vt-meddpicc-card__score--medium {
+  background: rgba(212, 148, 26, 0.12);
+  color: var(--vt-accent-account);
+}
+
+.vt-meddpicc-card__score--low {
+  background: rgba(196, 69, 105, 0.12);
+  color: var(--vt-accent-alert);
+}
+
+.vt-meddpicc-card__body {
+  font-size: 12px;
+  color: var(--vt-text-mid);
+  line-height: 1.5;
+}
+
+/* MEDDPICC action buttons (same hover reveal) */
+.vt-meddpicc-card__actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  opacity: 0;
+  transform: translateX(6px);
+  transition: opacity 200ms ease,
+              transform 200ms ease;
+  pointer-events: none;
+}
+
+.vt-meddpicc-card:hover .vt-meddpicc-card__actions {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+/* MEDDPICC field rows (compact mode) */
+.vt-meddpicc-field-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--vt-border-subtle);
+  gap: 8px;
+}
+
+.vt-meddpicc-field-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.vt-meddpicc-field-row:first-child {
+  padding-top: 0;
+}
+
+.vt-meddpicc-field-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--vt-text-light);
+  flex-shrink: 0;
+  width: 80px;
+  padding-top: 2px;
+}
+
+.vt-meddpicc-field-value {
+  flex: 1;
+  font-size: 12px;
+  color: var(--vt-text-primary);
+  line-height: 1.45;
+  min-width: 0;
+}
+
+.vt-meddpicc-field-empty {
+  color: var(--vt-text-faint);
+  font-style: italic;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   CALL SUMMARY — post-call view
+   ═══════════════════════════════════════════════════════════════ */
+.vt-call-summary {
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 14px;
+  padding: 16px;
+  box-shadow: var(--vt-shadow-sm);
+}
+
+.vt-call-summary__content {
+  font-size: 13px;
+  color: var(--vt-text-primary);
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.vt-call-summary__actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--vt-border-subtle);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   TASK ITEMS
+   ═══════════════════════════════════════════════════════════════ */
+.vt-task-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px 12px;
+  background: var(--vt-bg-card);
+  border-radius: 10px;
+  border: 1px solid var(--vt-border-subtle);
+  transition: box-shadow 150ms ease;
+}
+
+.vt-task-item:hover {
+  box-shadow: var(--vt-shadow-sm);
+}
+
+.vt-task-item__icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.vt-task-item__text {
+  min-width: 0;
+}
+
+.vt-task-item__title {
+  font-family: var(--vt-font-heading);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--vt-text-primary);
+}
+
+.vt-task-item__body {
+  font-size: 12px;
+  color: var(--vt-text-light);
+  margin-top: 2px;
+  line-height: 1.4;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   ACCOUNT INFO CARD
+   ═══════════════════════════════════════════════════════════════ */
+.vt-account-card {
+  position: relative;
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 12px;
+  padding: 14px 14px 14px 17px;
+  box-shadow: var(--vt-shadow-sm);
+  overflow: hidden;
+}
+
+.vt-account-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--vt-accent-account);
+  border-radius: 12px 0 0 12px;
+}
+
+.vt-account-card__name {
+  font-family: var(--vt-font-heading);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--vt-text-primary);
+  margin-bottom: 4px;
+}
+
+.vt-account-card__meta {
+  font-size: 12px;
+  color: var(--vt-text-light);
+  line-height: 1.6;
+}
+
+.vt-account-card__meta strong {
+  color: var(--vt-text-mid);
+  font-weight: 600;
+}
+
+/* CRM tag (LinkedIn view) */
+.vt-crm-tag {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+}
+
+.vt-crm-tag--found {
+  background: var(--vt-lime-soft);
+  color: #4A6600;
+}
+
+.vt-crm-tag--new {
+  background: var(--vt-bg-subtle);
+  color: var(--vt-text-light);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   DRAFT / SUGGESTION CARD
+   ═══════════════════════════════════════════════════════════════ */
+.vt-draft-card {
+  position: relative;
+  background: var(--vt-bg-card);
+  border: 1px solid var(--vt-border-subtle);
+  border-radius: 12px;
+  padding: 14px 14px 14px 17px;
+  overflow: hidden;
+  animation: vt-card-enter 250ms var(--vt-ease-sidebar);
+}
+
+.vt-draft-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--vt-lime);
+  border-radius: 12px 0 0 12px;
+}
+
+.vt-draft-card__label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--vt-text-light);
+  margin-bottom: 6px;
+}
+
+.vt-draft-card__text {
+  font-size: 13px;
+  color: var(--vt-text-primary);
+  line-height: 1.55;
+  white-space: pre-wrap;
+  margin-bottom: 10px;
+}
+
+.vt-draft-card__actions {
+  display: flex;
+  gap: 6px;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   GONG MOMENTS
+   ═══════════════════════════════════════════════════════════════ */
+.vt-moment-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--vt-border-subtle);
+}
+
+.vt-moment-row:last-child {
+  border-bottom: none;
+}
+
+.vt-moment-time {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--vt-accent-task);
+  flex-shrink: 0;
+  padding-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+
+.vt-moment-text {
+  font-size: 12px;
+  color: var(--vt-text-primary);
+  line-height: 1.45;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVE CALL INDICATOR DOT
+   ═══════════════════════════════════════════════════════════════ */
+.vt-live-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--vt-accent-call);
+  display: inline-block;
+  animation: vt-pulse-dot 1.5s ease infinite;
+  margin-right: 4px;
+}
+
+@keyframes vt-pulse-dot {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.3; }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════
+   UTILITY CLASSES
+   ═══════════════════════════════════════════════════════════════ */
+
+/* Visually hidden but accessible */
+.vt-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+/* Truncation */
+.vt-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* No-select */
+.vt-noselect {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Muted text */
+.vt-text-muted  { color: var(--vt-text-light); }
+.vt-text-faint  { color: var(--vt-text-faint); }
+.vt-text-xs     { font-size: 11px; }
+
+/* Spacing helpers */
+.vt-mt-sm { margin-top: 8px; }
+.vt-mb-sm { margin-bottom: 8px; }
+
+
+/* ═══════════════════════════════════════════════════════════════
+   REDUCED MOTION — respect user preferences
+   ═══════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  #vt-sidebar,
+  html.vt-sidebar-open,
+  html:not(.vt-sidebar-open) {
+    transition-duration: 0ms;
+  }
+
+  .vt-card,
+  .vt-card__actions,
+  .vt-trigger-card,
+  .vt-chat-msg,
+  .vt-toast,
+  .vt-card--enter,
+  .vt-card--exit,
+  .vt-confetti,
+  .vt-meddpicc-card,
+  .vt-meddpicc-card__actions,
+  .vt-draft-card {
+    animation: none;
+    transition-duration: 0ms;
+  }
+
+  #vt-fab:not(:hover) .vt-fab__circle {
+    animation: none;
+  }
+
+  .vt-fab__badge--visible::after,
+  .vt-fab__pulse-ring,
+  .vt-skeleton__line,
+  .vt-typing-dot,
+  .vt-listening-dot,
+  .vt-loading-dot,
+  .vt-live-dot {
+    animation: none;
+  }
+}

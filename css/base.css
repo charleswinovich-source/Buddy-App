@@ -1,0 +1,276 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-soft: #F5F2ED;
+  --gray: #E8E4DE;
+  --text: #2C2418;
+  --text-mid: #5C4F3D;
+  --text-light: #8A7E6B;
+  --text-faint: #B5AA98;
+  --text-ghost: #D1C9BC;
+  --accent: #C8F031;
+  --accent-dark: #9DBF10;
+  --accent-soft: rgba(200,240,49,0.12);
+  --border: rgba(44,36,24,0.06);
+  --shadow-sm: 0 2px 20px rgba(44,36,24,0.04);
+  --shadow-md: 0 4px 30px rgba(44,36,24,0.06);
+  --coral: #E8634A;
+  --teal: #2A9D8F;
+  --indigo: #5A67D8;
+  --amber: #D4941A;
+  --rose: #C44569;
+  --sage: #6B8E6B;
+  --lavender: #9B8FD4;
+  --sunset: #E8915C;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ── Screen Management ── */
+.screen { display: none !important; min-height: 100vh; height: 100vh; overflow: hidden; }
+.screen.active { display: flex !important; flex-direction: column; }
+
+/* ── Shared ── */
+.btn {
+  padding: 10px 24px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+.btn:hover {
+  background: var(--surface-soft);
+  border-color: rgba(44,36,24,0.12);
+}
+.btn-big {
+  padding: 14px 32px;
+  font-size: 1.05rem;
+  background: var(--accent);
+  color: var(--text);
+  border: none;
+  font-weight: 700;
+}
+.btn-big:hover {
+  background: var(--accent-dark);
+}
+.btn-sm {
+  padding: 6px 16px;
+  font-size: 0.8rem;
+}
+.btn-outline {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-mid);
+}
+.btn-outline:hover {
+  border-color: var(--text-light);
+}
+
+/* ── Action cards (shared) ── */
+.action-card {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 0.85rem 1rem; cursor: pointer; transition: all 0.15s;
+}
+.action-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.action-card .action-type {
+  display: inline-block; font-size: 0.65rem; font-weight: 700; padding: 2px 8px;
+  border-radius: 6px; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.action-card .action-title { font-size: 0.85rem; margin-top: 0.4rem; line-height: 1.4; }
+.action-card .action-meta { font-size: 0.7rem; color: var(--text-light); margin-top: 0.3rem; }
+.action-card .action-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 0.4rem; }
+.action-tag {
+  font-size: 0.6rem; font-weight: 600; padding: 1px 6px; border-radius: 4px;
+}
+.action-badge {
+  font-size: 0.6rem; font-weight: 700; padding: 1px 6px; border-radius: 4px;
+}
+
+/* ── Role picker ── */
+.role-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: var(--shadow-sm);
+}
+.role-card:hover {
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+.role-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.subrole-pill {
+  padding: 8px 18px;
+  border-radius: 50px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-mid);
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+.subrole-pill:hover {
+  border-color: var(--text-light);
+}
+.subrole-pill.selected {
+  background: var(--accent);
+  color: var(--text);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Focus sidebar (shared) ── */
+.focus-sidebar {
+  display: flex; gap: 0.5rem; overflow-x: auto; padding: 0.5rem 0;
+  scrollbar-width: none; -ms-overflow-style: none;
+}
+.focus-sidebar::-webkit-scrollbar { display: none; }
+.focus-pill {
+  background: var(--surface); border: 1.5px solid var(--border); border-radius: 20px;
+  padding: 0.4rem 0.9rem; font-size: 0.75rem; cursor: pointer; transition: all 0.15s;
+  white-space: nowrap; color: var(--text); font-family: inherit; display: flex; align-items: center; gap: 0.3rem;
+}
+.focus-pill:hover { border-color: var(--accent); }
+.focus-pill.active { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }
+
+/* ── Nav bar (bottom, mobile-first) ── */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0 max(12px, env(safe-area-inset-bottom));
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+.bottom-nav button {
+  background: none;
+  border: none;
+  color: var(--text-light);
+  font-size: 0.7rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Inter', sans-serif;
+  transition: color 0.2s;
+}
+.bottom-nav button svg { width: 22px; height: 22px; }
+.bottom-nav button.active { color: var(--text); }
+
+/* ── Legacy compat (keep for other screens) ── */
+.dash-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 20px;
+  padding: 1.25rem; margin-bottom: 1rem; transition: all 0.3s;
+}
+.dash-card:hover { border-color: rgba(44,36,24,0.12); }
+.dash-card h3 { font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem; }
+
+/* Weather mini */
+.weather-row { display: flex; align-items: center; gap: 1rem; }
+.weather-temp { font-size: 2rem; font-weight: 800; font-family: 'Nunito', sans-serif; }
+.weather-desc { color: var(--text-light); font-size: 0.9rem; }
+
+/* Gamification cards */
+.xp-bar-wrap { background: var(--bg); border-radius: 10px; height: 10px; overflow: hidden; margin-top: 0.5rem; }
+.xp-bar { height: 100%; background: linear-gradient(90deg, var(--accent), var(--coral)); border-radius: 10px; transition: width 0.5s; }
+.streak-badge {
+  display: inline-flex; align-items: center; gap: 0.4rem; background: rgba(255,107,157,0.15);
+  border: 1px solid rgba(255,107,157,0.3); border-radius: 20px; padding: 0.3rem 0.8rem;
+  font-size: 0.85rem; font-weight: 600; color: var(--coral);
+}
+.quest-item {
+  display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.quest-item:last-child { border-bottom: none; }
+.quest-check {
+  width: 24px; height: 24px; border: 2px solid var(--border); border-radius: 8px;
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.3s; flex-shrink: 0;
+}
+.quest-check:hover { border-color: var(--accent); }
+.quest-check.done { background: var(--accent); border-color: var(--accent); }
+.quest-check.done::after { content: '\2713'; color: #fff; font-size: 0.8rem; font-weight: 700; }
+.quest-text { font-size: 0.9rem; color: var(--text-light); }
+.quest-text.done { text-decoration: line-through; opacity: 0.5; }
+.quest-xp { font-size: 0.75rem; color: var(--accent); font-weight: 700; margin-left: auto; }
+
+/* Mood tracker */
+.mood-row { display: flex; gap: 0.75rem; }
+.mood-btn {
+  font-size: 1.5rem; background: var(--surface); border: 2px solid var(--border);
+  border-radius: 14px; width: 50px; height: 50px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; transition: all 0.25s;
+}
+.mood-btn:hover { transform: scale(1.1); border-color: var(--accent); }
+.mood-btn.selected { border-color: var(--accent); background: var(--accent-soft); transform: scale(1.1); }
+
+/* Chat FAB */
+.chat-fab {
+  position: fixed; bottom: 1.5rem; right: 1.5rem; width: 60px; height: 60px;
+  background: var(--accent); border: none; border-radius: 50%; cursor: pointer;
+  box-shadow: 0 4px 20px rgba(200,240,49,0.4); z-index: 50;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.5rem; color: var(--text); transition: all 0.3s;
+}
+.chat-fab:hover { transform: scale(1.08); }
+
+/* ── Shared animations ── */
+@keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ── Responsive ── */
+@media (max-width: 600px) {
+  .shape-grid { grid-template-columns: repeat(2, 1fr); }
+  .chat-messages { padding: 1rem; }
+  .chat-input-bar { padding: 0.75rem 1rem; }
+  .dash-header { padding: 1.5rem 1.25rem 0.75rem; }
+  .dash-body { padding: 0 1.25rem 5rem; }
+  .msg { max-width: 90%; }
+}
+
+/* Sign-out icon */
+.sign-out-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--text-light);
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.sign-out-btn:hover {
+  color: var(--text);
+}
+.sign-out-btn svg {
+  width: 20px;
+  height: 20px;
+}

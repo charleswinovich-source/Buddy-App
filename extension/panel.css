@@ -1,0 +1,431 @@
+/* ── Vibetran Extension Styles ── */
+
+#vibetran-fab {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 2147483646;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+#vibetran-fab:hover {
+  transform: scale(1.1);
+}
+
+#vibetran-fab.vibetran-fab-subtle {
+  opacity: 0.4;
+}
+
+#vibetran-fab.vibetran-fab-subtle:hover {
+  opacity: 1;
+}
+
+.vibetran-fab-inner {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: #2C2418;
+  color: #FAF8F5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 20px rgba(44,36,24,0.25);
+  position: relative;
+}
+
+.vibetran-fab-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #C8F031;
+  color: #2C2418;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, sans-serif;
+}
+
+/* ── Panel ── */
+
+#vibetran-panel {
+  position: fixed;
+  bottom: 84px;
+  right: 24px;
+  width: 340px;
+  max-height: 480px;
+  background: #FAF8F5;
+  border-radius: 20px;
+  box-shadow: 0 8px 40px rgba(44,36,24,0.15), 0 2px 12px rgba(44,36,24,0.06);
+  border: 1px solid rgba(44,36,24,0.06);
+  z-index: 2147483647;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  animation: vibetranSlideUp 0.25s ease;
+}
+
+@keyframes vibetranSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.vibetran-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  border-bottom: 1px solid rgba(44,36,24,0.04);
+}
+
+.vibetran-panel-logo {
+  font-family: 'DM Sans', -apple-system, sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #2C2418;
+  letter-spacing: -0.02em;
+}
+
+.vibetran-panel-close {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  color: #B5AA98;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.vibetran-panel-close:hover {
+  color: #2C2418;
+}
+
+.vibetran-panel-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #F5F2ED;
+  font-size: 0.72rem;
+}
+
+.vibetran-context-platform {
+  font-weight: 600;
+  color: #5C4F3D;
+  text-transform: capitalize;
+}
+
+.vibetran-context-title {
+  color: #8A7E6B;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.vibetran-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ── Loading ── */
+.vibetran-loading {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  padding: 20px;
+}
+
+.vibetran-loading-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #B5AA98;
+  animation: vibetranBounce 0.6s ease infinite alternate;
+}
+
+.vibetran-loading-dot:nth-child(2) { animation-delay: 0.15s; }
+.vibetran-loading-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes vibetranBounce {
+  to { opacity: 0.3; transform: translateY(-4px); }
+}
+
+/* ── Empty state ── */
+.vibetran-empty {
+  text-align: center;
+  padding: 20px 0;
+  color: #8A7E6B;
+  font-size: 0.82rem;
+}
+
+.vibetran-empty-sub {
+  color: #B5AA98;
+  font-size: 0.72rem;
+  margin-top: 4px;
+}
+
+/* ── Content items ── */
+.vibetran-item {
+  background: white;
+  border: 1px solid rgba(44,36,24,0.04);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 1px 4px rgba(44,36,24,0.03);
+}
+
+.vibetran-item-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8A7E6B;
+  margin-bottom: 6px;
+}
+
+.vibetran-item-content {
+  font-size: 0.82rem;
+  color: #2C2418;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.vibetran-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(44,36,24,0.08);
+  background: #F5F2ED;
+  color: #5C4F3D;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+}
+
+.vibetran-copy-btn:hover {
+  background: #EDE8E1;
+  border-color: rgba(44,36,24,0.12);
+}
+
+.vibetran-copy-btn.copied {
+  background: rgba(200,240,49,0.15);
+  border-color: #C8F031;
+  color: #2C2418;
+}
+
+/* ── Chat messages ── */
+.vibetran-chat-msg {
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  max-width: 85%;
+  animation: vibetranSlideUp 0.2s ease;
+}
+
+.vibetran-chat-user {
+  background: #2C2418;
+  color: #FAF8F5;
+  align-self: flex-end;
+  margin-left: auto;
+  border-bottom-right-radius: 4px;
+}
+
+.vibetran-chat-buddy {
+  background: white;
+  color: #2C2418;
+  border: 1px solid rgba(44,36,24,0.04);
+  box-shadow: 0 1px 4px rgba(44,36,24,0.03);
+  border-bottom-left-radius: 4px;
+}
+
+/* ── Input ── */
+.vibetran-panel-input-wrap {
+  padding: 10px 16px 14px;
+  border-top: 1px solid rgba(44,36,24,0.04);
+}
+
+.vibetran-panel-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 24px;
+  border: 1.5px solid rgba(44,36,24,0.06);
+  background: white;
+  font-size: 0.82rem;
+  font-family: inherit;
+  color: #2C2418;
+  outline: none;
+  box-sizing: border-box;
+  transition: all 0.2s;
+}
+
+.vibetran-panel-input:focus {
+  border-color: #C8F031;
+  box-shadow: 0 2px 12px rgba(200,240,49,0.12);
+}
+
+.vibetran-panel-input::placeholder {
+  color: #B5AA98;
+}
+
+/* ── Section labels ── */
+.vibetran-section-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #8A7E6B;
+  padding: 4px 0 6px;
+}
+
+.vibetran-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.vibetran-item-time {
+  font-size: 0.65rem;
+  color: #B5AA98;
+}
+
+/* ── Task items ── */
+.vibetran-task-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 8px 10px;
+  background: white;
+  border-radius: 10px;
+  border: 1px solid rgba(44,36,24,0.04);
+}
+
+.vibetran-task-icon {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.vibetran-task-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #2C2418;
+}
+
+.vibetran-task-content {
+  font-size: 0.72rem;
+  color: #8A7E6B;
+  margin-top: 2px;
+}
+
+/* ── Listening state ── */
+.vibetran-fab-listening .vibetran-fab-inner {
+  background: #2A9D8F;
+}
+
+.vibetran-fab-pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid #2A9D8F;
+  animation: vibetranPulse 2s ease infinite;
+  pointer-events: none;
+}
+
+@keyframes vibetranPulse {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+
+/* ── Trigger cards ── */
+.vibetran-trigger-card {
+  background: white;
+  border: 1px solid rgba(44,36,24,0.04);
+  border-left: 3px solid #E8634A;
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: 0 2px 12px rgba(44,36,24,0.06);
+  animation: vibetranSlideUp 0.3s ease;
+}
+
+.vibetran-trigger-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.vibetran-trigger-icon {
+  font-size: 0.9rem;
+}
+
+.vibetran-trigger-type {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8A7E6B;
+}
+
+.vibetran-trigger-keyword {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #2C2418;
+  margin-left: auto;
+}
+
+.vibetran-trigger-quote {
+  font-size: 0.72rem;
+  font-style: italic;
+  color: #8A7E6B;
+  padding: 6px 10px;
+  background: #F5F2ED;
+  border-radius: 8px;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+
+.vibetran-trigger-response {
+  font-size: 0.8rem;
+  color: #2C2418;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+/* ── Call summary ── */
+.vibetran-call-summary {
+  background: white;
+  border: 1px solid rgba(44,36,24,0.04);
+  border-radius: 14px;
+  padding: 14px;
+  box-shadow: 0 2px 12px rgba(44,36,24,0.04);
+}
+
+.vibetran-call-summary-content {
+  font-size: 0.78rem;
+  color: #2C2418;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.vibetran-call-summary-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(44,36,24,0.04);
+}
