@@ -101,6 +101,53 @@ function showProfile() {
     `;
   }
 
+  // ── Privacy / Meeting Intelligence settings ──
+  if (!STATE.privacy) STATE.privacy = { externalMeetingPrep: true, internalChannelContext: false, internalDMContext: false, postMeetingTranscript: false, postMeetingActionItems: false, sharedContextPeople: [] };
+  const priv = STATE.privacy;
+  const privacyEl = document.getElementById('profile-privacy');
+  if (privacyEl) {
+    privacyEl.innerHTML = [
+      { id: 'externalMeetingPrep', label: 'External meeting prep', desc: 'pull Gong, Salesforce, Zendesk context before customer calls', value: priv.externalMeetingPrep, locked: true },
+      { id: 'internalChannelContext', label: 'Public channel context', desc: 'read public Slack channels to prep for internal meetings', value: priv.internalChannelContext },
+      { id: 'postMeetingTranscript', label: 'Post-meeting summaries', desc: 'pull Google Meet transcripts and create summaries', value: priv.postMeetingTranscript },
+      { id: 'postMeetingActionItems', label: 'Extract action items', desc: 'find commitments from meeting transcripts and add to your tasks', value: priv.postMeetingActionItems },
+    ].map(s => `
+      <button onclick="${s.locked ? '' : `togglePrivacy('${s.id}')`}" style="
+        display:flex;align-items:center;gap:0.75rem;padding:0.75rem 1rem;
+        background:${s.value ? 'rgba(16,185,129,0.1)' : 'var(--surface)'};
+        border:1.5px solid ${s.value ? '#10B981' : 'transparent'};
+        border-radius:12px;cursor:${s.locked ? 'default' : 'pointer'};text-align:left;color:var(--text);
+        transition:all 0.2s;${s.locked ? 'opacity:0.7;' : ''}">
+        <div style="width:36px;height:20px;border-radius:10px;background:${s.value ? '#10B981' : '#ccc'};position:relative;transition:background 0.2s;">
+          <div style="width:16px;height:16px;border-radius:50%;background:#fff;position:absolute;top:2px;${s.value ? 'right:2px' : 'left:2px'};transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.2);"></div>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-weight:700;font-size:0.85rem;">${s.label}${s.locked ? ' <span style="font-size:0.65rem;color:#10B981;font-weight:600;">ALWAYS ON</span>' : ''}</div>
+          <div style="font-size:0.7rem;color:var(--text-light);">${s.desc}</div>
+        </div>
+      </button>
+    `).join('');
+  }
+
+  // ── Shared context people ──
+  const sharedEl = document.getElementById('profile-shared-context');
+  if (sharedEl) {
+    const people = priv.sharedContextPeople || [];
+    if (people.length === 0) {
+      sharedEl.innerHTML = '<div style="font-size:0.8rem;color:var(--text-faint);padding:0.5rem 0;">no one yet. invite coworkers you meet with regularly.</div>';
+    } else {
+      sharedEl.innerHTML = people.map((p, i) => `
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:0.6rem 0.75rem;background:var(--surface);border-radius:10px;">
+          <div>
+            <div style="font-weight:600;font-size:0.85rem;">${p.name || p.email}</div>
+            <div style="font-size:0.7rem;color:${p.accepted ? '#10B981' : '#ffa726'};">${p.accepted ? '✓ mutual' : '⏳ pending their approval'}</div>
+          </div>
+          <button onclick="removeSharedContextPerson(${i})" style="background:none;border:none;color:var(--text-light);cursor:pointer;font-size:0.8rem;">remove</button>
+        </div>
+      `).join('');
+    }
+  }
+
   // ── Memories ──
   const memories = STATE.personal?.memories || [];
   const personalFields = STATE.personal || {};
@@ -159,6 +206,58 @@ function setAutopilotProduct(value) {
   if (!STATE.autopilot) STATE.autopilot = { postCallFill: false, autoCreateOpp: false, defaultProduct: 'Fivetran Saas' };
   STATE.autopilot.defaultProduct = value;
   saveState();
+}
+
+function togglePrivacy(id) {
+  if (!STATE.privacy) STATE.privacy = { externalMeetingPrep: true, internalChannelContext: false, internalDMContext: false, postMeetingTranscript: false, postMeetingActionItems: false, sharedContextPeople: [] };
+  STATE.privacy[id] = !STATE.privacy[id];
+
+  // If enabling action items, also enable transcripts (dependency)
+  if (id === 'postMeetingActionItems' && STATE.privacy[id]) {
+    STATE.privacy.postMeetingTranscript = true;
+  }
+  // If disabling transcripts, also disable action items
+  if (id === 'postMeetingTranscript' && !STATE.privacy[id]) {
+    STATE.privacy.postMeetingActionItems = false;
+  }
+
+  saveState();
+  showProfile();
+}
+
+function addSharedContextPerson() {
+  const email = prompt('Enter their @fivetran.com email:');
+  if (!email || !email.includes('@fivetran.com')) {
+    if (email) alert('Must be a @fivetran.com email');
+    return;
+  }
+  if (!STATE.privacy) STATE.privacy = { externalMeetingPrep: true, internalChannelContext: false, internalDMContext: false, postMeetingTranscript: false, postMeetingActionItems: false, sharedContextPeople: [] };
+  if (!STATE.privacy.sharedContextPeople) STATE.privacy.sharedContextPeople = [];
+
+  // Check for duplicates
+  if (STATE.privacy.sharedContextPeople.some(p => p.email === email)) {
+    alert('Already added');
+    return;
+  }
+
+  STATE.privacy.sharedContextPeople.push({
+    email,
+    name: email.split('@')[0].split('.').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+    accepted: false,
+    invitedAt: new Date().toISOString(),
+  });
+
+  // TODO: Send notification to the other person via Slack
+  // For now just save locally
+  saveState();
+  showProfile();
+}
+
+function removeSharedContextPerson(index) {
+  if (!STATE.privacy?.sharedContextPeople) return;
+  STATE.privacy.sharedContextPeople.splice(index, 1);
+  saveState();
+  showProfile();
 }
 
 // ════════════════════════════════════════════════════════

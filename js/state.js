@@ -51,6 +51,14 @@ function defaultState() {
       autoCreateOpp: false,      // auto-create expansion opp if none exists
       defaultProduct: 'Fivetran Saas',  // product to select in "Products Being Pitched"
     },
+    privacy: {
+      externalMeetingPrep: true,       // always on — Gong, SF, Zendesk for external meetings
+      internalChannelContext: false,   // read public Slack channels for meeting context
+      internalDMContext: false,        // read DMs (requires mutual opt-in)
+      postMeetingTranscript: false,    // pull Google Meet transcripts from Drive
+      postMeetingActionItems: false,   // extract action items from transcripts
+      sharedContextPeople: [],         // emails of people who've mutually opted in for DM context
+    },
     role: null, subrole: null,
     activeFocus: null, activeCategory: 'all',
     onboarded: false,

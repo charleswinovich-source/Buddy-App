@@ -2174,11 +2174,33 @@ function showMeetingPrep(title) {
   // Extract account name from title or attendees
   const account = ev.account || ev.title.replace(/sync|meeting|call|discussion|prep|review/gi, '').trim();
 
+  // Determine what to fetch based on privacy settings and meeting type
+  const isExternal = ev.isExternal;
+  const priv = STATE.privacy || {};
+
+  // Only call meeting prep API for external meetings, or internal if channel context is enabled
+  if (!isExternal && !priv.internalChannelContext) {
+    // Internal meeting with no context enabled — show clean state
+    const body = document.getElementById('prep-body');
+    if (body) {
+      const people = ev.people?.join(', ') || '';
+      body.innerHTML = `
+        <div style="text-align:center;padding:1.5rem 1rem;">
+          <div style="font-size:1.5rem;margin-bottom:0.75rem;">🟢</div>
+          <div style="font-weight:700;font-size:0.95rem;margin-bottom:0.5rem;">internal meeting</div>
+          <div style="font-size:0.85rem;color:var(--text-light);line-height:1.6;margin-bottom:1.25rem;">${people ? 'with ' + people : 'no attendee info'}</div>
+          ${priv.postMeetingTranscript ? '<div style="font-size:0.75rem;color:#10B981;margin-bottom:0.75rem;">📝 post-meeting summary will be generated automatically</div>' : ''}
+          <div style="font-size:0.78rem;color:var(--text-faint);">enable "public channel context" in Profile → Meeting Intelligence to get prep for internal meetings</div>
+        </div>`;
+    }
+    return;
+  }
+
   // Call the real meeting prep API
   fetch('/api/meeting-prep', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: ev.title, attendees: ev.people, account }),
+    body: JSON.stringify({ title: ev.title, attendees: ev.people, account, isExternal }),
   })
   .then(r => r.json())
   .then(data => {
