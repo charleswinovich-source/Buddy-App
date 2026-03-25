@@ -230,7 +230,7 @@ function executeAction(actionId) {
   btn.style.opacity = '0.6';
 
   // Call the backend API
-  fetch('http://localhost:3001/api/action', {
+  fetch('/api/action', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({

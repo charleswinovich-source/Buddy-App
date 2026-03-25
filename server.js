@@ -2,10 +2,471 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
+const { google } = require('googleapis');
 const app = express();
 
+// ── Middleware ──
 app.use(cors());
 app.use(express.json());
+
+// ── Google OAuth (Calendar + Gmail) ──
+const GCAL_CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
+const GCAL_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const _calTokens = new Map(); // in-memory cache: email → tokens
+
+// GCS token persistence
+const { Storage } = require('@google-cloud/storage');
+const _gcs = new Storage();
+const TOKEN_BUCKET = 'buddy-tokens-store';
+
+async function saveUserTokens(email, tokens) {
+  _calTokens.set(email, tokens);
+  try {
+    await _gcs.bucket(TOKEN_BUCKET).file(`tokens/${email}.json`).save(JSON.stringify(tokens));
+    console.log(`[tokens] Saved tokens for ${email}`);
+  } catch (e) {
+    console.log(`[tokens] GCS save failed (local only): ${e.message}`);
+  }
+}
+
+async function loadUserTokens(email) {
+  // Check memory cache first
+  if (_calTokens.has(email)) return _calTokens.get(email);
+  // Try GCS
+  try {
+    const [content] = await _gcs.bucket(TOKEN_BUCKET).file(`tokens/${email}.json`).download();
+    const tokens = JSON.parse(content.toString());
+    _calTokens.set(email, tokens);
+    console.log(`[tokens] Loaded tokens for ${email} from GCS`);
+    return tokens;
+  } catch (e) {
+    return null;
+  }
+}
+
+function getCalOAuth2(redirectUri) {
+  return new google.auth.OAuth2(GCAL_CLIENT_ID, GCAL_CLIENT_SECRET, redirectUri);
+}
+
+// ── IAP user extraction — reads identity from GCP Identity-Aware Proxy headers ──
+// IAP handles auth at the infrastructure level — only @fivetran.com users can reach us
+function getIAPUser(req) {
+  const emailHeader = req.headers['x-goog-authenticated-user-email'] || '';
+  const idHeader = req.headers['x-goog-authenticated-user-id'] || '';
+  // Header format: "accounts.google.com:charlie.winovich@fivetran.com"
+  const email = emailHeader.replace('accounts.google.com:', '');
+  const id = idHeader.replace('accounts.google.com:', '');
+  if (email) return { email, id, name: email.split('@')[0].replace('.', ' ') };
+  return null;
+}
+
+// ── Auth endpoint — returns current user from IAP headers ──
+app.get('/api/auth/me', (req, res) => {
+  const user = getIAPUser(req);
+  if (user) {
+    res.json({ ok: true, user });
+  } else {
+    // Local dev — no IAP headers, return dev user
+    res.json({ ok: true, user: { email: 'dev@fivetran.com', name: 'dev', id: 'local' } });
+  }
+});
+
+// ── Connect Google account (Calendar + Gmail in one prompt) ──
+app.get('/api/connect/google', (req, res) => {
+  if (!GCAL_CLIENT_ID) return res.json({ ok: false, error: 'Google OAuth not configured' });
+  const proto = req.headers['x-forwarded-proto'] || req.protocol;
+  const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+  const oauth2 = getCalOAuth2(redirectUri);
+  const url = oauth2.generateAuthUrl({
+    access_type: 'offline',
+    prompt: 'consent',
+    scope: [
+      'https://www.googleapis.com/auth/calendar.readonly',
+      'https://www.googleapis.com/auth/calendar.events',
+      'https://www.googleapis.com/auth/gmail.readonly',
+      'https://www.googleapis.com/auth/drive.readonly',
+      'https://www.googleapis.com/auth/userinfo.email',
+      'https://www.googleapis.com/auth/userinfo.profile',
+    ],
+    hd: 'fivetran.com',
+  });
+  res.redirect(url);
+});
+
+app.get('/api/calendar/auth', (req, res) => res.redirect('/api/connect/google'));
+
+app.get('/api/calendar/callback', async (req, res) => {
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    const { tokens } = await oauth2.getToken(req.query.code);
+
+    const user = getIAPUser(req);
+    const email = user?.email || 'dev@fivetran.com';
+
+    await saveUserTokens(email, {
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token,
+      expiry: Date.now() + (tokens.expiry_date || 3600000),
+    });
+
+    console.log(`[connect] ${email} authorized Google (Calendar + Gmail)`);
+    res.redirect('/?connected=true');
+  } catch (err) {
+    console.error('[connect] OAuth error:', err.message);
+    res.status(500).send('Connection failed. Please try again.');
+  }
+});
+
+app.get('/api/connect/status', async (req, res) => {
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+  res.json({ ok: true, email, google: !!tokens, slack: true, triage: true });
+});
+
+app.get('/api/calendar/status', async (req, res) => {
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+  res.json({ ok: true, connected: !!tokens, email });
+});
+
+app.get('/api/calendar/events', async (req, res) => {
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+
+  if (!tokens || !GCAL_CLIENT_ID) {
+    return res.json({ ok: false, error: 'Calendar not connected', authUrl: '/api/calendar/auth' });
+  }
+
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    oauth2.setCredentials(tokens);
+
+    const calendar = google.calendar({ version: 'v3', auth: oauth2 });
+
+    const now = new Date();
+    // Show full day + tomorrow
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfTomorrow = new Date(now);
+    endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
+    endOfTomorrow.setHours(23, 59, 59, 999);
+
+    const response = await calendar.events.list({
+      calendarId: 'primary',
+      timeMin: startOfDay.toISOString(),
+      timeMax: endOfTomorrow.toISOString(),
+      singleEvents: true,
+      orderBy: 'startTime',
+      maxResults: 20,
+    });
+
+    const events = (response.data.items || []).map(ev => ({
+      id: ev.id,
+      title: ev.summary || '(No title)',
+      start: ev.start?.dateTime || ev.start?.date,
+      end: ev.end?.dateTime || ev.end?.date,
+      allDay: !!ev.start?.date,
+      location: ev.location,
+      attendees: (ev.attendees || []).map(a => ({
+        email: a.email,
+        name: a.displayName || a.email.split('@')[0],
+        self: a.self,
+        status: a.responseStatus,
+      })),
+      isExternal: (ev.attendees || []).some(a => !a.email?.endsWith('@fivetran.com') && !a.self),
+      meetLink: ev.hangoutLink || ev.conferenceData?.entryPoints?.[0]?.uri,
+      htmlLink: ev.htmlLink,
+    }));
+
+    res.json({ ok: true, events, count: events.length });
+  } catch (err) {
+    console.error('[calendar] Events error:', err.message);
+    if (err.message?.includes('invalid_grant') || err.message?.includes('Token has been expired')) {
+      _calTokens.delete(email);
+      return res.json({ ok: false, error: 'Token expired', authUrl: '/api/calendar/auth' });
+    }
+    res.json({ ok: false, error: err.message });
+  }
+});
+
+// ── Gmail — real inbox ──
+app.get('/api/gmail/inbox', async (req, res) => {
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+
+  if (!tokens || !GCAL_CLIENT_ID) {
+    return res.json({ ok: false, error: 'Google not connected', authUrl: '/api/connect/google' });
+  }
+
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    oauth2.setCredentials(tokens);
+
+    const gmail = google.gmail({ version: 'v1', auth: oauth2 });
+
+    // Get recent unread messages
+    const listRes = await gmail.users.messages.list({
+      userId: 'me',
+      q: 'is:unread category:primary',
+      maxResults: 10,
+    });
+
+    const messages = [];
+    for (const msg of (listRes.data.messages || []).slice(0, 8)) {
+      try {
+        const detail = await gmail.users.messages.get({
+          userId: 'me',
+          id: msg.id,
+          format: 'metadata',
+          metadataHeaders: ['From', 'Subject', 'Date'],
+        });
+
+        const headers = detail.data.payload?.headers || [];
+        const fromHeader = headers.find(h => h.name === 'From')?.value || '';
+        const subject = headers.find(h => h.name === 'Subject')?.value || '(no subject)';
+        const date = headers.find(h => h.name === 'Date')?.value || '';
+
+        // Parse "Name <email>" format
+        const nameMatch = fromHeader.match(/^"?([^"<]+)"?\s*<?/);
+        const emailMatch = fromHeader.match(/<([^>]+)>/);
+        const fromName = nameMatch ? nameMatch[1].trim() : fromHeader.split('@')[0];
+        const fromEmail = emailMatch ? emailMatch[1] : fromHeader;
+        const isExternal = !fromEmail.endsWith('@fivetran.com');
+
+        messages.push({
+          id: msg.id,
+          threadId: detail.data.threadId,
+          from: fromName,
+          fromEmail,
+          subject,
+          date,
+          isExternal,
+          snippet: detail.data.snippet || '',
+        });
+      } catch (e) {
+        // Skip messages we can't read
+      }
+    }
+
+    res.json({ ok: true, messages, count: messages.length });
+  } catch (err) {
+    console.error('[gmail] Error:', err.message);
+    if (err.message?.includes('invalid_grant') || err.message?.includes('insufficient')) {
+      return res.json({ ok: false, error: 'Gmail not authorized', authUrl: '/api/connect/google' });
+    }
+    res.json({ ok: false, error: err.message });
+  }
+});
+
+// ── Google Meet Transcripts from Drive ──
+app.get('/api/meeting/transcripts', async (req, res) => {
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+
+  if (!tokens || !GCAL_CLIENT_ID) {
+    return res.json({ ok: false, error: 'Google not connected' });
+  }
+
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    oauth2.setCredentials(tokens);
+
+    const drive = google.drive({ version: 'v3', auth: oauth2 });
+
+    // Search for Google Meet transcripts (saved as Google Docs in Drive)
+    // Meet transcripts are named like "Meeting transcript - <title> - <date>"
+    const searchRes = await drive.files.list({
+      q: "name contains 'transcript' and mimeType = 'application/vnd.google-apps.document' and modifiedTime > '" + new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString() + "'",
+      fields: 'files(id, name, modifiedTime, webViewLink)',
+      orderBy: 'modifiedTime desc',
+      pageSize: 10,
+    });
+
+    const transcripts = (searchRes.data.files || []).map(f => ({
+      id: f.id,
+      name: f.name,
+      date: f.modifiedTime,
+      link: f.webViewLink,
+    }));
+
+    res.json({ ok: true, transcripts, count: transcripts.length });
+  } catch (err) {
+    console.error('[transcripts] Error:', err.message);
+    res.json({ ok: false, error: err.message });
+  }
+});
+
+// Pull a specific transcript and summarize it
+app.post('/api/meeting/summarize', async (req, res) => {
+  const { transcriptId, meetingTitle } = req.body;
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+
+  if (!tokens || !GCAL_CLIENT_ID) {
+    return res.json({ ok: false, error: 'Google not connected' });
+  }
+
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    oauth2.setCredentials(tokens);
+
+    const drive = google.drive({ version: 'v3', auth: oauth2 });
+
+    // Export transcript as plain text
+    const exportRes = await drive.files.export({
+      fileId: transcriptId,
+      mimeType: 'text/plain',
+    });
+
+    const transcriptText = exportRes.data;
+
+    if (!ANTHROPIC_KEY || !transcriptText) {
+      return res.json({ ok: true, transcript: transcriptText, summary: null });
+    }
+
+    // Use Claude to extract summary + action items
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: `You are summarizing an internal meeting${meetingTitle ? ` titled "${meetingTitle}"` : ''} for ${email.split('@')[0]}.
+
+Transcript:
+${transcriptText.substring(0, 8000)}
+
+Return JSON only:
+{
+  "summary": "2-3 sentence summary of what was discussed",
+  "decisions": ["list of decisions made"],
+  "actionItems": [
+    {"owner": "person name", "task": "what they committed to do", "deadline": "if mentioned, or null"}
+  ],
+  "followUps": ["topics to revisit next time"],
+  "myActions": ["action items specifically for ${email.split('@')[0]}"]
+}` }],
+      }),
+    });
+
+    const claudeData = await claudeRes.json();
+    const text = claudeData.content?.[0]?.text || '';
+
+    let summary;
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      summary = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
+    } catch (e) {
+      summary = { summary: text };
+    }
+
+    res.json({ ok: true, summary, transcriptLength: transcriptText.length });
+  } catch (err) {
+    console.error('[summarize] Error:', err.message);
+    res.json({ ok: false, error: err.message });
+  }
+});
+
+// ── Find mutual availability ──
+app.post('/api/calendar/find-time', async (req, res) => {
+  const { attendeeEmail, duration = 30 } = req.body;
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+
+  if (!tokens || !GCAL_CLIENT_ID) {
+    return res.json({ ok: false, error: 'Calendar not connected' });
+  }
+
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    oauth2.setCredentials(tokens);
+    const calendar = google.calendar({ version: 'v3', auth: oauth2 });
+
+    const now = new Date();
+    const weekEnd = new Date(now);
+    weekEnd.setDate(weekEnd.getDate() + 5);
+
+    // Check freebusy for both users
+    const freeBusy = await calendar.freebusy.query({
+      requestBody: {
+        timeMin: now.toISOString(),
+        timeMax: weekEnd.toISOString(),
+        items: [{ id: email }, { id: attendeeEmail }],
+      },
+    });
+
+    // Find 3 open slots
+    const busySlots = [];
+    Object.values(freeBusy.data.calendars || {}).forEach(cal => {
+      (cal.busy || []).forEach(b => busySlots.push({ start: new Date(b.start), end: new Date(b.end) }));
+    });
+    busySlots.sort((a, b) => a.start - b.start);
+
+    const slots = [];
+    const durationMs = duration * 60 * 1000;
+    let cursor = new Date(now);
+    cursor.setMinutes(Math.ceil(cursor.getMinutes() / 30) * 30, 0, 0); // round to next 30
+
+    while (slots.length < 3 && cursor < weekEnd) {
+      const hour = cursor.getHours();
+      const day = cursor.getDay();
+
+      // Business hours only (9am-5pm, weekdays)
+      if (day === 0 || day === 6 || hour < 9 || hour >= 17) {
+        cursor.setDate(cursor.getDate() + (day === 0 ? 1 : day === 6 ? 2 : 0));
+        cursor.setHours(9, 0, 0, 0);
+        continue;
+      }
+
+      const slotEnd = new Date(cursor.getTime() + durationMs);
+      const conflict = busySlots.some(b => cursor < b.end && slotEnd > b.start);
+
+      if (!conflict && slotEnd.getHours() <= 17) {
+        slots.push({
+          start: cursor.toISOString(),
+          end: slotEnd.toISOString(),
+          startFormatted: cursor.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }),
+          endFormatted: slotEnd.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
+        });
+      }
+
+      cursor = new Date(cursor.getTime() + 30 * 60 * 1000); // advance 30 min
+    }
+
+    res.json({ ok: true, slots, attendee: attendeeEmail, duration });
+  } catch (err) {
+    console.error('[calendar/find-time] Error:', err.message);
+    res.json({ ok: false, error: err.message });
+  }
+});
+
+// Health check for Cloud Run
+app.get('/health', (req, res) => res.json({ ok: true }));
+
+// Static files (after auth gate)
 app.use(express.static('.'));
 
 const SLACK_TOKEN = process.env.SLACK_BOT_TOKEN;
@@ -17,11 +478,50 @@ const TRIAGE_KEY = process.env.TRIAGE_API_KEY;
 if (!TRIAGE_KEY) console.warn('⚠️  TRIAGE_API_KEY not set — knowledge features disabled');
 const TRIAGE_BASE = 'https://api.triage.cx/token-server/mcp';
 
+// ── Request cache + throttle — avoid hammering Triage ──
+const _triageCache = new Map();
+const CACHE_TTL = 5 * 60 * 1000; // 5 min TTL
+const MIN_REQUEST_GAP = 1000;     // 1 second minimum between requests
+let _lastTriageRequest = 0;
+
+function getCached(key) {
+  const entry = _triageCache.get(key);
+  if (!entry) return null;
+  if (Date.now() - entry.ts > CACHE_TTL) { _triageCache.delete(key); return null; }
+  return entry.data;
+}
+
+function setCache(key, data) {
+  _triageCache.set(key, { data, ts: Date.now() });
+  // Evict old entries if cache gets large
+  if (_triageCache.size > 200) {
+    const now = Date.now();
+    for (const [k, v] of _triageCache) {
+      if (now - v.ts > CACHE_TTL) _triageCache.delete(k);
+    }
+  }
+}
+
 async function queryFivetranKnowledge(query, sources = ['slab', 'fivetran_public_docs'], n = 3) {
+  const cacheKey = `${query}::${sources.join(',')}::${n}`;
+  const cached = getCached(cacheKey);
+  if (cached) {
+    console.log(`[knowledge] Cache hit for: ${query.substring(0, 40)}...`);
+    return cached;
+  }
+
   const results = [];
 
   for (const source of sources) {
     try {
+      // Throttle — wait if we're requesting too fast
+      const now = Date.now();
+      const gap = now - _lastTriageRequest;
+      if (gap < MIN_REQUEST_GAP) {
+        await new Promise(r => setTimeout(r, MIN_REQUEST_GAP - gap));
+      }
+      _lastTriageRequest = Date.now();
+
       const res = await fetch(`${TRIAGE_BASE}?kb_name=FivetranKnowledge`, {
         method: 'POST',
         headers: {
@@ -64,6 +564,9 @@ async function queryFivetranKnowledge(query, sources = ['slab', 'fivetran_public
     }
   }
 
+  // Cache results for future identical queries
+  if (results.length > 0) setCache(cacheKey, results);
+  console.log(`[knowledge] Fetched ${results.length} results for: ${query.substring(0, 40)}...`);
   return results;
 }
 
@@ -859,6 +1362,96 @@ app.get('/api/gong/poll', async (req, res) => {
   }
 });
 
+// ── Meeting Prep — enrich with Gong + Zendesk + Salesforce ──
+app.post('/api/meeting-prep', async (req, res) => {
+  const { title, attendees, account } = req.body;
+  if (!title) return res.json({ ok: false, error: 'missing title' });
+
+  const searchTerm = account || title;
+  console.log(`[meeting-prep] Enriching: "${title}" (account: ${searchTerm})`);
+
+  try {
+    // Query all sources in parallel
+    const [gongResults, zendeskResults, sfResults] = await Promise.all([
+      queryFivetranKnowledge(`${searchTerm} call meeting`, ['gongio'], 5).catch(() => []),
+      queryFivetranKnowledge(`${searchTerm} ticket support issue`, ['zendesk_new'], 5).catch(() => []),
+      queryFivetranKnowledge(`${searchTerm} account opportunity`, ['salesforce'], 3).catch(() => []),
+    ]);
+
+    console.log(`[meeting-prep] Gong: ${gongResults.length}, Zendesk: ${zendeskResults.length}, SF: ${sfResults.length}`);
+
+    // Use Claude to synthesize into meeting prep
+    if (!ANTHROPIC_KEY) {
+      return res.json({
+        ok: true,
+        prep: {
+          gongCalls: gongResults.map(r => ({ title: r.title, url: r.url, snippet: (r.content || '').substring(0, 200) })),
+          tickets: zendeskResults.map(r => ({ title: r.title, url: r.url, snippet: (r.content || '').substring(0, 200) })),
+          account: sfResults.map(r => ({ title: r.title, snippet: (r.content || '').substring(0, 200) })),
+          summary: null,
+        }
+      });
+    }
+
+    const allContext = [
+      ...gongResults.map(r => `[GONG CALL] ${r.title}\n${(r.content || '').substring(0, 500)}`),
+      ...zendeskResults.map(r => `[ZENDESK TICKET] ${r.title}\n${(r.content || '').substring(0, 500)}`),
+      ...sfResults.map(r => `[SALESFORCE] ${r.title}\n${(r.content || '').substring(0, 500)}`),
+    ].join('\n\n---\n\n');
+
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 800,
+        messages: [{ role: 'user', content: `You are preparing someone for a meeting titled "${title}".
+Based on this context from Gong calls, Zendesk tickets, and Salesforce, create a concise meeting prep briefing.
+
+${allContext}
+
+Return JSON only:
+{
+  "context": "1-2 sentence strategic summary of this account/relationship",
+  "callHistory": "what's been discussed in recent calls (key themes, concerns, asks)",
+  "openTickets": "any active support issues they should know about (or 'none found')",
+  "competitorMentions": "any competitors mentioned in calls (or 'none detected')",
+  "theyWant": "what this person/account likely wants to discuss",
+  "youShould": "what the Fivetran rep should bring up or be prepared for",
+  "risk": "any churn risk, escalation, or concern signals (or 'none detected')"
+}` }],
+      }),
+    });
+
+    const claudeData = await claudeRes.json();
+    const text = claudeData.content?.[0]?.text || '';
+
+    // Parse JSON from Claude response
+    let prep;
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      prep = jsonMatch ? JSON.parse(jsonMatch[0]) : { context: text };
+    } catch (e) {
+      prep = { context: text };
+    }
+
+    // Attach raw sources for reference
+    prep.sources = {
+      gongCalls: gongResults.map(r => ({ title: r.title, url: r.url })),
+      tickets: zendeskResults.map(r => ({ title: r.title, url: r.url })),
+    };
+
+    res.json({ ok: true, prep });
+  } catch (e) {
+    console.error('[meeting-prep] Error:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
 // ── Salesforce opp finder ──
 app.post('/api/sf/find-opp', async (req, res) => {
   const { accountName } = req.body;
@@ -1071,8 +1664,9 @@ app.post('/api/call/end', (req, res) => {
   res.json({ ok: true });
 });
 
-app.listen(3001, () => {
-  console.log(`\n🤖 Buddy Backend on :3001`);
+const PORT = process.env.PORT || 3001;
+app.listen(PORT, () => {
+  console.log(`\n🤖 Buddy Backend on :${PORT}`);
   console.log(`   Slack: ${SLACK_TOKEN ? '✅ Bot token loaded' : '❌ No token'}`);
   console.log(`   AI: ${ANTHROPIC_KEY ? '✅ Claude API ready' : '❌ No key'}\n`);
 });

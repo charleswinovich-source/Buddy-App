@@ -1318,14 +1318,21 @@
       let captionText = '';
 
       const strategies = [
-        // Strategy 1: Known Google Meet caption selectors
+        // Strategy 1: Known Google Meet caption selectors (updated March 2026)
         () => {
-          const els = document.querySelectorAll('.a4cQT, .iOzk7, .TBMuR, [jscontroller="D1tHje"]');
+          // Google Meet captions container + known class patterns
+          const els = document.querySelectorAll(
+            '.a4cQT, .iOzk7, .TBMuR, .bHdjFe, .zs7s8d, .iTTPOb, ' +
+            '[jscontroller="D1tHje"], [jscontroller="TEjda"], ' +
+            '[data-message-text], [data-is-caption], ' +
+            'div[class*="caption" i], div[class*="closed-caption" i], ' +
+            'div[class*="subtitle" i]'
+          );
           return [...els].map(e => e.textContent?.trim()).filter(t => t && t.length > 2).join(' ');
         },
-        // Strategy 2: elements with data-speaker-id
+        // Strategy 2: elements with speaker attribution
         () => {
-          const els = document.querySelectorAll('[data-speaker-id]');
+          const els = document.querySelectorAll('[data-speaker-id], [data-participant-id], [data-sender-name]');
           return [...els].map(e => e.textContent?.trim()).filter(t => t && t.length > 2).join(' ');
         },
         // Strategy 3: Scan bottom 30% of page for text containers that change
@@ -1372,11 +1379,20 @@
   }
 
   function extractCaptionText(node) {
-    const selectors = ['.TBMuR', '.iOzk7', '[data-speaker-id]', 'span'];
+    const selectors = [
+      '.TBMuR', '.iOzk7', '.a4cQT', '.bHdjFe', '.zs7s8d', '.iTTPOb',
+      '[data-message-text]', '[data-is-caption]', '[data-speaker-id]', '[data-sender-name]',
+      'div[class*="caption" i]', 'div[class*="subtitle" i]',
+      'span',
+    ];
     for (const sel of selectors) {
       const el = node.matches?.(sel) ? node : node.querySelector?.(sel);
       if (el?.textContent?.trim()) {
-        return el.textContent.trim();
+        const text = el.textContent.trim();
+        // Filter out UI elements
+        if (text.length > 2 && text.length < 500 && !text.match(/^(Present|Mute|Unmute|Chat|Leave|More|You|End)$/i)) {
+          return text;
+        }
       }
     }
     if (node.textContent?.trim()?.length > 3 && node.textContent.trim().length < 500) {

@@ -1,19 +1,47 @@
 /* ═══════════════════════════════════════
-   SCREEN 1: WELCOME
+   SCREEN 1: WELCOME — Redesigned
 ═══════════════════════════════════════ */
-.welcome {
-  background: linear-gradient(180deg, #FAF8F5 0%, #F0EDE6 40%, #E8F0E0 100%);
-  min-height: 100dvh;
-}
 
 #welcome {
   position: relative; overflow-y: auto; overflow-x: hidden;
   scroll-snap-type: y mandatory; scroll-behavior: smooth;
   height: 100vh; display: flex; flex-direction: column;
   padding: 0;
-  background: linear-gradient(180deg, #FAF8F5 0%, #F0EDE6 40%, #E8F0E0 100%);
+  background: #0D0D0D;
+  color: #F5F5F5;
 }
 #welcome.active { display: flex !important; flex-direction: column; }
+
+/* ── Glow text effect ── */
+.glow-text {
+  background: linear-gradient(135deg, #C8F031 0%, #A8D810 50%, #E0FF60 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 20px rgba(200, 240, 49, 0.4));
+}
+
+/* ── Nav bar ── */
+.welcome-nav {
+  position: absolute; top: 0; left: 0; right: 0;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2rem 3rem;
+  z-index: 10;
+  opacity: 0; animation: welcomeFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+}
+
+.welcome-nav .vibetran-wordmark {
+  font-family: 'Nunito', sans-serif; font-size: 1.4rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: lowercase;
+}
+
+.nav-badge {
+  padding: 6px 16px; border-radius: 50px;
+  border: 1px solid rgba(200, 240, 49, 0.3);
+  color: #C8F031; font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  background: rgba(200, 240, 49, 0.08);
+}
 
 /* ── Hero Section ── */
 .welcome-hero {
@@ -22,14 +50,14 @@
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   scroll-snap-align: start; flex-shrink: 0;
   padding: 2rem; text-align: center;
+  background: radial-gradient(ellipse at 50% 80%, rgba(200, 240, 49, 0.06) 0%, transparent 60%);
 }
 
-.welcome-hero .vibetran-wordmark {
-  position: absolute; top: 2.5rem; left: 3rem;
-  font-family: 'Nunito', sans-serif; font-size: 1.3rem; font-weight: 800;
-  letter-spacing: 0.15em; text-transform: lowercase;
-  color: var(--text);
-  opacity: 0; animation: welcomeFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s forwards;
+.hero-eyebrow {
+  font-size: 0.85rem; font-weight: 500; letter-spacing: 0.15em;
+  text-transform: uppercase; color: rgba(255,255,255,0.4);
+  margin-bottom: 1rem;
+  opacity: 0; animation: welcomeFadeUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
 }
 
 .welcome-hero-text {
@@ -37,23 +65,23 @@
 }
 .welcome-hero-text h1 {
   font-family: 'Nunito', sans-serif;
-  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-size: clamp(3rem, 8vw, 5.5rem);
   font-weight: 900;
   margin-bottom: 0.5rem;
-  line-height: 1.1;
-  color: var(--text);
+  line-height: 1.05;
+  color: #F5F5F5;
   opacity: 0;
   animation: welcomeFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0.8s forwards;
 }
 .welcome-hero-text h1 .accent-word {
-  color: var(--accent-dark);
+  color: #C8F031;
 }
 
 .welcome-hero-text .welcome-sub {
-  color: var(--text-mid);
-  font-size: 1.1rem;
-  max-width: 400px;
-  margin: 1rem auto 0;
+  color: rgba(255,255,255,0.55);
+  font-size: 1.15rem;
+  max-width: 480px;
+  margin: 1.5rem auto 0;
   line-height: 1.7;
   font-weight: 400;
   opacity: 0;
@@ -62,17 +90,7 @@
 
 /* Hero Buttons */
 .hero-btn-row {
-  display: flex;
-  gap: 16px;
-  justify-content: center;
-  margin-top: 2rem;
-  opacity: 0;
-  animation: welcomeFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
-}
-
-/* Keep old class name as alias for backward compat */
-.welcome-hero-buttons {
-  display: flex; gap: 16px; justify-content: center; margin-top: 2rem;
+  display: flex; gap: 16px; justify-content: center; margin-top: 2.5rem;
   opacity: 0; animation: welcomeFadeUp 1s cubic-bezier(0.16, 1, 0.3, 1) 1.5s forwards;
 }
 
@@ -80,54 +98,55 @@
   display: inline-flex; align-items: center; gap: 0.6rem;
   padding: 14px 32px; border-radius: 50px;
   font-weight: 600; font-size: 1rem; cursor: pointer;
-  transition: all 0.2s; font-family: 'Inter', sans-serif;
-  text-decoration: none;
+  transition: all 0.25s; font-family: 'Inter', sans-serif;
+  text-decoration: none; border: none;
 }
 
 .hero-btn.primary {
-  background: var(--accent);
-  color: var(--text);
-  border: none;
+  background: #C8F031;
+  color: #0D0D0D;
   font-weight: 700;
+  box-shadow: 0 0 30px rgba(200, 240, 49, 0.25);
 }
 .hero-btn.primary:hover {
-  background: var(--accent-dark);
+  background: #D4F850;
   transform: translateY(-2px);
+  box-shadow: 0 0 40px rgba(200, 240, 49, 0.4);
 }
 
 .hero-btn.secondary {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text-mid);
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.7);
 }
 .hero-btn.secondary:hover {
-  background: var(--surface-soft);
+  background: rgba(255,255,255,0.1);
   transform: translateY(-2px);
 }
 
 .hero-btn .arrow { font-size: 1.1rem; transition: transform 0.2s; }
 .hero-btn:hover .arrow { transform: translateX(3px); }
 
-/* ── 3D Buddy Hero Placeholder ── */
+/* ── 3D Buddy Hero ── */
 .hero-buddy-3d {
-  width: 280px; height: 280px;
+  width: 300px; height: 300px;
   margin: 2rem auto;
-  border-radius: 24px;
   opacity: 0;
   animation: welcomeFadeUp 1.2s cubic-bezier(0.16, 1, 0.3, 1) 1.8s forwards;
+  filter: drop-shadow(0 0 40px rgba(200, 240, 49, 0.15));
 }
 
 /* Scroll indicator */
 .welcome-scroll-hint {
   position: absolute; bottom: 2rem; left: 50%; transform: translateX(-50%);
-  color: var(--text-light); font-size: 1.5rem;
+  color: rgba(255,255,255,0.3); font-size: 1.5rem;
   opacity: 0;
   animation: welcomeFadeUp 1s ease 2.5s forwards, scrollHintFade 2s ease-in-out 3.5s infinite;
   z-index: 2;
 }
 @keyframes scrollHintFade {
-  0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
-  50% { opacity: 0.7; transform: translateX(-50%) translateY(8px); }
+  0%, 100% { opacity: 0.2; transform: translateX(-50%) translateY(0); }
+  50% { opacity: 0.5; transform: translateX(-50%) translateY(8px); }
 }
 
 /* ── Features Section ── */
@@ -136,105 +155,158 @@
   min-height: 100vh; width: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   scroll-snap-align: start; flex-shrink: 0;
-  padding: 4rem 2rem;
-  background: var(--bg);
+  padding: 6rem 2rem;
+  background: #111111;
 }
+
 .features-pill {
   display: inline-block; padding: 0.4rem 1.2rem; border-radius: 50px;
-  border: 1px solid var(--border); color: var(--text-mid);
-  font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em;
-  text-transform: uppercase; margin-bottom: 1.5rem;
-  font-family: 'Nunito', sans-serif;
+  border: 1px solid rgba(200, 240, 49, 0.25);
+  color: #C8F031; font-size: 0.75rem; font-weight: 600;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 1.5rem; font-family: 'Nunito', sans-serif;
 }
+
 .welcome-features h2 {
   font-family: 'Nunito', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 800; color: var(--text); margin-bottom: 3rem; text-align: center;
+  font-weight: 800; color: #F5F5F5; margin-bottom: 1rem; text-align: center;
 }
+
+.features-intro {
+  color: rgba(255,255,255,0.45); font-size: 1.05rem; max-width: 560px;
+  text-align: center; line-height: 1.7; margin-bottom: 3rem;
+}
+
 .feature-cards {
   display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem; max-width: 1100px; width: 100%;
 }
 .feature-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 24px;
-  box-shadow: var(--shadow-sm);
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 20px;
+  padding: 32px 28px;
   transition: all 0.3s;
 }
 .feature-card:hover {
-  box-shadow: var(--shadow-md);
+  background: rgba(255,255,255,0.06);
+  border-color: rgba(200, 240, 49, 0.2);
   transform: translateY(-4px);
 }
 .feature-card-icon {
-  font-size: 2rem; margin-bottom: 1rem;
-  width: 50px; height: 50px; display: flex; align-items: center; justify-content: center;
-  border-radius: 12px; background: var(--accent-soft);
+  font-size: 2rem; margin-bottom: 1.2rem;
+  width: 56px; height: 56px; display: flex; align-items: center; justify-content: center;
+  border-radius: 14px;
+  background: rgba(200, 240, 49, 0.08);
 }
 .feature-card h3 {
-  font-family: 'Nunito', sans-serif; font-size: 1.2rem; font-weight: 700;
-  color: var(--text); margin-bottom: 0.75rem;
+  font-family: 'Nunito', sans-serif; font-size: 1.15rem; font-weight: 700;
+  color: #F5F5F5; margin-bottom: 0.75rem;
 }
 .feature-card p {
-  color: var(--text-mid); font-size: 0.92rem; line-height: 1.65;
-}
-.features-tagline {
-  margin-top: 3rem; text-align: center; max-width: 700px;
-  color: var(--text-faint); font-size: 0.85rem; line-height: 1.7;
-  font-weight: 400;
+  color: rgba(255,255,255,0.45); font-size: 0.92rem; line-height: 1.7;
 }
 
-/* ── Buddy Teaser Section ── */
+/* ── Platform Section (Fivetran AI) ── */
+.welcome-platform {
+  position: relative; z-index: 1;
+  min-height: 100vh; width: 100%;
+  display: flex; align-items: center; justify-content: center;
+  scroll-snap-align: start; flex-shrink: 0;
+  padding: 6rem 2rem;
+  background: linear-gradient(180deg, #111111 0%, #0D0D0D 100%);
+}
+
+.platform-content {
+  max-width: 900px; width: 100%; text-align: center;
+}
+
+.platform-content h2 {
+  font-family: 'Nunito', sans-serif; font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 800; color: #F5F5F5; margin-bottom: 1rem;
+}
+
+.platform-desc {
+  color: rgba(255,255,255,0.45); font-size: 1.1rem;
+  max-width: 600px; margin: 0 auto 3.5rem; line-height: 1.7;
+}
+
+.platform-layers {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem; text-align: left;
+}
+
+.layer-card {
+  padding: 28px 24px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.3s;
+}
+.layer-card:hover {
+  border-color: rgba(200, 240, 49, 0.15);
+  background: rgba(255,255,255,0.04);
+}
+
+.layer-number {
+  font-family: 'Nunito', sans-serif; font-weight: 800;
+  font-size: 0.8rem; color: #C8F031; margin-bottom: 1rem;
+  letter-spacing: 0.05em;
+}
+
+.layer-card h4 {
+  font-family: 'Nunito', sans-serif; font-weight: 700;
+  font-size: 1.05rem; color: #F5F5F5; margin-bottom: 0.6rem;
+}
+
+.layer-card p {
+  color: rgba(255,255,255,0.4); font-size: 0.88rem; line-height: 1.65;
+}
+
+/* ── CTA Teaser Section ── */
 .welcome-buddy-teaser {
   position: relative; z-index: 1;
   min-height: 50vh; width: 100%;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   scroll-snap-align: start; flex-shrink: 0;
-  padding: 48px 24px; text-align: center;
-  background: var(--surface-soft);
-  border-radius: 24px;
-  margin: 2rem;
-  width: calc(100% - 4rem);
+  padding: 4rem 2rem; text-align: center;
+  background: radial-gradient(ellipse at 50% 50%, rgba(200, 240, 49, 0.05) 0%, transparent 60%),
+              #0D0D0D;
 }
 .welcome-buddy-teaser h2 {
   font-family: 'Nunito', sans-serif; font-size: clamp(1.8rem, 4vw, 3rem);
-  font-weight: 800; color: var(--text); margin-bottom: 1rem; text-align: center;
+  font-weight: 800; color: #F5F5F5; margin-bottom: 1rem; text-align: center;
 }
 .welcome-buddy-teaser .teaser-sub {
-  color: var(--text-mid); font-size: 1.05rem; max-width: 500px;
+  color: rgba(255,255,255,0.4); font-size: 1.05rem; max-width: 500px;
   text-align: center; line-height: 1.7; margin-bottom: 2.5rem;
-}
-.welcome-buddy-teaser .hero-btn {
-  opacity: 0; animation: welcomeFadeUp 0.8s ease 0.3s forwards;
 }
 
 /* wordmark */
 .wordmark {
-  color: var(--text);
   font-family: 'Nunito', sans-serif;
   font-weight: 800;
 }
 
-/* scroll indicator alias */
+/* scroll indicator */
 .scroll-indicator {
-  color: var(--text-light);
+  color: rgba(255,255,255,0.3);
 }
 
 /* ── Responsive welcome ── */
 @media (max-width: 768px) {
-  .feature-cards { grid-template-columns: 1fr 1fr; }
-  .welcome-hero .vibetran-wordmark { left: 1.5rem; top: 1.5rem; }
-  .hero-buddy-3d { width: 220px; height: 220px; }
-  .welcome-buddy-teaser { margin: 1rem; width: calc(100% - 2rem); }
+  .feature-cards, .platform-layers { grid-template-columns: 1fr 1fr; }
+  .welcome-nav { padding: 1.5rem; }
+  .hero-buddy-3d { width: 240px; height: 240px; }
 }
 @media (max-width: 500px) {
-  .feature-cards { grid-template-columns: 1fr; }
+  .feature-cards, .platform-layers { grid-template-columns: 1fr; }
   .hero-btn-row { flex-direction: column; gap: 0.75rem; }
-  .welcome-hero-buttons { flex-direction: column; gap: 0.75rem; }
-  .hero-btn { width: 100%; max-width: 260px; justify-content: center; }
+  .hero-btn { width: 100%; max-width: 280px; justify-content: center; }
+  .welcome-nav { padding: 1.2rem; }
 }
 
-/* ── Welcome animations ── */
+/* ── Animations ── */
 @keyframes welcomeFadeUp {
   from { opacity: 0; transform: translateY(25px); }
   to { opacity: 1; transform: translateY(0); }

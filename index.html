@@ -28,47 +28,77 @@
 
   <!-- Section 1: Hero -->
   <section class="welcome-hero">
-    <div class="vibetran-wordmark wordmark">vibetran</div>
+    <nav class="welcome-nav">
+      <div class="vibetran-wordmark wordmark glow-text">vibetran</div>
+      <span class="nav-badge">Fivetran AI</span>
+    </nav>
     <div class="welcome-hero-text">
-      <h1>ai that actually<br>knows your <span class="accent-word">data</span>.</h1>
-      <p class="welcome-sub">accurate answers. zero guesswork. powered by your schema.</p>
+      <p class="hero-eyebrow">meet your ai work companion</p>
+      <h1>this is <span class="accent-word glow-text">buddy</span>.</h1>
+      <p class="welcome-sub">one assistant that knows your Salesforce, Gong, Slack, calendar, and everything in between. powered by Fivetran AI.</p>
       <div class="hero-btn-row">
-        <button class="hero-btn secondary" onclick="goTo('role-picker'); initRolePicker();">explore <span class="arrow">&rarr;</span></button>
         <button class="hero-btn primary" onclick="goTo('creator')">get started <span class="arrow">&rarr;</span></button>
+        <button class="hero-btn secondary" onclick="document.querySelector('.welcome-features').scrollIntoView({behavior:'smooth'})">learn more <span class="arrow">&darr;</span></button>
       </div>
     </div>
     <div id="hero-buddy-3d" class="hero-buddy-3d"></div>
     <div class="welcome-scroll-hint scroll-indicator">&darr;</div>
   </section>
 
-  <!-- Section 2: Features -->
+  <!-- Section 2: What Buddy Does -->
   <section class="welcome-features">
-    <div class="features-pill">Features</div>
-    <h2>your data, your way.</h2>
+    <div class="features-pill">What Buddy Does</div>
+    <h2>your work, handled.</h2>
+    <p class="features-intro">Buddy connects to every tool you use and takes action &mdash; so you spend less time on busywork and more time closing deals.</p>
     <div class="feature-cards">
       <div class="feature-card">
-        <div class="feature-card-icon">&#10024;</div>
-        <h3>find anything, instantly</h3>
-        <p>search across all your connected systems. vibetran indexes your data and understands where to look &mdash; so you get real answers, not keyword matches.</p>
+        <div class="feature-card-icon">🎧</div>
+        <h3>post-call autopilot</h3>
+        <p>After a Gong call, Buddy extracts MEDDPICC, next steps, and notes &mdash; then fills your Salesforce opp automatically.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-card-icon">&#128200;</div>
-        <h3>ask questions. get facts.</h3>
-        <p>vibetran knows your schema. ask &ldquo;how many support tickets from enterprise customers in march&rdquo; and get the real number &mdash; not a guess.</p>
+        <div class="feature-card-icon">📅</div>
+        <h3>smart scheduling</h3>
+        <p>&ldquo;Schedule 30 min with Stephen to discuss MCP&rdquo; &mdash; Buddy checks both calendars and sends the invite.</p>
       </div>
       <div class="feature-card">
-        <div class="feature-card-icon">&#9889;</div>
-        <h3>don&rsquo;t just know. do.</h3>
-        <p>send emails, close tickets, create reports, launch campaigns. go from insight to action without switching tools.</p>
+        <div class="feature-card-icon">💬</div>
+        <h3>knows your context</h3>
+        <p>Ask anything about your accounts, deals, or team. Buddy searches Salesforce, Gong, Slack, and Slab to give you real answers.</p>
       </div>
     </div>
-    <p class="features-tagline">a fivetran company. we define the schema. we understand your metadata. we&rsquo;ve always been the easy button.</p>
   </section>
 
-  <!-- Section 3: Buddy Teaser -->
+  <!-- Section 3: Powered by Fivetran AI -->
+  <section class="welcome-platform">
+    <div class="platform-content">
+      <div class="features-pill">Powered By</div>
+      <h2>Fivetran <span class="accent-word glow-text">AI</span></h2>
+      <p class="platform-desc">The governed data layer for AI agents. Any agent, any runtime, any enterprise data source &mdash; Fivetran connects them.</p>
+      <div class="platform-layers">
+        <div class="layer-card">
+          <div class="layer-number">01</div>
+          <h4>Managed Embeddings</h4>
+          <p>Fivetran creates and maintains embeddings across 1,000+ connectors. Your data stays in your warehouse.</p>
+        </div>
+        <div class="layer-card">
+          <div class="layer-number">02</div>
+          <h4>Cross-Source Search</h4>
+          <p>Unified search that knows how a Salesforce account maps to a Zendesk org, a Jira project, and a Slack channel.</p>
+        </div>
+        <div class="layer-card">
+          <div class="layer-number">03</div>
+          <h4>Skills &amp; Plugins</h4>
+          <p>Pre-built capabilities for support triage, account research, deal prep &mdash; available to any AI agent.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: CTA -->
   <section class="welcome-buddy-teaser">
-    <h2>meet buddy.</h2>
-    <p class="teaser-sub">your personal ai assistant. it learns your role, your challenges, what makes you tick. it gets better every day.</p>
+    <h2>ready to meet your buddy?</h2>
+    <p class="teaser-sub">personalize your assistant, connect your tools, and let Buddy handle the rest.</p>
     <button class="hero-btn primary" onclick="goTo('creator')">get started <span class="arrow">&rarr;</span></button>
   </section>
 </div>

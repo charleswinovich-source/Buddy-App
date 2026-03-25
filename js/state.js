@@ -14,10 +14,11 @@ const BUDDY_COLORS = [
 ];
 
 const BUDDY_MOODS = [
-  { id: 'happy',      label: 'Happy',      desc: 'always smiling',  eyes: 'curved-up',   animSpeed: 1.8, animAmp: 0.2  },
-  { id: 'chill',      label: 'Chill',      desc: 'cool and calm',   eyes: 'half-closed',  animSpeed: 0.6, animAmp: 0.08 },
-  { id: 'energetic',  label: 'Energetic',  desc: 'full of energy',  eyes: 'wide',         animSpeed: 2.2, animAmp: 0.25 },
-  { id: 'thoughtful', label: 'Thoughtful', desc: 'always thinking', eyes: 'squint',       animSpeed: 0.8, animAmp: 0.1  },
+  { id: 'happy',      label: 'Happy',      desc: 'bright and friendly', eyes: 'normal',      animSpeed: 1.0, animAmp: 0.1  },
+  { id: 'chill',      label: 'Chill',      desc: 'cool and calm',       eyes: 'half-closed', animSpeed: 0.6, animAmp: 0.08 },
+  { id: 'energetic',  label: 'Energetic',  desc: 'full of energy',      eyes: 'wide',        animSpeed: 2.2, animAmp: 0.25 },
+  { id: 'thoughtful', label: 'Thoughtful', desc: 'always thinking',     eyes: 'squint',      animSpeed: 0.8, animAmp: 0.1  },
+  { id: 'surprised',  label: 'Surprised',  desc: 'oh!',                 eyes: 'wide',        animSpeed: 1.5, animAmp: 0.15 },
 ];
 
 const BUDDY_ACCESSORIES = [

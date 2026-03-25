@@ -1,4 +1,5 @@
-/* Creator Screen */
+/* Creator & Onboarding Screens — need scrolling */
+#creator, #role-picker { overflow-y: auto !important; }
 .creator-wrap {
   max-width: 480px;
   margin: 0 auto;

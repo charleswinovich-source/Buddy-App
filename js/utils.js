@@ -7,201 +7,182 @@
 // ════════════════════════════════════════════════════════
 function createBuddy3D(container, options = {}) {
   if (!container || !window.THREE) return null;
-  const { color = '#E8634A', mood = 'happy', accessories = [], size = 1, interactive = false } = options;
+  let { color = '#E8634A', mood = 'happy', accessories = [], size = 1, interactive = false } = options;
   const disposables = [];
 
-  // Scene setup
+  // ── Scene ──
   const w = container.clientWidth || 160;
   const h = container.clientHeight || 160;
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(35, w / h, 0.1, 100);
-  camera.position.set(0, 0.2, 3.5);
+  const camera = new THREE.PerspectiveCamera(32, w / h, 0.1, 100);
+  camera.position.set(0, 0.1, 3.8);
   const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
   renderer.setSize(w, h);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0);
   container.appendChild(renderer.domElement);
 
-  // Lighting
-  scene.add(new THREE.AmbientLight(0xfff5e6, 0.6));
-  const dirLight = new THREE.DirectionalLight(0xfff8f0, 0.8);
-  dirLight.position.set(-2, 3, 2);
-  scene.add(dirLight);
-  const rimLight = new THREE.DirectionalLight(0xC8F031, 0.2);
-  rimLight.position.set(0, -1, -2);
-  scene.add(rimLight);
+  // ── Lighting — soft, diffuse, no harsh specular ──
+  scene.add(new THREE.AmbientLight(0xfff5e6, 0.8));
+  const key = new THREE.DirectionalLight(0xfff0e0, 0.5);
+  key.position.set(0, 3, 4);
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffe8d8, 0.25);
+  fill.position.set(-3, 1, 2);
+  scene.add(fill);
 
-  // Body — soft blob ghost shape with vertex deformation
-  const bodyGeo = new THREE.SphereGeometry(1 * size, 48, 48);
-  const positions = bodyGeo.attributes.position;
-  for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i);
-    const y = positions.getY(i);
-    const z = positions.getZ(i);
-    if (y < -0.3) positions.setY(i, -0.3 + (y + 0.3) * 0.3);
-    if (y < -0.1) {
-      const wave = Math.sin(Math.atan2(z, x) * 5) * 0.08 * Math.abs(y + 0.1);
-      positions.setY(i, positions.getY(i) + wave);
+  // ── Body — soft inflated blob, rounded bottom like a water balloon ──
+  const geo = new THREE.SphereGeometry(1 * size, 64, 48);
+  const pos = geo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    let x = pos.getX(i);
+    let y = pos.getY(i);
+    let z = pos.getZ(i);
+
+    // Rounded bottom — not flat, gently curved
+    // Compress Y below -0.5 but keep curvature (not a hard cutoff)
+    if (y < -0.5) {
+      y = -0.5 + (y + 0.5) * 0.35; // softer compression = rounder bottom
     }
-    const noise = Math.sin(x * 3 + y * 2) * 0.03 + Math.cos(z * 4 + y) * 0.02;
-    positions.setX(i, x + noise);
-    positions.setZ(i, z + noise);
+
+    // Subtle outward bulge at the lower-middle — water balloon resting
+    const r = Math.sqrt(x * x + z * z);
+    const bulgeZone = Math.max(0, 1 - Math.abs(y + 0.2) * 2); // centered around y=-0.2
+    const bulge = 1 + bulgeZone * 0.06; // 6% outward bulge
+    x *= bulge;
+    z *= bulge;
+
+    // Slightly wider than tall overall
+    x *= 1.06;
+    z *= 1.06;
+
+    pos.setX(i, x);
+    pos.setY(i, y);
+    pos.setZ(i, z);
   }
-  bodyGeo.computeVertexNormals();
-  const bodyMat = new THREE.MeshPhysicalMaterial({
-    color: new THREE.Color(color), roughness: 0.3, metalness: 0,
-    clearcoat: 0.3, clearcoatRoughness: 0.2, transparent: true, opacity: 0.95
+  geo.computeVertexNormals();
+
+  const mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(color),
+    roughness: 0.75,
+    metalness: 0,
   });
-  const body = new THREE.Mesh(bodyGeo, bodyMat);
+  const body = new THREE.Mesh(geo, mat);
   scene.add(body);
-  disposables.push(bodyGeo, bodyMat);
+  disposables.push(geo, mat);
 
-  // Eyes
-  const eyeGeo = new THREE.SphereGeometry(0.12, 24, 24);
-  eyeGeo.scale(1, 1.2, 0.5);
-  const eyeMat = new THREE.MeshBasicMaterial({ color: 0x2C2418 });
-  disposables.push(eyeGeo, eyeMat);
-  const leftEye = new THREE.Mesh(eyeGeo, eyeMat);
-  leftEye.position.set(-0.28 * size, 0.15, 0.85 * size);
-  body.add(leftEye);
-  const rightEye = new THREE.Mesh(eyeGeo, eyeMat);
-  rightEye.position.set(0.28 * size, 0.15, 0.85 * size);
-  body.add(rightEye);
+  // ── Eyes — 2D canvas texture on a plane ──
+  const eyeRes = 256;
+  const eyeCanvas = document.createElement('canvas');
+  eyeCanvas.width = eyeRes;
+  eyeCanvas.height = eyeRes;
+  const eyeCtx = eyeCanvas.getContext('2d');
+  const eyeTex = new THREE.CanvasTexture(eyeCanvas);
 
-  // Blush
-  const blushGeo = new THREE.SphereGeometry(0.08, 16, 16);
-  blushGeo.scale(1.2, 0.8, 0.3);
-  const blushMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(color), transparent: true, opacity: 0.25 });
-  disposables.push(blushGeo, blushMat);
-  const leftBlush = new THREE.Mesh(blushGeo, blushMat);
-  leftBlush.position.set(-0.42 * size, -0.02, 0.82 * size);
-  body.add(leftBlush);
-  const rightBlush = new THREE.Mesh(blushGeo, blushMat);
-  rightBlush.position.set(0.42 * size, -0.02, 0.82 * size);
-  body.add(rightBlush);
+  function drawEyes() {
+    const ctx = eyeCtx;
+    const s = eyeRes;
+    ctx.clearRect(0, 0, s, s);
 
-  // Mood system
-  let currentAnimSpeed = 0.8, currentAnimAmp = 0.1;
-  let currentMood = mood;
+    const cx = s / 2;
+    const cy = s / 2 + 6; // moved up ~10-15%
+    const spacing = 44; // wider apart ~10%
+    const w = 23; // slightly larger
+    const h = 28;
 
-  function applyMoodToEyes(moodId) {
-    const m = BUDDY_MOODS.find(m => m.id === moodId) || BUDDY_MOODS[0];
-    leftEye.scale.set(1, 1, 1); rightEye.scale.set(1, 1, 1);
-    leftEye.rotation.z = 0; rightEye.rotation.z = 0;
-    if (m.eyes === 'curved-up') { leftEye.scale.y = 0.6; rightEye.scale.y = 0.6; }
-    else if (m.eyes === 'half-closed') { leftEye.scale.y = 0.5; rightEye.scale.y = 0.5; }
-    else if (m.eyes === 'wide') { leftEye.scale.set(1.2, 1.3, 1); rightEye.scale.set(1.2, 1.3, 1); }
-    else if (m.eyes === 'squint') { leftEye.scale.y = 0.7; }
-    currentAnimSpeed = m.animSpeed;
-    currentAnimAmp = m.animAmp;
+    [-1, 1].forEach(side => {
+      const ex = cx + side * spacing;
+      ctx.save();
+
+      // Soft oval — slight inward tilt for curious/calm expression
+      ctx.beginPath();
+      ctx.ellipse(ex, cy, w, h, side * -0.12, 0, Math.PI * 2); // inward tilt
+      const grad = ctx.createRadialGradient(ex, cy - 4, 2, ex, cy, h);
+      grad.addColorStop(0, '#4a4a62');
+      grad.addColorStop(0.4, '#35354d');
+      grad.addColorStop(1, '#22223a');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      // Soft highlight — top, calm and gentle
+      ctx.beginPath();
+      ctx.ellipse(ex + w * 0.22, cy - h * 0.28, 5, 5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.fill();
+
+      // Tiny secondary — subtle
+      ctx.beginPath();
+      ctx.ellipse(ex - w * 0.15, cy + h * 0.18, 2.5, 2.5, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fill();
+
+      ctx.restore();
+    });
+
+    eyeTex.needsUpdate = true;
   }
-  applyMoodToEyes(mood);
 
-  // Accessories
-  const accMeshes = {};
-  function addAccessory(id) {
-    if (accMeshes[id]) return;
-    let mesh;
-    const s = size;
-    if (id === 'hat') {
-      const g = new THREE.CylinderGeometry(0.25*s, 0.3*s, 0.2*s, 16);
-      const brim = new THREE.CylinderGeometry(0.4*s, 0.4*s, 0.03*s, 16);
-      const m = new THREE.MeshPhysicalMaterial({ color: 0x2C2418, roughness: 0.6 });
-      mesh = new THREE.Group();
-      mesh.add(Object.assign(new THREE.Mesh(g, m), { position: new THREE.Vector3(0, 0.1*s, 0) }));
-      mesh.add(new THREE.Mesh(brim, m));
-      mesh.position.set(0, 1.05*s, 0);
-      disposables.push(g, brim, m);
-    } else if (id === 'crown') {
-      const g = new THREE.TorusGeometry(0.25*s, 0.05*s, 8, 5);
-      const m = new THREE.MeshPhysicalMaterial({ color: 0xD4941A, metalness: 0.6, roughness: 0.2 });
-      mesh = new THREE.Mesh(g, m);
-      mesh.rotation.x = Math.PI / 2;
-      mesh.position.set(0, 1.05*s, 0);
-      disposables.push(g, m);
-    } else if (id === 'glasses') {
-      mesh = new THREE.Group();
-      const ringGeo = new THREE.TorusGeometry(0.13*s, 0.02*s, 8, 16);
-      const gm = new THREE.MeshPhysicalMaterial({ color: 0x2C2418, roughness: 0.4 });
-      const lLens = new THREE.Mesh(ringGeo, gm); lLens.position.set(-0.28*s, 0.15, 0.95*s);
-      const rLens = new THREE.Mesh(ringGeo, gm); rLens.position.set(0.28*s, 0.15, 0.95*s);
-      const bg = new THREE.CylinderGeometry(0.015*s, 0.015*s, 0.2*s, 4);
-      const bridge = new THREE.Mesh(bg, gm); bridge.rotation.z = Math.PI/2; bridge.position.set(0, 0.15, 0.95*s);
-      mesh.add(lLens, rLens, bridge);
-      disposables.push(ringGeo, gm, bg);
-    } else if (id === 'bow') {
-      const g = new THREE.SphereGeometry(0.1*s, 8, 8);
-      const m = new THREE.MeshPhysicalMaterial({ color: 0xC44569, roughness: 0.4 });
-      mesh = new THREE.Group();
-      const center = new THREE.Mesh(g, m);
-      const left = new THREE.Mesh(g, m); left.position.x = -0.12*s; left.scale.set(1.3, 0.8, 0.6);
-      const right = new THREE.Mesh(g, m); right.position.x = 0.12*s; right.scale.set(1.3, 0.8, 0.6);
-      mesh.add(center, left, right);
-      mesh.position.set(0, -0.35*s, 0.7*s);
-      disposables.push(g, m);
-    } else if (id === 'star') {
-      const g = new THREE.IcosahedronGeometry(0.12*s, 0);
-      const m = new THREE.MeshPhysicalMaterial({ color: 0xD4941A, metalness: 0.4, roughness: 0.2 });
-      mesh = new THREE.Mesh(g, m);
-      mesh._orbit = true;
-      disposables.push(g, m);
-    } else if (id === 'scarf') {
-      const g = new THREE.TorusGeometry(0.6*s, 0.08*s, 8, 24);
-      const m = new THREE.MeshPhysicalMaterial({ color: 0x2A9D8F, roughness: 0.5 });
-      mesh = new THREE.Mesh(g, m);
-      mesh.rotation.x = Math.PI / 2;
-      mesh.position.set(0, -0.3*s, 0);
-      disposables.push(g, m);
-    }
-    if (mesh) { body.add(mesh); accMeshes[id] = mesh; }
-  }
-  function removeAccessory(id) {
-    if (accMeshes[id]) { body.remove(accMeshes[id]); delete accMeshes[id]; }
-  }
-  accessories.forEach(addAccessory);
+  drawEyes();
 
-  // Animation loop
-  let time = 0, running = true;
+  const eyePlaneGeo = new THREE.PlaneGeometry(1.5 * size, 1.5 * size);
+  const eyePlaneMat = new THREE.MeshBasicMaterial({
+    map: eyeTex, transparent: true, depthWrite: false,
+  });
+  const eyePlane = new THREE.Mesh(eyePlaneGeo, eyePlaneMat);
+  eyePlane.position.set(0, -0.05 * size, 1.05 * size);
+  eyePlane.renderOrder = 1;
+  body.add(eyePlane);
+  disposables.push(eyePlaneGeo, eyePlaneMat, eyeTex);
+
+  // ── Animation — floating + squash/stretch loop ──
+  let time = 0;
+  let running = true;
+
+  // Animation — slow float with subtle squash/stretch
+  // Period ~3.5 seconds (2π / 1.8 ≈ 3.5s)
+  const floatSpeed = 1.8;
+  const floatHeight = 0.08 * size; // gentle rise/fall
+  const squashPct = 0.055; // ~5.5% compression
+
   function animate() {
     if (!running) return;
     requestAnimationFrame(animate);
     time += 0.016;
-    body.position.y = Math.sin(time * currentAnimSpeed) * currentAnimAmp;
-    body.rotation.z = Math.sin(time * 0.5) * 0.03;
-    body.scale.y = 1 + Math.sin(time * 1.2) * 0.02;
-    body.scale.x = 1 - Math.sin(time * 1.2) * 0.01;
-    if (accMeshes.star) {
-      accMeshes.star.position.set(
-        Math.sin(time * 1.5) * 1.4 * size,
-        0.5 * size,
-        Math.cos(time * 1.5) * 1.4 * size
-      );
-      accMeshes.star.rotation.y += 0.03;
-    }
+
+    const phase = time * floatSpeed;
+    const sinVal = Math.sin(phase);
+
+    // Smooth float
+    body.position.y = sinVal * floatHeight;
+
+    // Squash at bottom, stretch at top
+    // sinVal: -1 = bottom (squash), +1 = top (stretch)
+    const squashY = 1 + sinVal * squashPct;        // compress at bottom, stretch at top
+    const squashXZ = 1 - sinVal * squashPct * 0.4;  // widen at bottom, narrow at top
+
+    body.scale.set(squashXZ, squashY, squashXZ);
+
     renderer.render(scene, camera);
   }
   animate();
 
-  // Controller
+  // ── Controller (API for the rest of the app) ──
   return {
-    setColor(hex) { bodyMat.color.set(hex); blushMat.color.set(hex); },
-    setMood(id) { currentMood = id; applyMoodToEyes(id); },
-    setAccessories(ids) {
-      Object.keys(accMeshes).forEach(k => { if (!ids.includes(k)) removeAccessory(k); });
-      ids.forEach(addAccessory);
+    setColor(hex) {
+      color = hex;
+      mat.color.set(hex);
     },
+    setMood(id) { /* reserved for future expression changes */ },
+    setAccessories(ids) { /* no accessories in clean design */ },
+    bounce() { /* no-op in controlled animation */ },
+    squish() { /* no-op in controlled animation */ },
     cleanup() {
       running = false;
       disposables.forEach(d => d.dispose && d.dispose());
       renderer.dispose();
       if (container.contains(renderer.domElement)) container.removeChild(renderer.domElement);
     },
-    reactToInput(text) {
-      if (/help|how|what|\?/.test(text)) applyMoodToEyes('thoughtful');
-      else if (/great|awesome|happy|love/.test(text)) applyMoodToEyes('happy');
-      else if (/stress|anxious|worried/.test(text)) applyMoodToEyes('chill');
-      else applyMoodToEyes(currentMood);
-    }
+    reactToInput(text) { /* reserved for future eye reactions */ },
   };
 }
 

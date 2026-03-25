@@ -4,6 +4,111 @@
 
 let _buddy3dCleanup = null;
 let _buddy3dState = null;
+let _realCalendarEvents = null; // cached real calendar events
+
+// ── Fetch real calendar and refresh the UPCOMING widget ──
+async function _fetchRealCalendar() {
+  try {
+    const res = await fetch('/api/calendar/events');
+    const data = await res.json();
+    if (data.ok && data.events?.length >= 0) {
+      // Convert API format to the format getMockCalendar uses
+      _realCalendarEvents = data.events.map(ev => {
+        const start = ev.allDay ? null : new Date(ev.start);
+        const end = ev.allDay ? null : new Date(ev.end);
+        const time = ev.allDay ? 'all day' : start.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false }).replace(/^0/, '');
+        const endTime = ev.allDay ? '' : end.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: false }).replace(/^0/, '');
+        const people = ev.attendees?.filter(a => !a.self).map(a => a.name) || [];
+        return {
+          time,
+          end: endTime,
+          title: ev.title,
+          people,
+          type: ev.isExternal ? 'important' : 'meeting',
+          prep: ev.isExternal ? { context: 'loading...', theyWant: '', youShould: '' } : null,
+          account: ev.title, // used for meeting prep lookups
+          allDay: ev.allDay,
+          meetLink: ev.meetLink,
+          htmlLink: ev.htmlLink,
+          isExternal: ev.isExternal,
+          attendees: ev.attendees,
+        };
+      });
+
+      // Override getMockCalendar globally so all existing UI uses real data
+      window._originalGetMockCalendar = window._originalGetMockCalendar || (typeof getMockCalendar === 'function' ? getMockCalendar : null);
+      window.getMockCalendar = () => _realCalendarEvents;
+
+      // Refresh the UPCOMING widget if it exists
+      _refreshUpcomingWidget();
+      return _realCalendarEvents;
+    }
+  } catch (e) {
+    console.log('[calendar] Real calendar unavailable, using mock:', e.message);
+  }
+  return null;
+}
+
+// ── Fetch real Gmail and refresh MESSAGES widget ──
+async function _fetchRealGmail() {
+  try {
+    const res = await fetch('/api/gmail/inbox');
+    const data = await res.json();
+    if (data.ok && data.messages?.length >= 0) {
+      _refreshMessagesWidget(data.messages);
+    }
+  } catch (e) {
+    console.log('[gmail] Real gmail unavailable:', e.message);
+  }
+}
+
+function _refreshMessagesWidget(messages) {
+  // Find the MESSAGES widget
+  const widgets = document.querySelectorAll('.dash-widget-title');
+  let card = null;
+  widgets.forEach(w => { if (w.textContent.includes('MESSAGES')) card = w.closest('.dash-widget-card'); });
+  if (!card) return;
+
+  const unread = messages.slice(0, 4);
+  const count = messages.length;
+
+  let html = `<div class="dash-widget-title">📧 INBOX</div>`;
+  if (count > 0) {
+    html += `<div style="font-size:0.72rem;color:var(--coral);font-weight:600;margin-bottom:0.4rem;">${count} unread</div>`;
+    html += unread.map(m =>
+      `<div style="display:flex;gap:0.5rem;align-items:center;padding:0.25rem 0;">
+        <span style="font-size:0.7rem;">${m.isExternal ? '🔵' : '💬'}</span>
+        <div style="min-width:0;flex:1;">
+          <div style="font-size:0.78rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.from}</div>
+          <div style="font-size:0.65rem;color:var(--text-light);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${m.subject}</div>
+        </div>
+      </div>`
+    ).join('');
+  } else {
+    html += '<div style="font-size:0.78rem;color:var(--text-light);">inbox zero ✨</div>';
+  }
+
+  card.innerHTML = html;
+}
+
+function _refreshUpcomingWidget() {
+  const widget = document.querySelector('.dash-widget-title');
+  if (!widget || !widget.textContent.includes('UPCOMING')) return;
+  const card = widget.closest('.dash-widget-card');
+  if (!card) return;
+
+  const events = _realCalendarEvents || [];
+  const eventsToShow = events.filter(e => !e.allDay).slice(0, 3);
+
+  const calHtml = eventsToShow.length ? eventsToShow.map(ev =>
+    `<div style="display:flex;gap:0.6rem;align-items:flex-start;padding:0.3rem 0;">
+      <span style="font-size:0.72rem;color:var(--text-light);min-width:36px;font-family:'JetBrains Mono',monospace;">${ev.time}</span>
+      <span style="font-size:0.78rem;color:var(--text);font-weight:500;">${ev.title}</span>
+    </div>`
+  ).join('') : '<div style="font-size:0.78rem;color:var(--text-light);">no more meetings today ✨</div>';
+
+  card.innerHTML = `<div class="dash-widget-title">📅 UPCOMING</div>${calHtml}`;
+}
 
 function buddyReactToTyping(text) {
   if (_buddy3dState && _buddy3dState.reactToInput) {
@@ -61,6 +166,10 @@ function initDashboard() {
   renderDashDatePill();
   renderDashContent();
   renderBottomSheet();
+
+  // Fetch real data in background — updates widgets when ready
+  _fetchRealCalendar();
+  _fetchRealGmail();
 }
 
 function renderDashDatePill() {
@@ -1084,7 +1193,7 @@ function insightAction(index, type) {
 
       // Save to extension clipboard
       if (insight && actionContent) {
-        fetch('http://localhost:3001/api/clipboard/save', {
+        fetch('/api/clipboard/save', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -1420,21 +1529,27 @@ function dashAskQuestion() {
 }
 
 // ═══ Inline Dashboard Chat ═══
+let _dashChatActive = false;
+
 function _startDashChat(question) {
   const content = document.getElementById('dash-content');
   if (!content) return;
 
-  // Hide greeting, heads-up, chips, explore btn, 3D buddy canvas
-  const greetingArea = content.querySelector('.dash-greeting-area');
-  const exploreBtn = content.querySelector('.dash-explore-btn');
-  const buddyCanvas = document.getElementById('buddy-3d-canvas')?.parentElement;
-  const ctxChips = content.querySelector('.dash-ctx-chips');
+  // Only hide greeting elements on first message
+  if (!_dashChatActive) {
+    _dashChatActive = true;
+    const greetingArea = content.querySelector('.dash-greeting-area');
+    const exploreBtn = content.querySelector('.dash-explore-btn');
+    const buddyCanvas = document.getElementById('buddy-3d-canvas')?.parentElement;
+    const ctxChips = content.querySelector('.dash-ctx-chips');
 
-  [greetingArea, exploreBtn, buddyCanvas, ctxChips].forEach(el => {
-    if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 300); }
-  });
+    [greetingArea, exploreBtn, buddyCanvas, ctxChips].forEach(el => {
+      if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(() => { el.style.display = 'none'; }, 300); }
+    });
+  }
 
-  // Create chat area if not already present
+  // Create chat area if not already present — or reuse existing
+  const delay = document.getElementById('dash-chat-area') ? 0 : 320;
   setTimeout(() => {
     let chatArea = document.getElementById('dash-chat-area');
     if (!chatArea) {
@@ -1448,7 +1563,6 @@ function _startDashChat(question) {
       chatArea = document.createElement('div');
       chatArea.className = 'dash-chat-area';
       chatArea.id = 'dash-chat-area';
-      // Insert before the spacer (last child)
       const spacer = content.querySelector('div[style*="height: 4rem"]');
       if (spacer) content.insertBefore(chatArea, spacer);
       else content.appendChild(chatArea);
@@ -1460,7 +1574,6 @@ function _startDashChat(question) {
     // Generate buddy response
     const thinkTime = 400 + Math.random() * 400;
     setTimeout(() => {
-      // Show typing indicator
       const typing = document.createElement('div');
       typing.className = 'dash-chat-msg buddy';
       typing.id = 'dash-typing';
@@ -1468,7 +1581,6 @@ function _startDashChat(question) {
       chatArea.appendChild(typing);
       chatArea.scrollTop = chatArea.scrollHeight;
 
-      // Try AI backend first, fall back to local keyword matching
       _getAIResponse(question).then(response => {
         document.getElementById('dash-typing')?.remove();
         _addDashChatMsg('buddy', response);
@@ -1478,8 +1590,8 @@ function _startDashChat(question) {
 
     // Focus input for continued conversation
     const input = document.getElementById('dash-ai-input');
-    if (input) input.focus();
-  }, 320);
+    if (input) { input.focus(); input.placeholder = 'ask a follow-up...'; }
+  }, delay);
 }
 
 function _addDashChatMsg(who, text) {
@@ -1526,6 +1638,8 @@ function _closeDashChat() {
   const content = document.getElementById('dash-content');
   if (!content) return;
 
+  _dashChatActive = false;
+
   // Remove chat area and back button
   document.getElementById('dash-chat-area')?.remove();
   content.querySelector('.dash-chat-back')?.remove();
@@ -1539,6 +1653,10 @@ function _closeDashChat() {
   [greetingArea, exploreBtn, buddyCanvas, ctxChips].forEach(el => {
     if (el) { el.style.display = ''; el.style.opacity = '0'; setTimeout(() => { el.style.transition = 'opacity 0.3s'; el.style.opacity = '1'; }, 20); }
   });
+
+  // Reset input placeholder
+  const input = document.getElementById('dash-ai-input');
+  if (input) input.placeholder = 'ask me anything...';
 }
 
 // ── AI Chat — calls Claude API via backend ──
@@ -1597,7 +1715,7 @@ window.chatFeedbackReason = function(msgIdx, reason) {
 function _submitFeedback(entry) {
   const payload = { ...entry };
   delete payload.msgIdx;
-  fetch('http://localhost:3001/api/feedback', {
+  fetch('/api/feedback', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -1610,7 +1728,7 @@ async function _getAIResponse(question) {
   _msgCount++;
 
   try {
-    const res = await fetch('http://localhost:3001/api/chat', {
+    const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -1665,7 +1783,7 @@ function _maybeSaveToClipboard(question, reply, category) {
   // Extract context (account name, person name, topic) from the question
   const context = _extractContext(question);
 
-  fetch('http://localhost:3001/api/clipboard/save', {
+  fetch('/api/clipboard/save', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -1956,61 +2074,118 @@ function _legacyRenderDashBody_UNUSED() {
 function showMeetingPrep(title) {
   const events = getMockCalendar();
   const ev = events.find(e => e.title === title);
-  if (!ev || !ev.prep) return;
-  const p = ev.prep;
+  if (!ev) return;
 
+  // Show overlay immediately with loading state
   const overlay = document.createElement('div');
   overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
   overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
 
-  overlay.innerHTML = `
-    <div style="background:var(--surface);border-radius:20px;padding:2rem;max-width:480px;width:100%;max-height:80vh;overflow-y:auto;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-        <div>
-          <h2 style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.2rem;margin:0;">${ev.title}</h2>
-          <div style="font-size:0.85rem;color:var(--text-light);margin-top:0.25rem;">${ev.time} – ${ev.end} · ${ev.people.join(', ')}</div>
-        </div>
-        <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text-light);font-size:1.5rem;cursor:pointer;">×</button>
+  const card = document.createElement('div');
+  card.style.cssText = 'background:var(--surface);border-radius:20px;padding:2rem;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;';
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <div>
+        <h2 style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.2rem;margin:0;">${ev.title}</h2>
+        <div style="font-size:0.85rem;color:var(--text-light);margin-top:0.25rem;">${ev.time} – ${ev.end} · ${ev.people.join(', ')}</div>
       </div>
-
-      <div style="margin-bottom:1.25rem;">
-        <div style="font-weight:700;font-size:0.8rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">context</div>
-        <div style="font-size:0.9rem;line-height:1.5;color:var(--text);">${p.context}</div>
-      </div>
-
-      <div style="margin-bottom:1.25rem;">
-        <div style="font-weight:700;font-size:0.8rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">agenda</div>
-        ${p.agenda.map(a => `<div style="font-size:0.9rem;padding:0.3rem 0;color:var(--text);">• ${a}</div>`).join('')}
-      </div>
-
-      <div style="margin-bottom:1.25rem;">
-        <div style="font-weight:700;font-size:0.8rem;color:#E8634A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">what they'll want to discuss</div>
-        <div style="font-size:0.9rem;line-height:1.5;color:var(--text);">${p.theyWant}</div>
-      </div>
-
-      <div style="margin-bottom:1.25rem;">
-        <div style="font-weight:700;font-size:0.8rem;color:#4caf50;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">you should bring up</div>
-        <div style="font-size:0.9rem;line-height:1.5;color:var(--text);">${p.youShould}</div>
-      </div>
-
-      ${p.followUps?.length ? `<div style="margin-bottom:1.25rem;">
-        <div style="font-weight:700;font-size:0.8rem;color:#ffa726;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">follow-ups from last time</div>
-        ${p.followUps.map(f => `<div style="font-size:0.9rem;padding:0.3rem 0;color:var(--text);">• ${f}</div>`).join('')}
-      </div>` : ''}
-
-      ${(() => {
-        if (!STATE.integrations?.gdrive?.connected) return '';
-        const drive = getMockDrive();
-        const docs = drive.meetingDocs[ev.title];
-        if (!docs?.length) return '';
-        return `<div>
-          <div style="font-weight:700;font-size:0.8rem;color:#5b9cf7;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.5rem;">relevant docs</div>
-          ${docs.map(d => `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0;font-size:0.9rem;color:var(--accent);cursor:pointer;">
-            <span>${d.type === 'doc' ? '📄' : '📊'}</span> ${d.name}
-          </div>`).join('')}
-        </div>`;
-      })()}
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text-light);font-size:1.5rem;cursor:pointer;">×</button>
     </div>
-  `;
+    <div id="prep-body" style="display:flex;flex-direction:column;gap:1.25rem;">
+      <div style="text-align:center;padding:2rem;color:var(--text-light);">
+        <div style="font-size:1.5rem;margin-bottom:0.5rem;">🔍</div>
+        <div style="font-size:0.9rem;">pulling intel from Gong, Zendesk, and Salesforce...</div>
+      </div>
+    </div>`;
+  overlay.appendChild(card);
   document.body.appendChild(overlay);
+
+  // Extract account name from title or attendees
+  const account = ev.account || ev.title.replace(/sync|meeting|call|discussion|prep|review/gi, '').trim();
+
+  // Call the real meeting prep API
+  fetch('/api/meeting-prep', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: ev.title, attendees: ev.people, account }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    const body = document.getElementById('prep-body');
+    if (!body) return;
+
+    if (data.ok && data.prep) {
+      const p = data.prep;
+      body.innerHTML = _buildPrepSection('context', 'var(--accent)', p.context)
+        + _buildPrepSection('call history (gong)', '#9b59b6', p.callHistory)
+        + _buildPrepSection('open support tickets', '#e67e22', p.openTickets)
+        + _buildPrepSection('competitor mentions', '#e74c3c', p.competitorMentions)
+        + _buildPrepSection("what they'll want to discuss", '#E8634A', p.theyWant)
+        + _buildPrepSection('you should bring up', '#4caf50', p.youShould)
+        + _buildPrepSection('risk signals', '#f44336', p.risk)
+        + _buildPrepSources(p.sources);
+    } else {
+      // Fall back to mock prep if API fails
+      _showMockPrep(body, ev);
+    }
+  })
+  .catch(() => {
+    const body = document.getElementById('prep-body');
+    if (body) _showMockPrep(body, ev);
+  });
+}
+
+function _buildPrepSection(label, color, content) {
+  if (!content || content === 'none found' || content === 'none detected') return '';
+  return `<div>
+    <div style="font-weight:700;font-size:0.75rem;color:${color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">${label}</div>
+    <div style="font-size:0.9rem;line-height:1.6;color:var(--text);">${content}</div>
+  </div>`;
+}
+
+function _buildPrepSources(sources) {
+  if (!sources) return '';
+  let html = '';
+  if (sources.gongCalls?.length) {
+    html += `<div>
+      <div style="font-weight:700;font-size:0.75rem;color:#9b59b6;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">recent calls</div>
+      ${sources.gongCalls.map(c => `<div style="font-size:0.85rem;padding:0.2rem 0;">
+        ${c.url ? `<a href="${c.url}" target="_blank" style="color:var(--accent);text-decoration:none;">🎙 ${c.title}</a>` : `🎙 ${c.title}`}
+      </div>`).join('')}
+    </div>`;
+  }
+  if (sources.tickets?.length) {
+    html += `<div>
+      <div style="font-weight:700;font-size:0.75rem;color:#e67e22;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">support tickets</div>
+      ${sources.tickets.map(t => `<div style="font-size:0.85rem;padding:0.2rem 0;">
+        ${t.url ? `<a href="${t.url}" target="_blank" style="color:var(--accent);text-decoration:none;">🎫 ${t.title}</a>` : `🎫 ${t.title}`}
+      </div>`).join('')}
+    </div>`;
+  }
+  return html;
+}
+
+function _showMockPrep(body, ev) {
+  const p = ev.prep;
+  if (!p) {
+    body.innerHTML = '<div style="text-align:center;padding:1rem;color:var(--text-light);font-size:0.9rem;">no prep data available for this meeting yet.</div>';
+    return;
+  }
+  body.innerHTML = `
+    <div>
+      <div style="font-weight:700;font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">context</div>
+      <div style="font-size:0.9rem;line-height:1.5;color:var(--text);">${p.context}</div>
+    </div>
+    ${p.agenda ? `<div>
+      <div style="font-weight:700;font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">agenda</div>
+      ${p.agenda.map(a => `<div style="font-size:0.9rem;padding:0.3rem 0;color:var(--text);">• ${a}</div>`).join('')}
+    </div>` : ''}
+    <div>
+      <div style="font-weight:700;font-size:0.75rem;color:#E8634A;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">what they'll want to discuss</div>
+      <div style="font-size:0.9rem;line-height:1.5;color:var(--text);">${p.theyWant}</div>
+    </div>
+    <div>
+      <div style="font-weight:700;font-size:0.75rem;color:#4caf50;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">you should bring up</div>
+      <div style="font-size:0.9rem;line-height:1.5;color:var(--text);">${p.youShould}</div>
+    </div>`;
 }
