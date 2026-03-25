@@ -39,8 +39,13 @@ async function _fetchRealCalendar() {
       window._originalGetMockCalendar = window._originalGetMockCalendar || (typeof getMockCalendar === 'function' ? getMockCalendar : null);
       window.getMockCalendar = () => _realCalendarEvents;
 
-      // Refresh the UPCOMING widget if it exists
-      _refreshUpcomingWidget();
+      // Re-render the dashboard with real data
+      const content = document.getElementById('dash-content');
+      const greetingArea = content?.querySelector('.dash-greeting-area');
+      if (greetingArea && !document.getElementById('dash-chat-area')) {
+        // Only refresh if we're not in chat mode
+        renderDashContent();
+      }
       return _realCalendarEvents;
     }
   } catch (e) {
@@ -339,23 +344,89 @@ function renderDashContent() {
   slackUnread.forEach(d => commsItems.push(`<div style="display:flex;gap:0.5rem;align-items:center;padding:0.25rem 0;"><span style="font-size:0.7rem;">💬</span><span style="font-size:0.78rem;font-weight:500;">${d.from}</span></div>`));
   emailUrgent.forEach(e => commsItems.push(`<div style="display:flex;gap:0.5rem;align-items:center;padding:0.25rem 0;"><span style="font-size:0.7rem;">📧</span><span style="font-size:0.78rem;font-weight:500;">${e.from}</span></div>`));
 
+  // Build NOW card — next upcoming meeting with smart treatment
+  const allEvents = (typeof getMockCalendar === 'function') ? getMockCalendar() : [];
+  const now = new Date();
+  const nowHours = now.getHours();
+  const nowMins = now.getMinutes();
+  const nowTotal = nowHours * 60 + nowMins;
+
+  // Find next non-allDay meeting
+  const nextMeeting = allEvents.find(ev => {
+    if (ev.allDay) return false;
+    const timeParts = ev.time?.match(/(\d+):(\d+)/);
+    if (!timeParts) return false;
+    const evTotal = parseInt(timeParts[1]) * 60 + parseInt(timeParts[2]);
+    return evTotal >= nowTotal - 15; // include current meetings (started up to 15 min ago)
+  });
+
+  // Remaining meetings after the next one
+  const laterMeetings = allEvents.filter(ev => {
+    if (ev.allDay || ev === nextMeeting) return false;
+    const timeParts = ev.time?.match(/(\d+):(\d+)/);
+    if (!timeParts) return false;
+    const evTotal = parseInt(timeParts[1]) * 60 + parseInt(timeParts[2]);
+    return evTotal > nowTotal;
+  }).slice(0, 4);
+
+  let nowCardHtml = '';
+  if (nextMeeting) {
+    const isExt = nextMeeting.isExternal;
+    const borderColor = isExt ? '#3B82F6' : '#10B981';
+    const badge = isExt ? '<span style="font-size:0.6rem;background:#3B82F6;color:white;padding:2px 8px;border-radius:50px;font-weight:600;letter-spacing:0.05em;">EXTERNAL</span>' : '<span style="font-size:0.6rem;background:#10B981;color:white;padding:2px 8px;border-radius:50px;font-weight:600;letter-spacing:0.05em;">INTERNAL</span>';
+    const people = nextMeeting.people?.join(', ') || nextMeeting.attendees?.filter(a => !a.self).map(a => a.name).join(', ') || '';
+    const joinBtn = nextMeeting.meetLink ? `<a href="${nextMeeting.meetLink}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;padding:8px 16px;background:${borderColor};color:white;border-radius:10px;font-size:0.78rem;font-weight:600;text-decoration:none;transition:opacity 0.2s;">Join →</a>` : '';
+    const prepBtn = `<button onclick="showMeetingPrep('${nextMeeting.title.replace(/'/g, "\\'")}')" style="display:inline-flex;align-items:center;gap:0.4rem;padding:8px 16px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:10px;font-size:0.78rem;font-weight:600;cursor:pointer;transition:all 0.2s;">${isExt ? '🔍 View Prep' : '📋 Suggested Agenda'}</button>`;
+
+    nowCardHtml = `
+      <div id="now-card" style="background:var(--surface);border-radius:16px;border-left:4px solid ${borderColor};padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:0.75rem;">
+          <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">UP NEXT</div>
+          ${badge}
+        </div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.15rem;color:var(--text);margin-bottom:0.25rem;">${nextMeeting.title}</div>
+        <div style="font-size:0.8rem;color:var(--text-light);margin-bottom:0.75rem;">${nextMeeting.time}${nextMeeting.end ? ' – ' + nextMeeting.end : ''}${people ? ' · ' + people : ''}</div>
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+          ${joinBtn}
+          ${prepBtn}
+        </div>
+      </div>`;
+  }
+
+  // Later meetings — compact pills
+  let laterHtml = '';
+  if (laterMeetings.length) {
+    laterHtml = `<div style="margin-bottom:1rem;">
+      <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">LATER TODAY</div>
+      ${laterMeetings.map(ev => {
+        const isExt = ev.isExternal;
+        const dot = isExt ? '🔵' : '🟢';
+        return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.35rem 0;">
+          <span style="font-size:0.5rem;">${dot}</span>
+          <span style="font-size:0.72rem;color:var(--text-light);min-width:36px;">${ev.time}</span>
+          <span style="font-size:0.8rem;color:var(--text);font-weight:500;">${ev.title}</span>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
+  // Messages summary
+  const msgCount = waitingCount + commsItems.length;
+  const msgHtml = msgCount > 0 ? `<div class="dash-widget-card" style="margin-bottom:1rem;">
+    <div class="dash-widget-title">💬 MESSAGES</div>
+    ${waitingCount > 0 ? `<div style="font-size:0.72rem;color:var(--coral);font-weight:600;margin-bottom:0.4rem;">${waitingCount} need your attention</div>` : ''}
+    ${commsItems.join('') || ''}
+  </div>` : '';
+
   greetingArea.innerHTML = `
     <h1 id="dash-greeting-text"></h1>
     <p class="dash-greeting-sub">how can i help you today?</p>
 
-    <div class="dash-widget-row" style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin:1.25rem 0;">
-      <div class="dash-widget-card">
-        <div class="dash-widget-title">📅 UPCOMING</div>
-        ${calHtml || '<div style="font-size:0.78rem;color:var(--text-light);">no meetings today</div>'}
-      </div>
-      <div class="dash-widget-card">
-        <div class="dash-widget-title">💬 MESSAGES</div>
-        ${waitingCount > 0 ? `<div style="font-size:0.72rem;color:var(--coral);font-weight:600;margin-bottom:0.4rem;">${waitingCount} need your attention</div>` : ''}
-        ${commsItems.join('') || '<div style="font-size:0.78rem;color:var(--text-light);">all clear</div>'}
-      </div>
-    </div>
+    ${nowCardHtml}
+    ${laterHtml}
+    ${msgHtml}
 
-    <div id="buddy-3d-inline" style="display:flex;justify-content:center;margin:0.5rem 0;pointer-events:none;"><canvas id="buddy-3d-canvas" width="160" height="160" style="width:160px;height:160px;pointer-events:none;"></canvas></div>
+    <div id="buddy-3d-inline" style="display:flex;justify-content:center;margin:0.5rem 0;pointer-events:none;"><canvas id="buddy-3d-canvas" width="140" height="140" style="width:140px;height:140px;pointer-events:none;"></canvas></div>
 
     <div class="dash-ai-input-wrap">
       <input type="text" id="dash-ai-input" placeholder="ask me anything..." onkeydown="if(event.key==='Enter')dashAskQuestion()" oninput="buddyReactToTyping(this.value)" />
