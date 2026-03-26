@@ -817,6 +817,300 @@ const ROLE_DATA = {
       },
     ]
   },
+
+  alliances: {
+    name: 'Alliances & Partnerships',
+    icon: '🤝',
+    desc: 'Partner pipeline, co-sell, marketplace, joint GTM',
+    subroles: ['Partner Manager', 'Alliance Lead', 'Partner Engineer', 'Channel Manager', 'BD Lead'],
+    focusAreas: [
+      {
+        id: 'partner-pipeline', name: 'Partner Pipeline', icon: '📊',
+        desc: 'Co-sell deals, partner-sourced revenue, joint wins',
+        actions: [
+          { title: 'Show all co-sell deals with ___ this quarter', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'partner', placeholder: 'e.g. Snowflake, Databricks, dbt'}], top: true },
+          { title: 'Partner-sourced pipeline vs direct pipeline by quarter', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Which partner co-sell deals are stuck in stage for 30+ days?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], top: true },
+          { title: 'Win rate comparison: partner-sourced vs direct deals', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Generate a partner QBR deck for ___', category: 'generator', type: 'ask', meta: 'Salesforce + Gong + Slides', tags: ['salesforce','gong'], template: [{slot: 'partner name', placeholder: 'e.g. Snowflake'}] },
+        ]
+      },
+      {
+        id: 'partner-health', name: 'Partner Health', icon: '💚',
+        desc: 'Engagement trends, declining activity, coverage gaps',
+        actions: [
+          { title: 'Which partners have declining co-sell activity vs last quarter?', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'What are ___ partners saying about us on Gong calls?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'partner', placeholder: 'e.g. Snowflake'}], top: true },
+          { title: 'Coverage gaps — accounts using ___ but not Fivetran', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], template: [{slot: 'partner tech', placeholder: 'e.g. Snowflake, Databricks'}], top: true },
+          { title: 'Partner NPS and sentiment from recent calls', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], multi: false, semantic: true, top: true },
+          { title: 'Alert me when a key partner account goes dark for 3+ weeks', category: 'automation', type: 'auto', meta: 'Salesforce + Slack', tags: ['salesforce','slack'] },
+        ]
+      },
+      {
+        id: 'marketplace', name: 'Marketplace', icon: '🏪',
+        desc: 'Marketplace sign-ups, conversions, partner connect',
+        actions: [
+          { title: 'How many sign-ups came through ___ Marketplace this month?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'marketplace', placeholder: 'AWS, Snowflake Partner Connect, Azure'}], top: true },
+          { title: 'Marketplace sign-up to paid conversion rate by channel', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Which marketplace listings drive the highest ACV deals?', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Marketplace revenue attribution by partner and quarter', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+        ]
+      },
+      {
+        id: 'joint-customers', name: 'Joint Customers', icon: '🔗',
+        desc: 'Shared customers, tech overlap, expansion targets',
+        actions: [
+          { title: 'Which ___ customers are also Fivetran customers?', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], template: [{slot: 'partner', placeholder: 'e.g. Snowflake, dbt'}], top: true },
+          { title: 'Joint customers NOT using ___ — upsell opportunity', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], template: [{slot: 'product/integration', placeholder: 'e.g. Transformations, Activations'}], top: true },
+          { title: 'Which customers use ___ as their warehouse?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'warehouse', placeholder: 'Snowflake, Databricks, BigQuery, Redshift'}], top: true },
+          { title: 'Prep me for my partner meeting with ___', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce','gong'], template: [{slot: 'partner', placeholder: 'e.g. Databricks'}], top: true },
+        ]
+      },
+    ]
+  },
+
+  it_security: {
+    name: 'IT & Security',
+    icon: '🔒',
+    desc: 'Infrastructure, access, compliance, incidents, vendor management',
+    subroles: ['IT Admin', 'Security Engineer', 'Security Analyst', 'IT Manager', 'Compliance Lead'],
+    focusAreas: [
+      {
+        id: 'my-incidents', name: 'My Incidents', icon: '🚨',
+        desc: 'Security incidents, alerts, response tracking',
+        actions: [
+          { title: 'Open security incidents assigned to me or my team', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'All P1/P2 security tickets in the last ___ days', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira','aisql'], template: [{slot: 'days', placeholder: '30', options: ['7','30','90']}], top: true },
+          { title: 'Mean time to detect and resolve security incidents this quarter', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Trending security alert types — what\'s spiking?', category: 'question', type: 'ask', meta: 'AISQL + PagerDuty', tags: ['aisql','pagerduty'], multi: true, semantic: true, top: true },
+          { title: 'Generate an incident summary report for leadership', category: 'generator', type: 'ask', meta: 'Jira + AISQL', tags: ['jira','aisql'], multi: true, semantic: true },
+        ]
+      },
+      {
+        id: 'access-compliance', name: 'Access & Compliance', icon: '🔑',
+        desc: 'Access reviews, SOC2, audit prep, policy compliance',
+        actions: [
+          { title: 'Which users have production database access?', category: 'question', type: 'ask', meta: 'Okta + AISQL', tags: ['okta','aisql'], multi: true, semantic: false, top: true },
+          { title: 'Unused licenses by tool — Slack, Zoom, GitHub, Figma', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql','okta'], multi: true, semantic: false, top: true },
+          { title: 'SOC2-relevant Jira tickets completed this quarter', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Users who haven\'t completed security training', category: 'question', type: 'ask', meta: 'HRIS + Okta', tags: ['hris','okta'], multi: true, semantic: false, top: true },
+          { title: 'Generate a quarterly access review report', category: 'generator', type: 'ask', meta: 'Okta + AISQL', tags: ['okta','aisql'], multi: true, semantic: true },
+        ]
+      },
+      {
+        id: 'vendor-tools', name: 'Vendor & Tools', icon: '🛠️',
+        desc: 'Vendor management, tool adoption, spend',
+        actions: [
+          { title: 'Which tools have the lowest adoption across the org?', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql','okta'], multi: true, semantic: true, top: true },
+          { title: 'Tool spend by vendor this quarter vs last', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql','finance'], multi: true, semantic: false, top: true },
+          { title: 'Which vendors handle PII and when were they last reviewed?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Overlap analysis — which tools have redundant functionality?', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql','okta'], multi: true, semantic: true, top: true },
+          { title: 'Auto-flag when a new SaaS vendor is added without security review', category: 'automation', type: 'auto', meta: 'Okta + Slack', tags: ['okta','slack'] },
+        ]
+      },
+      {
+        id: 'infra-health', name: 'Infra Health', icon: '🖥️',
+        desc: 'System uptime, service health, capacity',
+        actions: [
+          { title: 'Internal service SLA compliance this quarter', category: 'question', type: 'ask', meta: 'AISQL + DataDog', tags: ['aisql','datadog'], multi: true, semantic: false, top: true },
+          { title: 'Which internal services had the most downtime this month?', category: 'question', type: 'ask', meta: 'AISQL + PagerDuty', tags: ['aisql','pagerduty'], multi: true, semantic: true, top: true },
+          { title: 'Cloud cost breakdown by team and service', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: false, top: true },
+          { title: 'Alert me when any internal service P99 latency exceeds ___ms', category: 'automation', type: 'auto', meta: 'DataDog + Slack', tags: ['datadog','slack'], template: [{slot: 'threshold', placeholder: '500', options: ['200','500','1000','2000']}] },
+        ]
+      },
+    ]
+  },
+
+  legal: {
+    name: 'Legal',
+    icon: '⚖️',
+    desc: 'Contracts, compliance, privacy, procurement, risk',
+    subroles: ['Legal Counsel', 'Contracts Manager', 'Privacy Lead', 'Compliance Analyst', 'Legal Ops'],
+    focusAreas: [
+      {
+        id: 'my-contracts', name: 'My Contracts', icon: '📄',
+        desc: 'Contract status, renewals, terms, NDAs',
+        actions: [
+          { title: 'Enterprise contracts expiring in the next ___ days', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], template: [{slot: 'days', placeholder: '90', options: ['30','60','90','180']}], top: true },
+          { title: 'Do we have an NDA with ___?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'company', placeholder: 'e.g. Okta'}], top: true },
+          { title: 'Average time from legal review request to signed contract', category: 'question', type: 'ask', meta: 'Jira + Salesforce + AISQL', tags: ['jira','salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Open legal review requests by priority and age', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Alert me when a contract review has been pending 5+ business days', category: 'automation', type: 'auto', meta: 'Jira + Slack', tags: ['jira','slack'], top: true },
+        ]
+      },
+      {
+        id: 'privacy-data', name: 'Privacy & Data', icon: '🛡️',
+        desc: 'PII tracking, data flows, GDPR/CCPA compliance',
+        actions: [
+          { title: 'Which connectors handle PII and where does that data land?', category: 'question', type: 'ask', meta: 'Fivetran Schema + AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Data subject access requests open and their status', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Which customers have DPA agreements in place?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], top: true },
+          { title: 'PII data flow mapping across our connector ecosystem', category: 'question', type: 'ask', meta: 'AISQL + Fivetran Schema', tags: ['aisql'], multi: true, semantic: true, top: true },
+        ]
+      },
+      {
+        id: 'risk-litigation', name: 'Risk & Disputes', icon: '⚠️',
+        desc: 'Customer disputes, escalations, account history',
+        actions: [
+          { title: 'Full account history for ___ — all communications, tickets, calls', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk + Gong', tags: ['salesforce','zendesk','gong'], template: [{slot: 'account', placeholder: 'e.g. Acme Corp'}], top: true },
+          { title: 'Customers with open disputes or credit requests', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk + AISQL', tags: ['salesforce','zendesk','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Escalation history for ___ over the past year', category: 'question', type: 'ask', meta: 'Zendesk + Jira', tags: ['zendesk','jira'], template: [{slot: 'account', placeholder: 'e.g. Okta'}], top: true },
+          { title: 'Generate a risk briefing for ___ including all touchpoints', category: 'generator', type: 'ask', meta: 'Salesforce + Zendesk + Gong + Jira', tags: ['salesforce','zendesk','gong','jira'], template: [{slot: 'account', placeholder: 'account name'}] },
+        ]
+      },
+      {
+        id: 'procurement', name: 'Procurement Review', icon: '🏷️',
+        desc: 'Vendor contracts, spend approval, compliance',
+        actions: [
+          { title: 'Vendor contracts up for renewal in the next quarter', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql','finance'], multi: true, semantic: false, top: true },
+          { title: 'Total spend by vendor category this fiscal year', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql','finance'], multi: true, semantic: false, top: true },
+          { title: 'Which vendor agreements lack standard security clauses?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Generate a procurement compliance summary for audit', category: 'generator', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql','finance'], multi: true, semantic: true },
+        ]
+      },
+    ]
+  },
+
+  internal_ops: {
+    name: 'Internal Operations',
+    icon: '⚙️',
+    desc: 'Process improvement, cross-functional projects, tooling, reporting',
+    subroles: ['Ops Manager', 'Business Analyst', 'Program Manager', 'Systems Admin', 'Ops Lead'],
+    focusAreas: [
+      {
+        id: 'process-metrics', name: 'Process Metrics', icon: '📈',
+        desc: 'Bottlenecks, cycle times, efficiency trends',
+        actions: [
+          { title: 'Average lead-to-close time by segment and quarter', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Where are deals getting stuck the longest in the pipeline?', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Support ticket resolution time by priority and team', category: 'question', type: 'ask', meta: 'Zendesk + AISQL', tags: ['zendesk','aisql'], multi: true, semantic: false, top: true },
+          { title: 'Handoff time between teams for ___', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'process', placeholder: 'e.g. sales-to-CS, support-to-eng, lead-to-opp'}], top: true },
+          { title: 'Generate a process efficiency report with bottleneck analysis', category: 'generator', type: 'ask', meta: 'Salesforce + Zendesk + AISQL', tags: ['salesforce','zendesk','aisql'], multi: true, semantic: true },
+        ]
+      },
+      {
+        id: 'cross-team', name: 'Cross-Team Health', icon: '🔄',
+        desc: 'Org-wide dashboards, team comparisons, alignment',
+        actions: [
+          { title: 'Key metrics dashboard across Sales, Support, Engineering, and Product', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk + Jira + AISQL', tags: ['salesforce','zendesk','jira','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Which teams have the most overdue Jira tickets?', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira','aisql'], multi: true, semantic: false, top: true },
+          { title: 'Meeting load analysis — which teams spend the most time in meetings?', category: 'question', type: 'ask', meta: 'Google Calendar + AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'OKR progress by team this quarter', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira','aisql'], multi: true, semantic: true, top: true },
+        ]
+      },
+      {
+        id: 'tool-adoption', name: 'Tool Adoption', icon: '🧰',
+        desc: 'Which tools are being used, by whom, and how much',
+        actions: [
+          { title: 'Internal tool adoption rates by department', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql','okta'], multi: true, semantic: true, top: true },
+          { title: 'Which tools have the lowest ROI based on spend vs usage?', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql','finance'], multi: true, semantic: true, top: true },
+          { title: 'New hire tool adoption — how quickly do they ramp?', category: 'question', type: 'ask', meta: 'AISQL + HRIS + Okta', tags: ['aisql','hris','okta'], multi: true, semantic: true, top: true },
+          { title: 'Triage adoption by department — who\'s using AI and who isn\'t?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+        ]
+      },
+      {
+        id: 'planning-reporting', name: 'Planning & Reporting', icon: '📊',
+        desc: 'Quarterly planning, budget tracking, exec reporting',
+        actions: [
+          { title: 'Budget vs actuals by department this quarter', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql','finance'], multi: true, semantic: false, top: true },
+          { title: 'Headcount plan vs actual by team', category: 'question', type: 'ask', meta: 'HRIS + Finance + AISQL', tags: ['hris','finance','aisql'], multi: true, semantic: false, top: true },
+          { title: 'Build a weekly ops report for leadership', category: 'generator', type: 'ask', meta: 'Salesforce + Zendesk + Jira + AISQL', tags: ['salesforce','zendesk','jira','aisql'], multi: true, semantic: true, top: true },
+          { title: 'What changed week-over-week across our core business metrics?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+        ]
+      },
+    ]
+  },
+
+  systems_engineering: {
+    name: 'Systems Engineering',
+    icon: '🖧',
+    desc: 'Infrastructure, deployment, CI/CD, monitoring, platform reliability',
+    subroles: ['Platform Engineer', 'SRE', 'DevOps Engineer', 'Infra Lead', 'Systems Architect'],
+    focusAreas: [
+      {
+        id: 'my-services', name: 'My Services', icon: '🔧',
+        desc: 'Services you own — health, latency, errors',
+        actions: [
+          { title: 'Health check on ___ — latency, error rate, throughput', category: 'question', type: 'ask', meta: 'DataDog + AISQL', tags: ['datadog','aisql'], template: [{slot: 'service name', placeholder: 'e.g. connector-service, sync-worker'}], top: true },
+          { title: 'Which of my services have degraded in the last 24 hours?', category: 'question', type: 'ask', meta: 'DataDog + AISQL', tags: ['datadog','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Service dependency map for ___', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'service', placeholder: 'service name'}], top: true },
+          { title: 'Alert me when ___ p99 latency exceeds ___ms', category: 'automation', type: 'auto', meta: 'DataDog + Slack', tags: ['datadog','slack'], template: [{slot: 'service', placeholder: 'service name'}, {slot: 'threshold', placeholder: '500'}], top: true },
+          { title: 'What\'s the cloud cost for ___ this month vs last?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'service', placeholder: 'service name'}] },
+        ]
+      },
+      {
+        id: 'deployments', name: 'Deployments', icon: '🚀',
+        desc: 'Deploy frequency, rollbacks, build health',
+        actions: [
+          { title: 'Deployment frequency and rollback rate this ___', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github','aisql'], template: [{slot: 'period', placeholder: 'week', options: ['week','month','quarter']}], top: true },
+          { title: 'My recent deployments — did any cause regressions?', category: 'question', type: 'ask', meta: 'GitHub + DataDog + AISQL', tags: ['github','datadog','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Average build time by repo — which are slowest?', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github','aisql'], multi: true, semantic: false, top: true },
+          { title: 'Change failure rate by team this quarter', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github','aisql'], multi: true, semantic: true, top: true },
+        ]
+      },
+      {
+        id: 'on-call', name: 'On-Call', icon: '📟',
+        desc: 'Pages, alert fatigue, incident response',
+        actions: [
+          { title: 'Who\'s been paged the most this month and for what?', category: 'question', type: 'ask', meta: 'PagerDuty + AISQL', tags: ['pagerduty','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Top 10 noisiest alerts — which should be tuned or muted?', category: 'question', type: 'ask', meta: 'PagerDuty + AISQL', tags: ['pagerduty','aisql'], multi: true, semantic: true, top: true },
+          { title: 'MTTR trend for production incidents this quarter', category: 'question', type: 'ask', meta: 'Jira + PagerDuty + AISQL', tags: ['jira','pagerduty','aisql'], multi: true, semantic: true, top: true },
+          { title: 'Generate a post-incident review for incident ___', category: 'generator', type: 'ask', meta: 'Jira + PagerDuty + Slack', tags: ['jira','pagerduty','slack'], template: [{slot: 'incident ID or name', placeholder: 'e.g. INC-1234'}], top: true },
+        ]
+      },
+      {
+        id: 'capacity', name: 'Capacity & Cost', icon: '💾',
+        desc: 'Storage growth, compute scaling, cost optimization',
+        actions: [
+          { title: 'Storage growth projection for the next quarter', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Cloud cost per request by service — where are we overspending?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Which services have the most idle capacity?', category: 'question', type: 'ask', meta: 'AISQL + DataDog', tags: ['aisql','datadog'], multi: true, semantic: true, top: true },
+          { title: 'Compute utilization by team and environment', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: false, top: true },
+          { title: 'Generate a monthly infra cost report with optimization recommendations', category: 'generator', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true },
+        ]
+      },
+    ]
+  },
+
+  customer_solutions: {
+    name: 'Customer Solutions Group',
+    icon: '🎯',
+    desc: 'Implementation, onboarding, technical success, customer health',
+    subroles: ['Solutions Architect', 'Implementation Engineer', 'CSM', 'Technical Account Manager', 'Onboarding Lead'],
+    focusAreas: [
+      {
+        id: 'my-customers', name: 'My Customers', icon: '👤',
+        desc: 'Health, usage, risk for your assigned accounts',
+        actions: [
+          { title: 'Customer health scorecard for ___', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk + AISQL', tags: ['salesforce','zendesk','aisql'], template: [{slot: 'account', placeholder: 'e.g. Okta'}], top: true },
+          { title: 'Which of my customers have declining connector usage?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Open support tickets across all my accounts by priority', category: 'question', type: 'ask', meta: 'Zendesk + Salesforce', tags: ['zendesk','salesforce'], multi: true, semantic: false, top: true },
+          { title: 'Which customers haven\'t been contacted in ___ days?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce','gong'], template: [{slot: 'days', placeholder: '30', options: ['14','30','60']}], top: true },
+          { title: 'Auto-alert me when a customer\'s sync failure rate spikes', category: 'automation', type: 'auto', meta: 'AISQL + Slack', tags: ['aisql','slack'] },
+        ]
+      },
+      {
+        id: 'onboarding', name: 'Onboarding', icon: '🏗️',
+        desc: 'Implementation progress, time-to-value, blockers',
+        actions: [
+          { title: 'Which customers are in onboarding and what stage?', category: 'question', type: 'ask', meta: 'Salesforce + Jira', tags: ['salesforce','jira'], multi: true, semantic: false, top: true },
+          { title: 'Average time-to-first-sync by connector type', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
+          { title: 'Which onboarding implementations are behind schedule?', category: 'question', type: 'ask', meta: 'Jira + Salesforce', tags: ['jira','salesforce'], multi: true, semantic: true, top: true },
+          { title: 'Common onboarding blockers this quarter', category: 'question', type: 'ask', meta: 'Jira + Zendesk + AISQL', tags: ['jira','zendesk','aisql'], multi: true, semantic: true, top: true },
+        ]
+      },
+      {
+        id: 'renewals-expansion', name: 'Renewals & Expansion', icon: '📈',
+        desc: 'Upcoming renewals, expansion signals, churn risk',
+        actions: [
+          { title: 'My renewals coming up in the next ___ days', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'days', placeholder: '90', options: ['30','60','90']}], top: true },
+          { title: 'Which of my accounts show expansion signals?', category: 'question', type: 'ask', meta: 'AISQL + Salesforce', tags: ['aisql','salesforce'], multi: true, semantic: true, top: true },
+          { title: 'Churn risk analysis for ___ — usage trends, sentiment, tickets', category: 'question', type: 'ask', meta: 'AISQL + Zendesk + Gong + Salesforce', tags: ['aisql','zendesk','gong','salesforce'], template: [{slot: 'account', placeholder: 'e.g. Amplify Life'}], top: true },
+          { title: 'What did ___ say on their last Gong call about renewal?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'account', placeholder: 'account name'}], top: true },
+        ]
+      },
+    ]
+  },
 };
 
 // ════════════════════════════════════════════════════════
@@ -847,6 +1141,8 @@ const TAG_COLORS = {
   'culture-amp': { bg: '#fce4ec', text: '#c2185b', label: 'Culture Amp' },
   billing: { bg: '#ccfbf1', text: '#0d7377', label: 'Billing' },
   okta: { bg: '#dbeafe', text: '#1e40af', label: 'Okta' },
+  aisql: { bg: '#d1fae5', text: '#065f46', label: 'Fivetran AI' },
+  'fivetran-schema': { bg: '#d1fae5', text: '#065f46', label: 'Fivetran Schema' },
   fivetran: { bg: '#dbeafe', text: '#1565c0', label: 'Fivetran' },
   outreach: { bg: '#ede9fe', text: '#6d28d9', label: 'Outreach' },
   gainsight: { bg: '#e8f5e9', text: '#2e7d32', label: 'Gainsight' },
