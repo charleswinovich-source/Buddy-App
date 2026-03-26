@@ -633,6 +633,162 @@ const TRIAGE_KEY = process.env.TRIAGE_API_KEY;
 if (!TRIAGE_KEY) console.warn('⚠️  TRIAGE_API_KEY not set — knowledge features disabled');
 const TRIAGE_BASE = 'https://api.triage.cx/token-server/mcp';
 
+// ── Fivetran AI MCP (FivetranChat 3.0 — data + analytics) ──
+const FIVETRAN_AI_BASE = 'https://api.triage.cx/token-server/mcp?kb_name=FivetranKnowledge&search_strategy=full_fivetran';
+
+async function callFivetranAITool(toolName, args = {}) {
+  if (!TRIAGE_KEY) return null;
+  const now = Date.now();
+  const gap = now - _lastTriageRequest;
+  if (gap < MIN_REQUEST_GAP) await new Promise(r => setTimeout(r, MIN_REQUEST_GAP - gap));
+  _lastTriageRequest = Date.now();
+
+  try {
+    const res = await fetch(FIVETRAN_AI_BASE, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${TRIAGE_KEY}`,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json, text/event-stream',
+      },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        method: 'tools/call',
+        id: Date.now(),
+        params: { name: toolName, arguments: args },
+      }),
+    });
+    const text = await res.text();
+    const dataLines = text.split('\n').filter(l => l.startsWith('data: '));
+    for (const line of dataLines) {
+      try {
+        const json = JSON.parse(line.substring(6));
+        if (json.result?.content?.[0]?.text) return json.result.content[0].text;
+      } catch (e) {}
+    }
+    return null;
+  } catch (e) {
+    console.log(`[fivetran-ai] Error calling ${toolName}:`, e.message);
+    return null;
+  }
+}
+
+// Detect if a question is an analytics/data question
+function _isDataQuestion(question) {
+  const lower = question.toLowerCase();
+  const dataPatterns = [
+    'how many', 'what is the', 'show me', 'compare', 'trend', 'breakdown',
+    'churn', 'arr', 'revenue', 'pipeline', 'conversion', 'retention',
+    'support tickets', 'escalation', 'connector failure', 'sync failure',
+    'query', 'table', 'schema', 'dataset', 'sql', 'metric',
+    'weekly', 'monthly', 'quarterly', 'year over year', 'yoy',
+    'top customers', 'top accounts', 'biggest', 'smallest', 'fastest', 'slowest',
+    'performance', 'usage', 'adoption', 'growth', 'decline',
+    'what changed', 'why is', 'root cause', 'analyze', 'analysis',
+    'segment', 'region', 'by team', 'by product', 'by connector',
+    'forecast', 'predict', 'estimate', 'what if',
+    'open tickets', 'ticket volume', 'support volume',
+    'which customers', 'which accounts', 'who are the',
+    'average', 'median', 'sum', 'count', 'percentage', 'ratio',
+  ];
+  return dataPatterns.some(p => lower.includes(p));
+}
+
+// Run the full Fivetran AI analytics workflow
+async function runFivetranAIWorkflow(question) {
+  console.log(`[fivetran-ai] Starting analytics workflow for: "${question.substring(0, 60)}"`);
+  const steps = [];
+
+  // Step 1: Search for relevant tables
+  const searchResult = await callFivetranAITool('search_tables', { query: question });
+  if (!searchResult) return { ok: false, error: 'Could not search tables' };
+  steps.push({ step: 'search_tables', result: searchResult });
+  console.log(`[fivetran-ai] search_tables complete`);
+
+  // Step 2: Parse table names from search result, pick top candidates
+  let tables = [];
+  try {
+    const parsed = JSON.parse(searchResult);
+    if (Array.isArray(parsed)) tables = parsed.slice(0, 3);
+    else if (parsed.tables) tables = parsed.tables.slice(0, 3);
+  } catch (e) {
+    // searchResult might be plain text — extract table refs
+    const tableMatches = searchResult.match(/"[^"]+"\."[^"]+"\."[^"]+"/g) || [];
+    tables = tableMatches.slice(0, 3).map(t => ({ fqn: t.replace(/"/g, '') }));
+  }
+
+  // Step 3: Deep dive on top table
+  let deepDive = null;
+  let schemaFqn = null;
+  if (tables.length > 0) {
+    const topTable = tables[0].fqn || tables[0].table_fqn || tables[0].name || '';
+    if (topTable) {
+      deepDive = await callFivetranAITool('table_deep_dive', { table_fqn: topTable });
+      steps.push({ step: 'table_deep_dive', table: topTable, result: deepDive?.substring(0, 2000) });
+      // Extract schema from table FQN
+      const parts = topTable.split('.');
+      if (parts.length >= 2) schemaFqn = parts.slice(0, -1).join('.');
+    }
+  }
+
+  // Step 4: Get schema instructions
+  let schemaInstr = null;
+  if (schemaFqn) {
+    schemaInstr = await callFivetranAITool('schema_instructions', { schema_fqn: schemaFqn });
+    steps.push({ step: 'schema_instructions', schema: schemaFqn, result: schemaInstr?.substring(0, 1500) });
+    console.log(`[fivetran-ai] schema_instructions complete`);
+  }
+
+  // Step 5: Let Claude write the AISQL based on context, then execute
+  // Build context for Claude to write the query
+  const queryContext = `
+FIVETRAN AI DATA CONTEXT:
+Search results: ${searchResult?.substring(0, 2000)}
+${deepDive ? `Table details: ${deepDive.substring(0, 2000)}` : ''}
+${schemaInstr ? `Schema instructions: ${schemaInstr.substring(0, 1500)}` : ''}
+
+USER QUESTION: ${question}
+
+Based on the above metadata, write an AISQL query to answer this question. Follow schema instructions exactly. Use semantic_relevance() for text search, not LIKE. Use double quotes for identifiers, not backticks. Always include a LIMIT.
+Return ONLY the SQL query, nothing else.`;
+
+  // Ask Claude to write the SQL
+  const sqlResponse = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': ANTHROPIC_KEY,
+      'anthropic-version': '2023-06-01',
+    },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 800,
+      system: 'You are an expert AISQL analyst. Write a single SQL query. Return ONLY the query, no explanation.',
+      messages: [{ role: 'user', content: queryContext }],
+    }),
+  });
+  const sqlData = await sqlResponse.json();
+  const sqlQuery = sqlData.content?.[0]?.text?.replace(/```sql\n?/g, '').replace(/```\n?/g, '').trim();
+
+  if (!sqlQuery) return { ok: false, error: 'Could not generate query', steps };
+  steps.push({ step: 'generate_sql', query: sqlQuery });
+  console.log(`[fivetran-ai] Generated SQL: ${sqlQuery.substring(0, 100)}...`);
+
+  // Step 6: Execute the query
+  const execResult = await callFivetranAITool('execute_aisql', { query: sqlQuery });
+  steps.push({ step: 'execute_aisql', result: execResult?.substring(0, 3000) });
+  console.log(`[fivetran-ai] Query executed`);
+
+  return {
+    ok: true,
+    question,
+    sqlQuery,
+    result: execResult,
+    steps,
+    tables: tables.map(t => t.fqn || t.table_fqn || t.name || ''),
+  };
+}
+
 // ── Request cache + throttle — avoid hammering Triage ──
 const _triageCache = new Map();
 const CACHE_TTL = 5 * 60 * 1000; // 5 min TTL
@@ -994,7 +1150,66 @@ RULES:
 - If someone asks to message someone, confirm who and what before sending
 - Always be on the user's side`;
 
-    // Query Fivetran Knowledge for context
+    // Check if this is a data/analytics question → route to Fivetran AI
+    if (_isDataQuestion(message) && TRIAGE_KEY) {
+      console.log(`[chat] Detected data question, routing to Fivetran AI workflow`);
+      try {
+        const aiResult = await runFivetranAIWorkflow(message);
+        if (aiResult.ok && aiResult.result) {
+          // Have Claude interpret the results in Buddy's voice
+          const interpretPrompt = `${systemPrompt}
+
+FIVETRAN AI DATA RESULTS:
+Question: ${aiResult.question}
+SQL Query: ${aiResult.sqlQuery}
+Tables used: ${aiResult.tables?.join(', ')}
+Raw result: ${aiResult.result?.substring(0, 3000)}
+
+Interpret these data results for ${name}. Present the answer clearly:
+1. Start with the key finding in one sentence
+2. Show the most important numbers or trends
+3. If there's a table, format it cleanly in markdown
+4. End with 2-3 follow-up questions they could ask (as suggestions)
+
+Keep your personality — warm, lowercase, confident. But be precise with the data.`;
+
+          const interpretResp = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': ANTHROPIC_KEY,
+              'anthropic-version': '2023-06-01',
+            },
+            body: JSON.stringify({
+              model: 'claude-sonnet-4-20250514',
+              max_tokens: 1000,
+              system: interpretPrompt,
+              messages: [{ role: 'user', content: message }],
+            }),
+          });
+          const interpretData = await interpretResp.json();
+          if (interpretData.content?.[0]?.text) {
+            return res.json({
+              ok: true,
+              reply: interpretData.content[0].text,
+              canAnswer: true,
+              category: 'data',
+              dataContext: {
+                sqlQuery: aiResult.sqlQuery,
+                tables: aiResult.tables,
+                stepsCount: aiResult.steps?.length || 0,
+              },
+            });
+          }
+        }
+        // If Fivetran AI workflow failed, fall through to regular chat
+        console.log(`[chat] Fivetran AI workflow returned no result, falling back to regular chat`);
+      } catch (e) {
+        console.log(`[chat] Fivetran AI workflow error: ${e.message}, falling back`);
+      }
+    }
+
+    // Regular chat flow — query knowledge + Claude
     let knowledgeContext = '';
     try {
       const sources = _getRelevantSources(message);
@@ -1012,7 +1227,7 @@ RULES:
     // Build message history for context
     const messages = [];
     if (history?.length) {
-      for (const h of history.slice(-10)) { // last 10 messages for context
+      for (const h of history.slice(-10)) {
         messages.push({ role: h.who === 'user' ? 'user' : 'assistant', content: h.text });
       }
     }

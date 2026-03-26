@@ -280,9 +280,38 @@ function addMessage(who, text, containerId, options = {}) {
   const msgs = document.getElementById(containerId);
   const div = document.createElement('div');
   div.className = `msg ${who}`;
-  // Support line breaks and bullet points — sanitize first
-  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  div.innerHTML = safe.replace(/\n/g, '<br>');
+
+  // Support markdown-lite: bold, code blocks, bullet points
+  let safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Convert markdown tables to simple HTML
+  safe = safe.replace(/\|(.+)\|/g, (m) => {
+    const cells = m.split('|').filter(c => c.trim());
+    if (cells.every(c => /^[\s-]+$/.test(c))) return ''; // separator row
+    return '<tr>' + cells.map(c => `<td style="padding:4px 8px;border-bottom:1px solid var(--border);font-size:0.85rem;">${c.trim()}</td>`).join('') + '</tr>';
+  });
+  if (safe.includes('<tr>')) safe = `<table style="border-collapse:collapse;width:100%;margin:0.5rem 0;">${safe}</table>`;
+  // Bold
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // Inline code
+  safe = safe.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:2px 6px;border-radius:4px;font-size:0.85em;">$1</code>');
+  // Line breaks
+  safe = safe.replace(/\n/g, '<br>');
+
+  div.innerHTML = safe;
+
+  // Add data context badge if this is a data response
+  if (options.dataContext) {
+    const ctx = options.dataContext;
+    const badge = document.createElement('div');
+    badge.style.cssText = 'margin-top:0.5rem;';
+    badge.innerHTML = `
+      <div style="display:inline-flex;align-items:center;gap:0.4rem;padding:4px 10px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);cursor:pointer;font-size:0.72rem;color:#3B82F6;font-weight:600;" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+        📊 powered by fivetran ai · ${ctx.stepsCount} steps · ${ctx.tables?.length || 0} tables
+      </div>
+      <div style="display:none;margin-top:0.5rem;padding:0.75rem;background:rgba(0,0,0,0.03);border-radius:8px;font-family:monospace;font-size:0.75rem;color:var(--text-mid);white-space:pre-wrap;overflow-x:auto;">${(ctx.sqlQuery || '').replace(/</g,'&lt;')}</div>`;
+    div.appendChild(badge);
+  }
+
   if (options.id) div.id = options.id;
   msgs.appendChild(div);
   msgs.scrollTop = msgs.scrollHeight;

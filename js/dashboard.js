@@ -2077,7 +2077,8 @@ function _startDashChat(question) {
 
       _getAIResponse(question).then(response => {
         document.getElementById('dash-typing')?.remove();
-        _addDashChatMsg('buddy', response);
+        _addDashChatMsg('buddy', response, _lastDataContext);
+        _lastDataContext = null;
         chatArea.scrollTop = chatArea.scrollHeight;
       });
     }, thinkTime);
@@ -2088,13 +2089,35 @@ function _startDashChat(question) {
   }, delay);
 }
 
-function _addDashChatMsg(who, text) {
+let _lastDataContext = null;
+
+function _addDashChatMsg(who, text, dataContext) {
   const chatArea = document.getElementById('dash-chat-area');
   if (!chatArea) return;
   const div = document.createElement('div');
   div.className = `dash-chat-msg ${who}`;
-  const safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  let safe = text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Markdown-lite: bold, code
+  safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  safe = safe.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-size:0.85em;">$1</code>');
   div.innerHTML = safe.replace(/\n/g, '<br>');
+
+  // Add Fivetran AI data badge if this was a data response
+  if (dataContext) {
+    const badge = document.createElement('div');
+    badge.style.cssText = 'margin-top:0.75rem;';
+    const sqlSafe = (dataContext.sqlQuery || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    badge.innerHTML = `
+      <div onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'" style="display:inline-flex;align-items:center;gap:0.4rem;padding:5px 12px;border-radius:8px;background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);cursor:pointer;font-size:0.72rem;color:#3B82F6;font-weight:600;transition:all 0.2s;">
+        📊 powered by fivetran ai · ${dataContext.stepsCount || 0} steps · ${dataContext.tables?.length || 0} tables
+      </div>
+      <div style="display:none;margin-top:0.5rem;padding:0.75rem;background:rgba(0,0,0,0.04);border-radius:10px;font-family:'SF Mono',monospace;font-size:0.72rem;color:var(--text-mid);white-space:pre-wrap;overflow-x:auto;line-height:1.5;border:1px solid rgba(0,0,0,0.06);">
+        <div style="font-weight:700;color:var(--text);margin-bottom:0.4rem;font-family:'Inter',sans-serif;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;">SQL Query</div>
+        ${sqlSafe}
+        ${dataContext.tables?.length ? `<div style="margin-top:0.5rem;font-weight:700;color:var(--text);font-family:'Inter',sans-serif;font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;">Tables</div>${dataContext.tables.join(', ')}` : ''}
+      </div>`;
+    div.appendChild(badge);
+  }
 
   if (who === 'buddy') {
     const msgIdx = _dashMsgIdx++;
@@ -2237,6 +2260,7 @@ async function _getAIResponse(question) {
       _chatHistory.push({ who: 'buddy', text: data.reply });
       _lastBuddyCanAnswer = data.canAnswer !== undefined ? data.canAnswer : true;
       _lastBuddyCategory = data.category || 'unknown';
+      _lastDataContext = data.dataContext || null; // Fivetran AI data context
       // Save to extension clipboard if the response contains actionable content
       _maybeSaveToClipboard(question, data.reply, data.category);
       return data.reply;
