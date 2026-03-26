@@ -410,6 +410,38 @@ function renderDashContent() {
     </div>`;
   }
 
+  // Completed meetings — past meetings today
+  const doneMeetings = allEvents.filter(ev => {
+    if (ev.allDay) return false;
+    const timeParts = ev.time?.match(/(\d+):(\d+)/);
+    if (!timeParts) return false;
+    const endParts = ev.end?.match(/(\d+):(\d+)/);
+    if (!endParts) return false;
+    const endTotal = parseInt(endParts[1]) * 60 + parseInt(endParts[2]);
+    return endTotal <= nowTotal && ev !== nextMeeting;
+  }).slice(-4); // last 4 completed meetings
+
+  const priv = STATE.privacy || {};
+  let doneHtml = '';
+  if (doneMeetings.length) {
+    doneHtml = `<div style="margin-bottom:1rem;">
+      <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">DONE</div>
+      ${doneMeetings.map(ev => {
+        const isExt = ev.isExternal;
+        const dot = isExt ? '🔵' : '🟢';
+        const summaryBtn = priv.postMeetingTranscript
+          ? `<button onclick="processMeeting('${ev.title.replace(/'/g, "\\'")}')" style="font-size:0.65rem;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:none;color:var(--text-light);cursor:pointer;">get summary</button>`
+          : '';
+        return `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.35rem 0;opacity:0.6;">
+          <span style="font-size:0.5rem;">${dot}</span>
+          <span style="font-size:0.72rem;color:var(--text-light);min-width:36px;">${ev.time}</span>
+          <span style="font-size:0.8rem;color:var(--text);font-weight:500;flex:1;">${ev.title}</span>
+          ${summaryBtn}
+        </div>`;
+      }).join('')}
+    </div>`;
+  }
+
   // Messages summary
   const msgCount = waitingCount + commsItems.length;
   const msgHtml = msgCount > 0 ? `<div class="dash-widget-card" style="margin-bottom:1rem;">
@@ -424,6 +456,7 @@ function renderDashContent() {
 
     ${nowCardHtml}
     ${laterHtml}
+    ${doneHtml}
     ${msgHtml}
 
     <div id="buddy-3d-inline" style="display:flex;justify-content:center;margin:0.5rem 0;pointer-events:none;"><canvas id="buddy-3d-canvas" width="140" height="140" style="width:140px;height:140px;pointer-events:none;"></canvas></div>
@@ -2139,6 +2172,87 @@ function _legacyRenderDashBody_UNUSED() {
 
   // Spacer for bottom nav
   body.innerHTML += '<div style="height:4rem"></div>';
+}
+
+// Process a completed meeting — pull transcript, summarize, extract actions
+function processMeeting(title) {
+  const events = (typeof getMockCalendar === 'function') ? getMockCalendar() : [];
+  const ev = events.find(e => e.title === title);
+  const attendees = ev?.attendees?.filter(a => !a.self).map(a => a.email) || ev?.people || [];
+
+  // Show overlay
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+  overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+  const card = document.createElement('div');
+  card.style.cssText = 'background:var(--surface);border-radius:20px;padding:2rem;max-width:520px;width:100%;max-height:85vh;overflow-y:auto;';
+  card.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+      <h2 style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.15rem;margin:0;">${title}</h2>
+      <button onclick="this.closest('div[style*=fixed]').remove()" style="background:none;border:none;color:var(--text-light);font-size:1.5rem;cursor:pointer;">×</button>
+    </div>
+    <div id="process-body" style="text-align:center;padding:2rem;">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;">📝</div>
+      <div style="font-size:0.9rem;color:var(--text-light);">looking for Google Meet transcript...</div>
+    </div>`;
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+
+  fetch('/api/meeting/process', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title, attendees }),
+  })
+  .then(r => r.json())
+  .then(data => {
+    const body = document.getElementById('process-body');
+    if (!body) return;
+
+    if (!data.ok || !data.found) {
+      body.innerHTML = `
+        <div style="text-align:center;padding:1rem;">
+          <div style="font-size:1.5rem;margin-bottom:0.75rem;">🔇</div>
+          <div style="font-weight:600;font-size:0.95rem;margin-bottom:0.5rem;">no transcript found</div>
+          <div style="font-size:0.8rem;color:var(--text-light);line-height:1.5;">${data.message || 'Make sure Google Meet transcription is enabled in your Workspace settings. Transcripts may take a few minutes to appear.'}</div>
+        </div>`;
+      return;
+    }
+
+    if (!data.summary) {
+      body.innerHTML = '<div style="font-size:0.85rem;color:var(--text-light);">transcript found but AI summary unavailable.</div>';
+      return;
+    }
+
+    const s = data.summary;
+    body.style.textAlign = 'left';
+    body.innerHTML = `
+      ${s.summary ? `<div style="margin-bottom:1.25rem;">
+        <div style="font-weight:700;font-size:0.75rem;color:var(--accent);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">summary</div>
+        <div style="font-size:0.9rem;line-height:1.6;">${s.summary}</div>
+      </div>` : ''}
+      ${s.decisions?.length ? `<div style="margin-bottom:1.25rem;">
+        <div style="font-weight:700;font-size:0.75rem;color:#3B82F6;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">decisions</div>
+        ${s.decisions.map(d => `<div style="font-size:0.85rem;padding:0.2rem 0;">✅ ${d}</div>`).join('')}
+      </div>` : ''}
+      ${s.myActions?.length ? `<div style="margin-bottom:1.25rem;">
+        <div style="font-weight:700;font-size:0.75rem;color:#E8634A;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">your action items</div>
+        ${s.myActions.map(a => `<div style="font-size:0.85rem;padding:0.2rem 0;">🔴 ${a}</div>`).join('')}
+      </div>` : ''}
+      ${s.allActionItems?.length ? `<div style="margin-bottom:1.25rem;">
+        <div style="font-weight:700;font-size:0.75rem;color:#ffa726;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">all action items</div>
+        ${s.allActionItems.map(a => `<div style="font-size:0.85rem;padding:0.2rem 0;">📋 <strong>${a.owner}</strong>: ${a.task}${a.deadline ? ' (by ' + a.deadline + ')' : ''}</div>`).join('')}
+      </div>` : ''}
+      ${s.followUps?.length ? `<div style="margin-bottom:1.25rem;">
+        <div style="font-weight:700;font-size:0.75rem;color:#10B981;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:0.4rem;">follow up next time</div>
+        ${s.followUps.map(f => `<div style="font-size:0.85rem;padding:0.2rem 0;">↩️ ${f}</div>`).join('')}
+      </div>` : ''}
+    `;
+  })
+  .catch(err => {
+    const body = document.getElementById('process-body');
+    if (body) body.innerHTML = `<div style="color:var(--text-light);font-size:0.85rem;">error: ${err.message}</div>`;
+  });
 }
 
 // Meeting prep overlay — shows full strategic prep for a meeting

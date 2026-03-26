@@ -387,6 +387,156 @@ Return JSON only:
   }
 });
 
+// ── Internal meeting context (Slack channels) ──
+app.post('/api/meeting/internal-context', async (req, res) => {
+  const { attendeeEmails, meetingTitle } = req.body;
+  if (!attendeeEmails?.length) return res.json({ ok: false, error: 'no attendees' });
+
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+
+  // Query Triage for Slack activity with these people
+  try {
+    const attendeeNames = attendeeEmails.map(e => e.split('@')[0].replace('.', ' '));
+    const query = `${attendeeNames.join(' ')} ${meetingTitle || ''} discussion update project`;
+
+    const results = await queryFivetranKnowledge(query, ['slack'], 5).catch(() => []);
+
+    if (!ANTHROPIC_KEY || results.length === 0) {
+      return res.json({ ok: true, context: null, raw: results.length });
+    }
+
+    const slackContext = results.map(r => `[SLACK] ${r.title}\n${(r.content || '').substring(0, 400)}`).join('\n\n---\n\n');
+
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        messages: [{ role: 'user', content: `You're prepping ${email.split('@')[0]} for an internal meeting${meetingTitle ? ` titled "${meetingTitle}"` : ''} with ${attendeeNames.join(', ')}.
+
+Here are recent Slack conversations involving these people:
+${slackContext}
+
+Return JSON only:
+{
+  "topics": ["active topics between these people from Slack"],
+  "suggestedAgenda": ["3-5 agenda items based on what they've been discussing"],
+  "openThreads": ["unresolved discussions or questions from Slack"],
+  "context": "1-2 sentence summary of what these people are working on together"
+}` }],
+      }),
+    });
+
+    const data = await claudeRes.json();
+    const text = data.content?.[0]?.text || '';
+    let context;
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      context = jsonMatch ? JSON.parse(jsonMatch[0]) : { context: text };
+    } catch (e) {
+      context = { context: text };
+    }
+
+    res.json({ ok: true, context });
+  } catch (e) {
+    console.error('[internal-context] Error:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
+// ── Post-meeting processing — check for transcript, summarize, extract actions ──
+app.post('/api/meeting/process', async (req, res) => {
+  const { eventId, title, attendees } = req.body;
+  const user = getIAPUser(req);
+  const email = user?.email || 'dev@fivetran.com';
+  const tokens = await loadUserTokens(email);
+
+  if (!tokens || !GCAL_CLIENT_ID) {
+    return res.json({ ok: false, error: 'Google not connected' });
+  }
+
+  try {
+    const proto = req.headers['x-forwarded-proto'] || req.protocol;
+    const redirectUri = `${proto}://${req.get('host')}/api/calendar/callback`;
+    const oauth2 = getCalOAuth2(redirectUri);
+    oauth2.setCredentials(tokens);
+    const drive = google.drive({ version: 'v3', auth: oauth2 });
+
+    // Search for transcript matching this meeting
+    const meetingName = title.replace(/[^a-zA-Z0-9 ]/g, '');
+    const searchRes = await drive.files.list({
+      q: `name contains 'transcript' and fullText contains '${meetingName.substring(0, 30)}' and mimeType = 'application/vnd.google-apps.document' and modifiedTime > '${new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()}'`,
+      fields: 'files(id, name, modifiedTime)',
+      orderBy: 'modifiedTime desc',
+      pageSize: 1,
+    });
+
+    const transcript = searchRes.data.files?.[0];
+    if (!transcript) {
+      return res.json({ ok: true, found: false, message: 'No transcript found yet. Google Meet transcripts may take a few minutes to appear in Drive.' });
+    }
+
+    // Export and summarize
+    const exportRes = await drive.files.export({ fileId: transcript.id, mimeType: 'text/plain' });
+    const transcriptText = exportRes.data;
+
+    if (!ANTHROPIC_KEY) {
+      return res.json({ ok: true, found: true, transcriptId: transcript.id, length: transcriptText.length, summary: null });
+    }
+
+    const claudeRes = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'x-api-key': ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{ role: 'user', content: `Summarize this internal meeting for ${email.split('@')[0]}. Extract their specific action items.
+
+Meeting: "${title}"
+Attendees: ${(attendees || []).join(', ')}
+
+Transcript:
+${transcriptText.substring(0, 8000)}
+
+Return JSON:
+{
+  "summary": "2-3 sentence summary",
+  "decisions": ["decisions made"],
+  "allActionItems": [{"owner": "name", "task": "what", "deadline": "if mentioned or null"}],
+  "myActions": ["action items specifically for ${email.split('@')[0]}"],
+  "followUps": ["topics to revisit next meeting"],
+  "keyQuotes": ["1-2 important quotes with speaker name"]
+}` }],
+      }),
+    });
+
+    const data = await claudeRes.json();
+    const text = data.content?.[0]?.text || '';
+    let summary;
+    try {
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      summary = jsonMatch ? JSON.parse(jsonMatch[0]) : { summary: text };
+    } catch (e) {
+      summary = { summary: text };
+    }
+
+    res.json({ ok: true, found: true, transcriptId: transcript.id, summary });
+  } catch (e) {
+    console.error('[meeting/process] Error:', e.message);
+    res.json({ ok: false, error: e.message });
+  }
+});
+
 // ── Find mutual availability ──
 app.post('/api/calendar/find-time', async (req, res) => {
   const { attendeeEmail, duration = 30 } = req.body;
