@@ -67,7 +67,8 @@ async function renderCalendar() {
 
   // Fetch events
   try {
-    const dateParam = target.toISOString().split('T')[0];
+    // Use local date, NOT UTC — toISOString converts to UTC which shifts the day
+    const dateParam = target.getFullYear() + '-' + String(target.getMonth()+1).padStart(2,'0') + '-' + String(target.getDate()).padStart(2,'0');
     const res = await fetch(`/api/calendar/events?date=${dateParam}`);
     const data = await res.json();
 
