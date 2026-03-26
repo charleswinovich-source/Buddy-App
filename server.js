@@ -150,21 +150,32 @@ app.get('/api/calendar/events', async (req, res) => {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2 });
 
-    // Support ?date=YYYY-MM-DD param
+    // Support ?date=YYYY-MM-DD param — use Pacific timezone
     const dateParam = req.query.date;
-    const targetDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    const tz = 'America/Los_Angeles';
+    let timeMin, timeMax;
+    if (dateParam) {
+      // Use explicit timezone offset to avoid UTC issues on Cloud Run
+      timeMin = dateParam + 'T00:00:00-07:00';
+      timeMax = dateParam + 'T23:59:59-07:00';
+    } else {
+      const now = new Date();
+      const startOfDay = new Date(now);
+      startOfDay.setHours(0, 0, 0, 0);
+      const endOfDay = new Date(now);
+      endOfDay.setHours(23, 59, 59, 999);
+      timeMin = startOfDay.toISOString();
+      timeMax = endOfDay.toISOString();
+    }
 
     const response = await calendar.events.list({
       calendarId: 'primary',
-      timeMin: startOfDay.toISOString(),
-      timeMax: endOfDay.toISOString(),
+      timeMin: timeMin,
+      timeMax: timeMax,
+      timeZone: tz,
       singleEvents: true,
       orderBy: 'startTime',
-      maxResults: 20,
+      maxResults: 50,
     });
 
     const events = (response.data.items || []).map(ev => ({
