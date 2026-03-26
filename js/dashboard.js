@@ -3,6 +3,159 @@
 // ════════════════════════════════════════════════════════
 
 let _buddy3dCleanup = null;
+
+// ════════════════════════════════════════════════════════
+// CALENDAR TAB
+// ════════════════════════════════════════════════════════
+let _calDateOffset = 0; // 0=today, -1=yesterday, +1=tomorrow
+
+async function initCalendar() {
+  _calDateOffset = 0;
+  await renderCalendar();
+}
+
+async function _calShift(dir) {
+  _calDateOffset += dir;
+  if (_calDateOffset < -1) _calDateOffset = -1;
+  if (_calDateOffset > 1) _calDateOffset = 1;
+  await renderCalendar();
+}
+
+async function renderCalendar() {
+  const container = document.getElementById('calendar-content');
+  if (!container) return;
+  const datePill = document.getElementById('cal-date-pill');
+
+  const target = new Date();
+  target.setDate(target.getDate() + _calDateOffset);
+  const dateStr = target.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric', year: 'numeric' });
+  const dayLabel = _calDateOffset === 0 ? 'Today' : _calDateOffset === -1 ? 'Yesterday' : 'Tomorrow';
+
+  if (datePill) datePill.textContent = dateStr;
+
+  // Date switcher
+  const switcher = `
+    <div style="display:flex;align-items:center;justify-content:center;gap:1rem;margin-bottom:1rem;">
+      <button onclick="_calShift(-1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.85rem;color:var(--text-mid);${_calDateOffset <= -1 ? 'opacity:0.3;pointer-events:none;' : ''}">&larr;</button>
+      <div style="text-align:center;">
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.3rem;color:var(--text);">${dayLabel}</div>
+        <div style="font-size:0.8rem;color:var(--text-light);">${dateStr}</div>
+      </div>
+      <button onclick="_calShift(1)" style="background:none;border:1px solid var(--border);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.85rem;color:var(--text-mid);${_calDateOffset >= 1 ? 'opacity:0.3;pointer-events:none;' : ''}">&rarr;</button>
+    </div>`;
+
+  // 7-day mini week
+  const weekDays = [];
+  const now = new Date();
+  for (let i = -1; i <= 5; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() + i);
+    const isSelected = i === _calDateOffset;
+    const isToday = i === 0;
+    weekDays.push(`<div onclick="_calDateOffset=${i};renderCalendar();" style="
+      text-align:center;cursor:pointer;padding:6px 0;border-radius:10px;min-width:44px;
+      ${isSelected ? 'background:var(--accent);color:var(--text);font-weight:700;' : ''}
+      ${isToday && !isSelected ? 'border:1px solid var(--accent);' : ''}
+    ">
+      <div style="font-size:0.65rem;color:${isSelected ? 'var(--text)' : 'var(--text-faint)'};text-transform:uppercase;">${d.toLocaleDateString('en-US',{weekday:'short'})}</div>
+      <div style="font-size:1rem;font-weight:600;">${d.getDate()}</div>
+    </div>`);
+  }
+  const weekStrip = `<div style="display:flex;justify-content:space-between;gap:4px;margin-bottom:1.5rem;padding:0.5rem;background:var(--surface);border-radius:14px;">${weekDays.join('')}</div>`;
+
+  container.innerHTML = switcher + weekStrip + '<div style="color:var(--text-light);text-align:center;padding:2rem;">Loading meetings...</div>';
+
+  // Fetch events
+  try {
+    const dateParam = target.toISOString().split('T')[0];
+    const res = await fetch(`/api/calendar/events?date=${dateParam}`);
+    const data = await res.json();
+
+    if (!data.ok || !data.events || data.events.length === 0) {
+      container.innerHTML = switcher + weekStrip + `
+        <div style="text-align:center;padding:3rem 1rem;">
+          <div style="font-size:2rem;margin-bottom:0.5rem;">🎉</div>
+          <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.2rem;color:var(--text);">No meetings ${dayLabel.toLowerCase()}</div>
+          <div style="color:var(--text-light);font-size:0.85rem;margin-top:0.25rem;">enjoy the free time</div>
+        </div>`;
+      return;
+    }
+
+    const events = data.events.filter(e => !e.allDay);
+    const allDay = data.events.filter(e => e.allDay);
+
+    let html = '';
+
+    // All-day events
+    if (allDay.length) {
+      html += allDay.map(e => `
+        <div style="background:var(--accent-soft);border-radius:10px;padding:8px 14px;margin-bottom:0.5rem;font-size:0.8rem;color:var(--text-mid);">
+          📌 ${e.title}
+        </div>`).join('');
+    }
+
+    // Timeline
+    const isPast = _calDateOffset < 0 || (_calDateOffset === 0);
+    events.forEach(e => {
+      const startTime = new Date(e.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
+      const endTime = e.end ? new Date(e.end).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }) : '';
+      const isExt = e.isExternal;
+      const dotColor = isExt ? '#3B82F6' : '#10B981';
+      const people = e.attendees?.filter(a => !a.self).map(a => a.name || a.email.split('@')[0]).slice(0, 3).join(', ') || '';
+      const meetEnded = _calDateOffset < 0 || (_calDateOffset === 0 && e.end && new Date(e.end) < now);
+
+      html += `
+        <div onclick="this.querySelector('.cal-expand')?.classList.toggle('open')" style="
+          display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);cursor:pointer;
+          ${meetEnded ? 'opacity:0.5;' : ''}
+        ">
+          <div style="width:55px;flex-shrink:0;text-align:right;">
+            <div style="font-size:0.85rem;font-weight:600;color:var(--text);">${startTime}</div>
+            <div style="font-size:0.7rem;color:var(--text-faint);">${endTime}</div>
+          </div>
+          <div style="width:3px;border-radius:2px;background:${dotColor};flex-shrink:0;"></div>
+          <div style="flex:1;min-width:0;">
+            <div style="font-weight:600;font-size:0.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${e.title}</div>
+            ${people ? `<div style="font-size:0.75rem;color:var(--text-light);margin-top:2px;">${people}</div>` : ''}
+            <div class="cal-expand" style="max-height:0;overflow:hidden;transition:max-height 0.3s;">
+              <div style="padding-top:0.75rem;display:flex;flex-direction:column;gap:0.5rem;">
+                ${e.meetLink ? `<a href="${e.meetLink}" target="_blank" style="display:inline-flex;align-items:center;gap:0.4rem;padding:6px 14px;background:${dotColor};color:white;border-radius:8px;font-size:0.75rem;font-weight:600;text-decoration:none;width:fit-content;">Join →</a>` : ''}
+                <button onclick="event.stopPropagation();showMeetingPrep('${e.title.replace(/'/g, "\\'")}')" style="padding:6px 14px;background:var(--surface);border:1px solid var(--border);color:var(--text);border-radius:8px;font-size:0.75rem;font-weight:600;cursor:pointer;width:fit-content;">${isExt ? '🔍 Intel' : '📋 Agenda'}</button>
+                <textarea placeholder="your notes..." onclick="event.stopPropagation()" style="
+                  width:100%;min-height:50px;resize:vertical;border:1px solid var(--border);border-radius:8px;
+                  padding:8px;font-size:0.8rem;font-family:'Inter',sans-serif;background:var(--surface);color:var(--text);
+                  box-sizing:border-box;
+                "></textarea>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    });
+
+    container.innerHTML = switcher + weekStrip + html;
+
+    // Make expand animation work
+    container.querySelectorAll('.cal-expand').forEach(el => {
+      const parent = el.closest('[onclick]');
+      if (parent) {
+        parent.addEventListener('click', () => {
+          if (el.classList.contains('open')) {
+            el.style.maxHeight = el.scrollHeight + 'px';
+          } else {
+            el.style.maxHeight = '0';
+          }
+        });
+      }
+    });
+
+  } catch (err) {
+    container.innerHTML = switcher + weekStrip + `
+      <div style="text-align:center;padding:2rem;color:var(--text-light);">
+        <p>Calendar not connected</p>
+        <a href="/api/connect/google" style="color:var(--accent-dark);text-decoration:underline;">Connect Google Calendar</a>
+      </div>`;
+  }
+}
 let _buddy3dState = null;
 let _realCalendarEvents = null; // cached real calendar events
 
@@ -13,7 +166,7 @@ function _saveScratchpad() {
   _scratchpadTimeout = setTimeout(() => {
     const el = document.getElementById('scratchpad');
     if (el) { STATE.scratchpad = el.value; saveState(); }
-  }, 500); // debounce 500ms
+  }, 500);
 }
 function _clearScratchpad() {
   if (!confirm('clear your scratchpad?')) return;
@@ -21,6 +174,66 @@ function _clearScratchpad() {
   saveState();
   const el = document.getElementById('scratchpad');
   if (el) el.value = '';
+}
+
+// ── Idea Machine helpers ──
+let _ideaTimeout;
+function _saveIdeaRaw() {
+  clearTimeout(_ideaTimeout);
+  _ideaTimeout = setTimeout(() => {
+    const el = document.getElementById('idea-machine-input');
+    if (!el) return;
+    if (!STATE.ideaMachine) STATE.ideaMachine = { notes: [], raw: '' };
+    STATE.ideaMachine.raw = el.value;
+    saveState();
+  }, 500);
+}
+
+function _clearIdeas() {
+  if (!confirm('clear all notes?')) return;
+  STATE.ideaMachine = { notes: [], raw: '' };
+  saveState();
+  initLife();
+}
+
+function _toggleIdeaTask(idx) {
+  if (!STATE.ideaMachine?.notes?.[idx]) return;
+  STATE.ideaMachine.notes[idx].done = !STATE.ideaMachine.notes[idx].done;
+  saveState();
+  initLife();
+}
+
+async function _organizeIdeas() {
+  const el = document.getElementById('idea-machine-input');
+  if (!el || !el.value.trim()) return;
+  const raw = el.value.trim();
+  const btn = el.parentElement.querySelector('button');
+  if (btn) { btn.textContent = 'thinking...'; btn.disabled = true; }
+  try {
+    const resp = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: `Categorize each line or thought from this brain dump into exactly one of: task, idea, reminder, journal. Return ONLY a JSON array like [{"type":"task","text":"..."},{"type":"idea","text":"..."}]. No markdown, no explanation. Here's the text:\n\n${raw}`,
+        context: 'idea-machine'
+      })
+    });
+    const data = await resp.json();
+    const reply = data.reply || data.response || '';
+    // Extract JSON array from response
+    const match = reply.match(/\[[\s\S]*\]/);
+    if (match) {
+      const notes = JSON.parse(match[0]);
+      if (!STATE.ideaMachine) STATE.ideaMachine = { notes: [], raw: '' };
+      STATE.ideaMachine.notes = notes.map(n => ({ ...n, done: false }));
+      STATE.ideaMachine.raw = raw;
+      saveState();
+      initLife();
+    }
+  } catch (e) {
+    console.error('Idea organize failed:', e);
+    if (btn) { btn.textContent = 'organize my thoughts'; btn.disabled = false; }
+  }
 }
 
 // ── Fetch real calendar and refresh the UPCOMING widget ──
@@ -564,21 +777,6 @@ function renderDashContent() {
     ${nowCardHtml}
     ${laterHtml}
     ${doneHtml}
-
-    <!-- Scratchpad -->
-    <div style="background:var(--surface);border-radius:16px;padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
-        <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">✏️ SCRATCHPAD</div>
-        <button onclick="_clearScratchpad()" style="font-size:0.65rem;color:var(--text-faint);background:none;border:none;cursor:pointer;">clear</button>
-      </div>
-      <textarea id="scratchpad" placeholder="jot down thoughts, reminders, ideas..." oninput="_saveScratchpad()" style="
-        width:100%;min-height:70px;max-height:160px;resize:vertical;
-        background:none;border:none;outline:none;
-        font-family:'Inter',sans-serif;font-size:0.85rem;line-height:1.6;
-        color:var(--text);padding:0;box-sizing:border-box;
-      ">${(STATE.scratchpad || '').replace(/</g,'&lt;')}</textarea>
-    </div>
-
     ${msgHtml}
   `;
   content.appendChild(greetingArea);
@@ -1604,20 +1802,50 @@ function initLife() {
   // Keep the h2 and p, rebuild cards
   let html = '';
 
-  // Card 1: Your Schedule
-  const cal = getMockCalendar();
-  const next3 = cal.slice(0, 3);
-  html += `<div class="life-card">
-    <div class="life-card-title">\u{1F4C5} Your Schedule</div>
-    ${next3.map(ev => `
-      <div style="display:flex;gap:0.75rem;align-items:flex-start;padding:0.5rem 0;border-bottom:1px solid rgba(0,0,0,0.04);">
-        <div style="width:3px;min-height:36px;border-radius:2px;background:#9DBF10;flex-shrink:0;"></div>
-        <div>
-          <div style="font-weight:600;font-size:0.88rem;color:#1A1A2E;">${ev.title}</div>
-          <div style="font-size:0.78rem;color:#9A96A8;">${ev.time}${ev.people?.length ? ' \u00B7 ' + ev.people.join(', ') : ''}</div>
-        </div>
+  // Initialize notes array in state
+  if (!STATE.ideaMachine) STATE.ideaMachine = { notes: [], raw: '' };
+
+  // Card 1: The Idea Machine
+  const notes = STATE.ideaMachine.notes || [];
+  const rawText = STATE.ideaMachine.raw || '';
+  const taskNotes = notes.filter(n => n.type === 'task' && !n.done);
+  const ideaNotes = notes.filter(n => n.type === 'idea');
+  const reminderNotes = notes.filter(n => n.type === 'reminder');
+  const journalNotes = notes.filter(n => n.type === 'journal');
+
+  html += `<div class="life-card" style="padding:1.25rem;">
+    <div class="life-card-title" style="margin-bottom:0.75rem;">💡 The Idea Machine</div>
+    <p style="font-size:0.8rem;color:#9A96A8;margin-bottom:1rem;line-height:1.5;">brain dump anything. buddy organizes it for you.</p>
+    <textarea id="idea-machine-input" placeholder="what's on your mind? tasks, ideas, reminders, thoughts..."
+      oninput="_saveIdeaRaw()"
+      style="width:100%;min-height:90px;max-height:200px;resize:vertical;background:rgba(0,0,0,0.02);border:1px solid rgba(0,0,0,0.06);border-radius:12px;outline:none;font-family:'Inter',sans-serif;font-size:0.9rem;line-height:1.7;color:#1A1A2E;padding:0.75rem;box-sizing:border-box;">${rawText.replace(/</g,'&lt;')}</textarea>
+    <div style="display:flex;gap:0.5rem;margin-top:0.75rem;">
+      <button onclick="_organizeIdeas()" style="flex:1;padding:0.6rem;background:#9DBF10;color:white;border:none;border-radius:10px;font-size:0.8rem;font-weight:600;cursor:pointer;">organize my thoughts</button>
+      <button onclick="_clearIdeas()" style="padding:0.6rem 1rem;background:none;border:1px solid rgba(0,0,0,0.08);border-radius:10px;font-size:0.8rem;color:#9A96A8;cursor:pointer;">clear</button>
+    </div>
+    ${notes.length > 0 ? `
+      <div style="margin-top:1.25rem;border-top:1px solid rgba(0,0,0,0.06);padding-top:1rem;">
+        ${taskNotes.length ? `<div style="margin-bottom:1rem;">
+          <div style="font-size:0.7rem;color:#9A96A8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">Tasks</div>
+          ${taskNotes.map((n, i) => `<div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.3rem 0;">
+            <input type="checkbox" onchange="_toggleIdeaTask(${notes.indexOf(n)})" style="margin-top:3px;accent-color:#9DBF10;">
+            <span style="font-size:0.85rem;color:#1A1A2E;">${n.text}</span>
+          </div>`).join('')}
+        </div>` : ''}
+        ${ideaNotes.length ? `<div style="margin-bottom:1rem;">
+          <div style="font-size:0.7rem;color:#9A96A8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">Ideas</div>
+          ${ideaNotes.map(n => `<div style="padding:0.3rem 0;font-size:0.85rem;color:#1A1A2E;">💡 ${n.text}</div>`).join('')}
+        </div>` : ''}
+        ${reminderNotes.length ? `<div style="margin-bottom:1rem;">
+          <div style="font-size:0.7rem;color:#9A96A8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">Reminders</div>
+          ${reminderNotes.map(n => `<div style="padding:0.3rem 0;font-size:0.85rem;color:#1A1A2E;">⏰ ${n.text}</div>`).join('')}
+        </div>` : ''}
+        ${journalNotes.length ? `<div style="margin-bottom:0.5rem;">
+          <div style="font-size:0.7rem;color:#9A96A8;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">Journal</div>
+          ${journalNotes.map(n => `<div style="padding:0.3rem 0;font-size:0.85rem;color:#1A1A2E;font-style:italic;">${n.text}</div>`).join('')}
+        </div>` : ''}
       </div>
-    `).join('')}
+    ` : ''}
   </div>`;
 
   // Card 2: Weather with hourly forecast

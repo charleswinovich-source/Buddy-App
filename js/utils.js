@@ -198,34 +198,33 @@ function goTo(screenId) {
   document.querySelectorAll('.dash-bottom-nav button').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.bottom-nav button').forEach(b => b.classList.remove('active'));
 
-  // Set active tab on the dashboard bottom nav
-  if (screenId === 'dashboard') {
-    document.getElementById('nav-home')?.classList.add('active');
-  }
-  if (screenId === 'insights') {
-    document.getElementById('nav-insights')?.classList.add('active');
-    document.getElementById('insights-nav-insights')?.classList.add('active');
-  }
-  if (screenId === 'life') {
-    document.getElementById('nav-life')?.classList.add('active');
-    document.getElementById('life-nav-life')?.classList.add('active');
-  }
-  if (screenId === 'profile') {
-    document.getElementById('nav-profile')?.classList.add('active');
-  }
+  // Set active tab — find buttons by nav id pattern
+  const mainScreens = ['dashboard', 'calendar', 'insights', 'life'];
+  const navMap = { dashboard: 'nav-home', calendar: 'nav-calendar', insights: 'nav-insights', life: 'nav-life' };
+  // Activate matching buttons across ALL navs
+  document.querySelectorAll('.dash-bottom-nav button, .bottom-nav button').forEach(btn => {
+    const match = mainScreens.find(s => {
+      if (s === screenId) {
+        const txt = btn.textContent.trim().toLowerCase();
+        if (s === 'dashboard' && txt === 'buddy') return true;
+        if (s === 'calendar' && txt === 'calendar') return true;
+        if (s === 'insights' && txt === 'pulse') return true;
+        if (s === 'life' && txt === 'life') return true;
+      }
+      return false;
+    });
+    if (match) btn.classList.add('active');
+  });
 
-  // Show/hide the dashboard bottom nav (only for dashboard screen)
+  // Show/hide dashboard bottom nav
   const dashNav = document.getElementById('dash-bottom-nav');
   if (dashNav) dashNav.style.display = (screenId === 'dashboard') ? 'flex' : 'none';
-
-  // Show/hide legacy bottom nav for other screens
-  const nav = document.getElementById('bottom-nav');
-  if (nav) nav.classList.toggle('visible', screenId === 'chat' || screenId === 'hangout');
 
   // Init screens
   if (screenId === 'creator') initCreator();
   if (screenId === 'role-picker') initRolePicker();
   if (screenId === 'dashboard') initDashboard();
+  if (screenId === 'calendar' && typeof initCalendar === 'function') initCalendar();
   if (screenId === 'chat') initChat();
   if (screenId === 'hangout') initHangout();
   if (screenId === 'insights') initInsights();

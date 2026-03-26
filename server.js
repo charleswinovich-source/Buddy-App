@@ -150,18 +150,18 @@ app.get('/api/calendar/events', async (req, res) => {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2 });
 
-    const now = new Date();
-    // Show full day + tomorrow
-    const startOfDay = new Date(now);
+    // Support ?date=YYYY-MM-DD param
+    const dateParam = req.query.date;
+    const targetDate = dateParam ? new Date(dateParam + 'T00:00:00') : new Date();
+    const startOfDay = new Date(targetDate);
     startOfDay.setHours(0, 0, 0, 0);
-    const endOfTomorrow = new Date(now);
-    endOfTomorrow.setDate(endOfTomorrow.getDate() + 1);
-    endOfTomorrow.setHours(23, 59, 59, 999);
+    const endOfDay = new Date(targetDate);
+    endOfDay.setHours(23, 59, 59, 999);
 
     const response = await calendar.events.list({
       calendarId: 'primary',
       timeMin: startOfDay.toISOString(),
-      timeMax: endOfTomorrow.toISOString(),
+      timeMax: endOfDay.toISOString(),
       singleEvents: true,
       orderBy: 'startTime',
       maxResults: 20,
