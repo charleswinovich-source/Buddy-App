@@ -7,11 +7,65 @@ const ROLE_DATA = {
   sales: {
     name: 'Sales',
     icon: '💼',
-    desc: 'Pipeline, prospecting, deals, forecasting, account intelligence',
-    subroles: ['Account Executive', 'BDR/SDR', 'Enterprise AE', 'Sales Manager', 'CSM'],
+    desc: 'Your deals, your accounts, your calls — not the forecast spreadsheet',
+    subroles: ['Account Executive', 'BDR/SDR', 'Solutions Engineer', 'Enterprise AE', 'Sales Manager', 'CSM'],
     focusAreas: [
       {
-        id: 'outbounding', name: 'Outbounding', icon: '🎯',
+        id: 'my-deals', name: 'My Deals', icon: '💰',
+        desc: 'Your pipeline, your opps, your close plan',
+        actions: [
+          { title: 'Show my open pipeline this quarter', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], top: true },
+          { title: 'Which of my deals haven\'t been updated in ___ days?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'days', placeholder: '14', options: ['7','14','21','30']}], top: true },
+          { title: 'What\'s blocking my ___ deal?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce','gong'], template: [{slot: 'account name', placeholder: 'e.g. Okta, Amplify Life'}], top: true },
+          { title: 'Push MEDDPICC + next steps to Salesforce from my last call', category: 'action', type: 'act', meta: 'Gong + Salesforce', tags: ['gong','salesforce'], top: true },
+          { title: 'Generate a close plan for ___', category: 'generator', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce','gong'], template: [{slot: 'deal/account', placeholder: 'e.g. Okta expansion'}] },
+        ]
+      },
+      {
+        id: 'my-accounts', name: 'My Accounts', icon: '🏢',
+        desc: 'Deep context on the accounts you own',
+        actions: [
+          { title: 'Full account brief for ___', category: 'question', type: 'ask', meta: 'Salesforce + Gong + Zendesk', tags: ['salesforce','gong','zendesk'], template: [{slot: 'account name', placeholder: 'e.g. Okta'}], top: true },
+          { title: 'What are customers at ___ saying about us?', category: 'question', type: 'ask', meta: 'Gong + Zendesk', tags: ['gong','zendesk'], template: [{slot: 'account', placeholder: 'e.g. USAA'}], top: true },
+          { title: 'Open support tickets for ___', category: 'question', type: 'ask', meta: 'Zendesk', tags: ['zendesk'], template: [{slot: 'account', placeholder: 'e.g. Amplify Life'}], top: true },
+          { title: 'Which competitors came up in calls with ___?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'account', placeholder: 'e.g. Okta'}] },
+          { title: 'Enrich ___ with latest firmographic data', category: 'action', type: 'act', meta: 'Salesforce + Clearbit', tags: ['salesforce'], template: [{slot: 'account or list', placeholder: 'account name or paste list'}] },
+        ]
+      },
+      {
+        id: 'my-calls', name: 'My Calls', icon: '🎧',
+        desc: 'Prep for upcoming, review past, follow up',
+        actions: [
+          { title: 'Prep me for my call with ___', category: 'question', type: 'ask', meta: 'Salesforce + Gong + Zendesk', tags: ['salesforce','gong','zendesk'], template: [{slot: 'account or person', placeholder: 'e.g. Tyler at Amplify Life'}], top: true },
+          { title: 'What happened in my last call with ___?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'account', placeholder: 'e.g. Okta'}], top: true },
+          { title: 'Draft a follow-up email from my ___ call', category: 'generator', type: 'ask', meta: 'Gong + Salesforce', tags: ['gong','salesforce'], template: [{slot: 'account', placeholder: 'e.g. USAA discovery call'}], top: true },
+          { title: 'What objections came up and how should I handle them?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], top: true },
+          { title: 'Auto-fill Salesforce after every Gong call', category: 'automation', type: 'auto', meta: 'Gong + Salesforce', tags: ['gong','salesforce'] },
+        ]
+      },
+      {
+        id: 'prospecting', name: 'Prospecting', icon: '🎯',
+        desc: 'Find new accounts, research targets, build outreach',
+        actions: [
+          { title: 'Which accounts in my territory haven\'t been contacted?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], top: true },
+          { title: 'What are customers saying about ___?', category: 'question', type: 'ask', meta: 'Gong + Zendesk', tags: ['gong','zendesk'], template: [{slot: 'topic, competitor, or feature', placeholder: 'e.g. Airbyte, connector SDK, pricing'}], top: true },
+          { title: 'Draft a cold email to ___ at ___', category: 'generator', type: 'ask', meta: 'Salesforce + LinkedIn', tags: ['salesforce'], template: [{slot: 'person', placeholder: 'e.g. VP of Data'}, {slot: 'company', placeholder: 'e.g. Stripe'}] },
+          { title: 'Enrich my prospect spreadsheet', category: 'action', type: 'act', meta: 'Salesforce', tags: ['salesforce'], top: true },
+        ]
+      },
+      {
+        id: 'learn-find', name: 'Learn & Find', icon: '🔍',
+        desc: 'Internal knowledge, product info, competitive intel',
+        actions: [
+          { title: 'How does ___ work?', category: 'question', type: 'ask', meta: 'Slab + Docs', tags: ['slab','docs'], template: [{slot: 'product, feature, or process', placeholder: 'e.g. connector SDK, HVR migration'}], top: true },
+          { title: 'What tables does the ___ connector sync?', category: 'question', type: 'ask', meta: 'Fivetran schema API', tags: ['fivetran'], template: [{slot: 'connector', placeholder: 'e.g. Salesforce, HubSpot'}], top: true },
+          { title: 'Find customer evidence for ___', category: 'question', type: 'ask', meta: 'Gong + Zendesk + Salesforce', tags: ['gong','zendesk','salesforce'], template: [{slot: 'feature or use case', placeholder: 'e.g. real-time sync, security compliance'}] },
+          { title: 'What\'s the competitive positioning against ___?', category: 'question', type: 'ask', meta: 'Slab + Gong', tags: ['slab','gong'], template: [{slot: 'competitor', placeholder: 'e.g. Airbyte, Stitch, Matillion'}] },
+          { title: 'Search internal knowledge for ___', category: 'question', type: 'ask', meta: 'Slab + Docs', tags: ['slab','docs'], template: [{slot: 'anything', placeholder: 'type your question'}] },
+        ]
+      },
+      {
+        id: 'outbounding', name: 'Outbounding', icon: '📧',
         desc: 'Prospecting, sequences, cold outreach, territory mining',
         actions: [
           { title: 'Which accounts in my territory have never been contacted?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
@@ -157,73 +211,64 @@ const ROLE_DATA = {
   engineering: {
     name: 'Engineering',
     icon: '⚙️',
-    desc: 'Incidents, system health, deploys, code quality, connectors',
+    desc: 'Your code, your services, your sprint — not the org chart',
     subroles: ['Software Engineer', 'SRE', 'Engineering Manager', 'Staff Engineer'],
     focusAreas: [
       {
-        id: 'incidents-oncall', name: 'Incidents & On-Call', icon: '🚨',
-        desc: 'Blast radius, resolution, customer impact',
+        id: 'my-code', name: 'My Code', icon: '💻',
+        desc: 'Your PRs, reviews, and recent deploys',
         actions: [
-          { title: 'Which customers are in the blast radius of the current open incident?', category: 'question', type: 'ask', meta: 'PagerDuty + Salesforce', tags: ['pagerduty','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What changed in the 24 hours before the last incident?', category: 'question', type: 'ask', meta: 'GitHub + DataDog', tags: ['github','datadog'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'All P1 incidents in the last 90 days with resolution time and ARR impact', category: 'question', type: 'ask', meta: 'PagerDuty + Salesforce', tags: ['pagerduty','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Auto-alert CSMs when an enterprise account enters incident blast radius', category: 'automation', type: 'auto', meta: 'PagerDuty + Salesforce + Slack', tags: ['pagerduty','salesforce','slack'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate a post-incident review doc from PagerDuty, GitHub, and logs', category: 'generator', type: 'ask', meta: 'PagerDuty + GitHub + DataDog', tags: ['pagerduty','github','datadog'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Show my open PRs and who needs to review them', category: 'question', type: 'ask', meta: 'GitHub', tags: ['github'], top: true },
+          { title: 'PRs waiting for my review right now', category: 'question', type: 'ask', meta: 'GitHub', tags: ['github'], top: true },
+          { title: 'Did my last deploy to ___ break anything?', category: 'question', type: 'ask', meta: 'GitHub + DataDog', tags: ['github','datadog'], template: [{slot: 'service/branch', placeholder: 'e.g. connector-sdk, main'}], top: true },
+          { title: 'Draft a PR description for ___', category: 'generator', type: 'ask', meta: 'GitHub', tags: ['github'], template: [{slot: 'branch or PR URL', placeholder: 'e.g. feature/new-auth'}], top: true },
+          { title: 'Write tests for ___', category: 'generator', type: 'ask', meta: 'GitHub', tags: ['github'], template: [{slot: 'function or file', placeholder: 'e.g. syncEngine.handleRetry()'}] },
+          { title: 'Notify me when my PR ___ gets reviewed', category: 'automation', type: 'auto', meta: 'GitHub + Slack', tags: ['github','slack'], template: [{slot: 'PR number', placeholder: 'e.g. #4521'}] },
         ]
       },
       {
-        id: 'system-health', name: 'System Health', icon: '💚',
-        desc: 'Error rates, latency, sync failures, infra costs',
+        id: 'my-tickets', name: 'My Tickets', icon: '🎫',
+        desc: 'Your Jira backlog, blockers, and sprint work',
         actions: [
-          { title: 'Error rate trend for each service over the last 30 days', category: 'question', type: 'ask', meta: 'DataDog', tags: ['datadog'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which pipelines have had the most sync failures this week?', category: 'question', type: 'ask', meta: 'Fivetran logs', tags: ['fivetran'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'What is our cloud infrastructure cost trend vs revenue growth?', category: 'question', type: 'ask', meta: 'AWS + Finance', tags: ['aws','finance'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Alert me when any service p99 latency exceeds SLA threshold', category: 'automation', type: 'auto', meta: 'DataDog + Slack', tags: ['datadog','slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a weekly reliability report with health scores by service', category: 'generator', type: 'ask', meta: 'DataDog + PagerDuty', tags: ['datadog','pagerduty'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Show my open Jira tickets sorted by due date', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Which of my tickets are overdue or stale?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'What\'s blocking me right now?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Create a ticket for ___', category: 'action', type: 'act', meta: 'Jira', tags: ['jira'], template: [{slot: 'what needs to be done', placeholder: 'describe the bug or task'}], top: true },
+          { title: 'Update ___ with a comment', category: 'action', type: 'act', meta: 'Jira', tags: ['jira'], template: [{slot: 'ticket ID', placeholder: 'e.g. CONN-1234'}] },
+          { title: 'Generate my standup update from yesterday\'s activity', category: 'generator', type: 'ask', meta: 'Jira + GitHub + Slack', tags: ['jira','github','slack'], top: true },
         ]
       },
       {
-        id: 'code-prs', name: 'Code & PRs', icon: '💻',
-        desc: 'Open PRs, review bottlenecks, test coverage, deploys',
+        id: 'my-services', name: 'My Services', icon: '🔧',
+        desc: 'Health of the services and connectors you own',
         actions: [
-          { title: 'Which PRs have been open for more than 7 days without review?', category: 'question', type: 'ask', meta: 'GitHub', tags: ['github'], multi: false, semantic: false, top: true, rising: true },
-          { title: 'Deployment frequency and change failure rate this quarter', category: 'question', type: 'ask', meta: 'GitHub', tags: ['github'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which services have the lowest test coverage?', category: 'question', type: 'ask', meta: 'GitHub', tags: ['github'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Auto-notify on-call when a deploy is pushed to a high-risk service', category: 'automation', type: 'auto', meta: 'GitHub + PagerDuty + Slack', tags: ['github','pagerduty','slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Push stale PR reminders to the team Slack channel daily', category: 'automation', type: 'auto', meta: 'GitHub + Slack', tags: ['github','slack'], multi: true, semantic: false, top: false, rising: true },
+          { title: 'How is ___ performing right now?', category: 'question', type: 'ask', meta: 'DataDog + Fivetran logs', tags: ['datadog','fivetran'], template: [{slot: 'service or connector name', placeholder: 'e.g. Salesforce connector, sync-engine'}], top: true },
+          { title: 'Show me failures for ___ in the last ___', category: 'question', type: 'ask', meta: 'Fivetran logs', tags: ['fivetran'], template: [{slot: 'connector/service', placeholder: 'e.g. PostgreSQL'}, {slot: 'time range', placeholder: '24 hours', options: ['24 hours','7 days','30 days']}], top: true },
+          { title: 'What are customers saying about ___ on support?', category: 'question', type: 'ask', meta: 'Zendesk + Gong', tags: ['zendesk','gong'], template: [{slot: 'connector or feature', placeholder: 'e.g. HVR, connector SDK'}], top: true },
+          { title: 'Alert me when ___ error rate exceeds ___', category: 'automation', type: 'auto', meta: 'DataDog + Slack', tags: ['datadog','slack'], template: [{slot: 'service', placeholder: 'e.g. sync-engine'}, {slot: 'threshold', placeholder: 'e.g. 5%'}] },
+          { title: 'Debug why ___ is failing for ___', category: 'question', type: 'ask', meta: 'Fivetran logs + Zendesk', tags: ['fivetran','zendesk'], template: [{slot: 'connector', placeholder: 'e.g. Oracle CDC'}, {slot: 'customer (optional)', placeholder: 'e.g. Okta'}] },
         ]
       },
       {
-        id: 'tech-debt', name: 'Tech Debt', icon: '🧹',
-        desc: 'Old bugs, recurring issues, dependency vulnerabilities',
+        id: 'my-oncall', name: 'My On-Call', icon: '🚨',
+        desc: 'When you\'re on the hook — incidents, blast radius, context',
         actions: [
-          { title: 'Oldest open bugs by component and severity', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which tech debt items are correlated with recurring incidents?', category: 'question', type: 'ask', meta: 'Jira + PagerDuty', tags: ['jira','pagerduty'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which dependencies have known critical vulnerabilities?', category: 'question', type: 'ask', meta: 'GitHub', tags: ['github'], multi: false, semantic: false, top: true, rising: true },
-          { title: 'Flag Jira bugs older than 6 months with no activity to team lead', category: 'automation', type: 'auto', meta: 'Jira + Slack', tags: ['jira','slack'], multi: true, semantic: false, top: false, rising: false },
-          { title: 'Generate a tech debt impact report linking bugs to customer issues', category: 'generator', type: 'ask', meta: 'Jira + Zendesk + PagerDuty', tags: ['jira','zendesk','pagerduty'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Am I on-call right now? What\'s the current incident status?', category: 'question', type: 'ask', meta: 'PagerDuty', tags: ['pagerduty'], top: true },
+          { title: 'Which customers are affected by ___?', category: 'question', type: 'ask', meta: 'PagerDuty + Salesforce', tags: ['pagerduty','salesforce'], template: [{slot: 'incident or outage', placeholder: 'e.g. INC-4521, Postgres sync outage'}], top: true },
+          { title: 'What changed right before ___ started?', category: 'question', type: 'ask', meta: 'GitHub + DataDog', tags: ['github','datadog'], template: [{slot: 'the incident', placeholder: 'e.g. the latency spike at 3pm'}], top: true },
+          { title: 'Draft a customer comms update for ___', category: 'generator', type: 'ask', meta: 'PagerDuty + Salesforce', tags: ['pagerduty','salesforce'], template: [{slot: 'incident', placeholder: 'e.g. INC-4521'}] },
+          { title: 'Generate a post-incident review doc', category: 'generator', type: 'ask', meta: 'PagerDuty + GitHub + DataDog', tags: ['pagerduty','github','datadog'] },
         ]
       },
       {
-        id: 'connector-health', name: 'Connector Health', icon: '🔌',
-        desc: 'Connector failure rates, customer-reported issues, performance',
+        id: 'learn-build', name: 'Learn & Build', icon: '🛠️',
+        desc: 'Docs, schemas, internal knowledge — find what you need',
         actions: [
-          { title: 'Which connectors have the highest customer-reported failure rate?', category: 'question', type: 'ask', meta: 'Zendesk + Fivetran logs', tags: ['zendesk','fivetran'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Sync duration trends by connector and customer tier', category: 'question', type: 'ask', meta: 'Fivetran logs + Salesforce', tags: ['fivetran','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Auto-create Jira bug when connector failure rate exceeds threshold', category: 'automation', type: 'auto', meta: 'Fivetran logs + Jira', tags: ['fivetran','jira'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Which connectors have degraded performance in the last 7 days?', category: 'question', type: 'ask', meta: 'DataDog + Fivetran logs', tags: ['datadog','fivetran'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a connector reliability scorecard for the engineering review', category: 'generator', type: 'ask', meta: 'Fivetran logs + Zendesk + DataDog', tags: ['fivetran','zendesk','datadog'], multi: true, semantic: true, top: false, rising: true },
-        ]
-      },
-      {
-        id: 'sprint-planning', name: 'Sprint & Planning', icon: '📋',
-        desc: 'Velocity, scope, blockers, backlog health',
-        actions: [
-          { title: 'What is our sprint velocity trend over the last 6 sprints?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which tickets are blocked and who is the blocker?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'How much scope crept into the current sprint vs what was planned?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Push daily standup summary from Jira updates to team Slack', category: 'automation', type: 'auto', meta: 'Jira + Slack', tags: ['jira','slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a sprint retrospective summary from Jira and Slack threads', category: 'generator', type: 'ask', meta: 'Jira + Slack', tags: ['jira','slack'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'How does ___ work internally?', category: 'question', type: 'ask', meta: 'Slab + Docs', tags: ['slab','docs'], template: [{slot: 'system or feature', placeholder: 'e.g. sync scheduling, CDC pipeline'}], top: true },
+          { title: 'What tables/columns does the ___ connector sync?', category: 'question', type: 'ask', meta: 'Fivetran schema API', tags: ['fivetran'], template: [{slot: 'connector name', placeholder: 'e.g. Salesforce, Jira'}], top: true },
+          { title: 'Find the right tables to analyze ___', category: 'question', type: 'ask', meta: 'BigQuery catalog', tags: ['bigquery'], template: [{slot: 'what you want to analyze', placeholder: 'e.g. connector failures by type'}], top: true },
+          { title: 'Run a query: ___', category: 'action', type: 'act', meta: 'BigQuery', tags: ['bigquery'], template: [{slot: 'question or SQL', placeholder: 'natural language or SQL'}], top: true },
+          { title: 'What docs should I read before working on ___?', category: 'question', type: 'ask', meta: 'Slab + Docs', tags: ['slab','docs'], template: [{slot: 'feature or area', placeholder: 'e.g. connector SDK, Oracle setup'}] },
         ]
       },
     ]

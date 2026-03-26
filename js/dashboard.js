@@ -939,16 +939,57 @@ function renderSheetPrompts() {
     });
   };
 
-  container.innerHTML = filtered.map(action => {
+  container.innerHTML = filtered.map((action, idx) => {
     const catStyle = (typeof CATEGORY_STYLES !== 'undefined' && CATEGORY_STYLES[action.category])
       ? CATEGORY_STYLES[action.category]
       : { icon: '', label: action.category, bg: '#f0f0f0', text: '#666' };
 
-    return `<div class="dash-sheet-prompt" onclick="sheetRunAction('${action.title.replace(/'/g, "\\'")}')">
+    const hasTemplate = action.template && action.template.length > 0;
+
+    // Replace ___ in title with styled blanks
+    let displayTitle = action.title;
+    if (hasTemplate) {
+      let slotIdx = 0;
+      displayTitle = action.title.replace(/___/g, () => {
+        const tmpl = action.template[slotIdx] || action.template[0];
+        slotIdx++;
+        return `<span style="border-bottom:2px dashed var(--accent);color:var(--accent-dark);font-weight:600;padding:0 2px;">___</span>`;
+      });
+    }
+
+    // Template inputs (shown on click)
+    let templateHtml = '';
+    if (hasTemplate) {
+      templateHtml = `<div class="action-template-inputs" id="tmpl-${idx}" style="display:none;margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--border);">`;
+      action.template.forEach((t, ti) => {
+        if (t.options) {
+          templateHtml += `<div style="margin-bottom:0.5rem;">
+            <label style="font-size:0.7rem;color:var(--text-light);display:block;margin-bottom:4px;">${t.slot}</label>
+            <select class="tmpl-input" data-slot="${ti}" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;">
+              ${t.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+            </select>
+          </div>`;
+        } else {
+          templateHtml += `<div style="margin-bottom:0.5rem;">
+            <label style="font-size:0.7rem;color:var(--text-light);display:block;margin-bottom:4px;">${t.slot}</label>
+            <input type="text" class="tmpl-input" data-slot="${ti}" placeholder="${t.placeholder || ''}" style="width:100%;padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:0.85rem;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;box-sizing:border-box;" />
+          </div>`;
+        }
+      });
+      templateHtml += `<button onclick="runTemplateAction(${idx})" style="width:100%;padding:10px;background:var(--accent);border:none;border-radius:10px;font-weight:700;font-size:0.85rem;cursor:pointer;font-family:'Inter',sans-serif;margin-top:0.25rem;">Run</button>`;
+      templateHtml += `</div>`;
+    }
+
+    const clickHandler = hasTemplate
+      ? `toggleTemplate(${idx})`
+      : `sheetRunAction('${action.title.replace(/'/g, "\\'")}')`;
+
+    return `<div class="dash-sheet-prompt" onclick="${clickHandler}">
       <span class="dash-sheet-prompt-badge" style="background:${catStyle.bg};color:${catStyle.text};">${catStyle.icon}</span>
-      <div>
-        <div class="dash-sheet-prompt-text">${action.title}</div>
+      <div style="flex:1;">
+        <div class="dash-sheet-prompt-text">${displayTitle}</div>
         <div class="dash-sheet-prompt-meta">${action.meta || ''}</div>
+        ${templateHtml}
       </div>
     </div>`;
   }).join('');
@@ -1051,6 +1092,54 @@ function sheetRunAction(title) {
   closeBottomSheet();
   const inp = document.getElementById('dash-ai-input');
   if (inp) inp.value = title;
+  dashAskQuestion();
+}
+
+function toggleTemplate(idx) {
+  const tmpl = document.getElementById(`tmpl-${idx}`);
+  if (!tmpl) return;
+  // Close all other templates
+  document.querySelectorAll('.action-template-inputs').forEach(el => {
+    if (el.id !== `tmpl-${idx}`) el.style.display = 'none';
+  });
+  tmpl.style.display = tmpl.style.display === 'none' ? 'block' : 'none';
+  // Focus first input
+  if (tmpl.style.display === 'block') {
+    const firstInput = tmpl.querySelector('input, select');
+    if (firstInput) setTimeout(() => firstInput.focus(), 100);
+  }
+  // Stop event propagation
+  event.stopPropagation();
+}
+
+function runTemplateAction(idx) {
+  event.stopPropagation();
+  const roleKey = STATE.role || 'sales';
+  const roleData = (typeof ROLE_DATA !== 'undefined' && ROLE_DATA[roleKey]) ? ROLE_DATA[roleKey] : null;
+  if (!roleData) return;
+
+  const activeFocusId = STATE.activeFocus || roleData.focusAreas[0]?.id;
+  const activeCategory = STATE.activeCategory || 'all';
+  const focusArea = roleData.focusAreas.find(fa => fa.id === activeFocusId) || roleData.focusAreas[0];
+  const actions = focusArea?.actions || [];
+  const filtered = activeCategory === 'all' ? actions : actions.filter(a => a.category === activeCategory);
+  const action = filtered[idx];
+  if (!action) return;
+
+  // Build the prompt by replacing ___ with user inputs
+  const tmplEl = document.getElementById(`tmpl-${idx}`);
+  const inputs = tmplEl?.querySelectorAll('.tmpl-input') || [];
+  let prompt = action.title;
+  let inputIdx = 0;
+  prompt = prompt.replace(/___/g, () => {
+    const input = inputs[inputIdx];
+    inputIdx++;
+    return input?.value || input?.placeholder || '___';
+  });
+
+  closeBottomSheet();
+  const inp = document.getElementById('dash-ai-input');
+  if (inp) inp.value = prompt;
   dashAskQuestion();
 }
 
