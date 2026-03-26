@@ -1088,8 +1088,11 @@ function sheetSelectCategory(category) {
   renderSheetPrompts();
 }
 
+let _actionSource = null; // Set when running from Explore Actions
+
 function sheetRunAction(title) {
   closeBottomSheet();
+  _actionSource = 'action'; // Tag this query as coming from an action
   const inp = document.getElementById('dash-ai-input');
   if (inp) inp.value = title;
   dashAskQuestion();
@@ -1138,6 +1141,7 @@ function runTemplateAction(idx) {
   });
 
   closeBottomSheet();
+  _actionSource = 'action'; // Tag as action-triggered
   const inp = document.getElementById('dash-ai-input');
   if (inp) inp.value = prompt;
   dashAskQuestion();
@@ -2189,7 +2193,26 @@ function _addDashChatMsg(who, text, dataContext) {
   // Markdown-lite: bold, code
   safe = safe.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   safe = safe.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:2px 5px;border-radius:4px;font-size:0.85em;">$1</code>');
-  div.innerHTML = safe.replace(/\n/g, '<br>');
+  // Convert → follow-up lines into clickable chips
+  const lines = safe.split('\n');
+  const followUps = [];
+  const mainLines = [];
+  lines.forEach(line => {
+    if (line.trim().startsWith('→ ') || line.trim().startsWith('&rarr; ')) {
+      followUps.push(line.trim().replace(/^(→|&rarr;)\s*/, ''));
+    } else {
+      mainLines.push(line);
+    }
+  });
+  let mainHtml = mainLines.join('<br>');
+  if (followUps.length > 0) {
+    mainHtml += '<div style="display:flex;flex-wrap:wrap;gap:0.4rem;margin-top:0.75rem;">';
+    followUps.forEach(fu => {
+      mainHtml += `<button onclick="_actionSource='action';document.getElementById('dash-ai-input').value='${fu.replace(/'/g, "\\'")}';dashAskQuestion();" style="padding:6px 14px;border-radius:50px;border:1px solid var(--border);background:var(--surface);font-size:0.78rem;cursor:pointer;color:var(--text-mid);font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--text)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text-mid)'">${fu}</button>`;
+    });
+    mainHtml += '</div>';
+  }
+  div.innerHTML = mainHtml;
 
   // Add Fivetran AI data badge if this was a data response
   if (dataContext) {
@@ -2334,6 +2357,8 @@ async function _getAIResponse(question) {
   _msgCount++;
 
   try {
+    const source = _actionSource || undefined;
+    _actionSource = null; // Reset after use
     const res = await fetch('/api/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2342,6 +2367,7 @@ async function _getAIResponse(question) {
         profile: STATE.profile || {},
         role: STATE.role || 'Sales',
         history: _chatHistory.slice(-10),
+        source, // 'action' triggers FivetranChat routing
       }),
     });
     const data = await res.json();

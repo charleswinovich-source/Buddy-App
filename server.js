@@ -677,19 +677,29 @@ async function callFivetranAITool(toolName, args = {}) {
 function _isDataQuestion(question) {
   const lower = question.toLowerCase();
   const dataPatterns = [
+    // Analytics / metrics
     'how many', 'what is the', 'show me', 'compare', 'trend', 'breakdown',
     'churn', 'arr', 'revenue', 'pipeline', 'conversion', 'retention',
-    'support tickets', 'escalation', 'connector failure', 'sync failure',
     'query', 'table', 'schema', 'dataset', 'sql', 'metric',
     'weekly', 'monthly', 'quarterly', 'year over year', 'yoy',
     'top customers', 'top accounts', 'biggest', 'smallest', 'fastest', 'slowest',
-    'performance', 'usage', 'adoption', 'growth', 'decline',
     'what changed', 'why is', 'root cause', 'analyze', 'analysis',
     'segment', 'region', 'by team', 'by product', 'by connector',
     'forecast', 'predict', 'estimate', 'what if',
-    'open tickets', 'ticket volume', 'support volume',
-    'which customers', 'which accounts', 'who are the',
     'average', 'median', 'sum', 'count', 'percentage', 'ratio',
+    // Engineering / operations
+    'sync failure', 'connector failure', 'error rate', 'latency',
+    'failing', 'performing', 'health', 'incident', 'outage',
+    'which connectors', 'which pipelines', 'which services',
+    'support tickets', 'escalation', 'ticket volume', 'support volume',
+    'open tickets', 'which customers', 'which accounts', 'who are the',
+    'performance', 'usage', 'adoption', 'growth', 'decline',
+    'blast radius', 'affected customers', 'degraded',
+    // Product / feature
+    'feature request', 'most requested', 'customer pain',
+    'nps', 'satisfaction', 'adoption curve',
+    // Explicit data triggers
+    'run a query', 'find the right tables', 'what tables',
   ];
   return dataPatterns.some(p => lower.includes(p));
 }
@@ -1092,7 +1102,8 @@ app.post('/api/action', async (req, res) => {
 
 // ── AI Chat endpoint — real Claude responses ──
 app.post('/api/chat', async (req, res) => {
-  const { message, profile, role, history } = req.body;
+  const { message, profile, role, history, source } = req.body;
+  // source can be: 'action' (from Explore Actions), 'data' (explicit data query), or undefined (regular chat)
   if (!ANTHROPIC_KEY) return res.json({ ok: false, reply: "ai not configured yet." });
 
   try {
@@ -1151,7 +1162,9 @@ RULES:
 - Always be on the user's side`;
 
     // Check if this is a data/analytics question → route to Fivetran AI
-    if (_isDataQuestion(message) && TRIAGE_KEY) {
+    // Explicitly tagged as data/action, or auto-detected
+    const forceData = source === 'data' || source === 'action';
+    if ((forceData || _isDataQuestion(message)) && TRIAGE_KEY) {
       console.log(`[chat] Detected data question, routing to Fivetran AI workflow`);
       try {
         const aiResult = await runFivetranAIWorkflow(message);
@@ -1169,9 +1182,12 @@ Interpret these data results for ${name}. Present the answer clearly:
 1. Start with the key finding in one sentence
 2. Show the most important numbers or trends
 3. If there's a table, format it cleanly in markdown
-4. End with 2-3 follow-up questions they could ask (as suggestions)
+4. End with exactly 3 follow-up suggestions on new lines, each starting with "→ " (arrow space). These should be specific, actionable next questions they could ask. Example:
+→ break this down by connector type
+→ show the trend over the last 90 days
+→ which customers are most affected
 
-Keep your personality — warm, lowercase, confident. But be precise with the data.`;
+Keep your personality — warm, lowercase, confident. But be precise with the data. The follow-up suggestions should feel natural, not formulaic.`;
 
           const interpretResp = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
