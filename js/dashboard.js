@@ -1777,6 +1777,70 @@ function _getInsightAction(insight) {
 // ════════════════════════════════════════════════════════
 // LIFE TAB — init
 // ════════════════════════════════════════════════════════
+function saveSportsTeams() {
+  const input = document.getElementById('sports-teams-input');
+  if (!input || !input.value.trim()) return;
+  const teams = input.value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  STATE.sportsTeams = teams;
+  saveState();
+  initLife();
+}
+
+async function _fetchSportsScores(teams) {
+  const container = document.getElementById('sports-scores');
+  if (!container) return;
+  try {
+    const res = await fetch(`/api/sports/scores?teams=${encodeURIComponent(teams.join(','))}`);
+    const data = await res.json();
+    if (!data.ok || !data.results?.length) {
+      container.innerHTML = '<div style="color:#9A96A8;font-size:0.82rem;">no scores found</div>';
+      return;
+    }
+    container.innerHTML = data.results.map(r => {
+      if (r.error) return `<div style="padding:0.4rem 0;color:#9A96A8;font-size:0.82rem;">${r.team}: not found</div>`;
+      if (r.news) {
+        // No game today — show news
+        return `<div style="padding:0.6rem 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+          <div style="font-weight:600;font-size:0.85rem;color:#1A1A2E;margin-bottom:0.25rem;">${r.team.charAt(0).toUpperCase()+r.team.slice(1)} <span style="font-size:0.65rem;color:#9A96A8;font-weight:400;">${r.league} · No game today</span></div>
+          ${r.news.map(n => `<div style="font-size:0.8rem;color:#6B6580;line-height:1.5;padding:0.2rem 0;">${n.headline}</div>`).join('')}
+        </div>`;
+      }
+      // Live or final score
+      const isLive = r.status?.toLowerCase().includes('progress') || r.statusDetail?.toLowerCase().includes('half') || r.statusDetail?.match(/\d+(st|nd|rd|th)/);
+      const statusColor = isLive ? '#ef4444' : '#9A96A8';
+      const statusText = isLive ? 'LIVE · ' + r.statusDetail : r.status;
+      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          ${r.away?.logo ? `<img src="${r.away.logo}" style="width:20px;height:20px;">` : ''}
+          <span style="font-weight:600;font-size:0.85rem;color:#1A1A2E;">${r.away?.name || ''}</span>
+        </div>
+        <div style="text-align:center;">
+          <div style="font-weight:800;font-size:1rem;color:#1A1A2E;">${r.away?.score || 0} - ${r.home?.score || 0}</div>
+          <div style="font-size:0.6rem;color:${statusColor};font-weight:600;">${statusText}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.5rem;">
+          <span style="font-weight:600;font-size:0.85rem;color:#1A1A2E;">${r.home?.name || ''}</span>
+          ${r.home?.logo ? `<img src="${r.home.logo}" style="width:20px;height:20px;">` : ''}
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    container.innerHTML = '<div style="color:#9A96A8;font-size:0.82rem;">could not load scores</div>';
+  }
+}
+
+function submitWidgetIdea() {
+  const input = document.getElementById('widget-suggest');
+  const msg = document.getElementById('widget-suggest-msg');
+  if (!input || !input.value.trim()) return;
+  const idea = input.value.trim();
+  input.value = '';
+  if (msg) msg.textContent = 'thanks! we logged it.';
+  // Log to server
+  fetch('/api/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'widget-idea', text: idea }) }).catch(() => {});
+  setTimeout(() => { if (msg) msg.textContent = ''; }, 3000);
+}
+
 function initLife() {
   // Sync date pill
   const now = new Date();
@@ -1866,27 +1930,26 @@ function initLife() {
     </div>
   </div>`;
 
-  // Card 3: Sports
-  const sports = getMockSports();
-  html += `<div class="life-card">
-    <div class="life-card-title">\u{1F3C0} Sports</div>
-    ${sports.map(g => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid rgba(0,0,0,0.04);">
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <span style="font-size:1.1rem;">${g.emoji1}</span>
-          <span style="font-weight:600;font-size:0.85rem;color:#1A1A2E;">${g.team1}</span>
-        </div>
-        <div style="text-align:center;">
-          <div style="font-weight:800;font-size:1rem;color:#1A1A2E;">${g.score1} - ${g.score2}</div>
-          <div style="font-size:0.65rem;color:${g.status.includes('LIVE') ? '#ef4444' : '#9A96A8'};font-weight:600;">${g.status}</div>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.5rem;">
-          <span style="font-weight:600;font-size:0.85rem;color:#1A1A2E;">${g.team2}</span>
-          <span style="font-size:1.1rem;">${g.emoji2}</span>
-        </div>
+  // Card 3: Sports — ask what teams if not set, else show real scores
+  const savedTeams = STATE.sportsTeams || [];
+  if (savedTeams.length === 0) {
+    html += `<div class="life-card" id="sports-card">
+      <div class="life-card-title">\u{1F3C0} Sports</div>
+      <div style="color:#9A96A8;font-size:0.88rem;margin-bottom:0.75rem;">what teams do you follow?</div>
+      <input id="sports-teams-input" type="text" placeholder="e.g. Warriors, 49ers, Giants" style="width:100%;padding:10px 14px;border-radius:10px;border:1px solid #E0DDD6;font-size:0.88rem;font-family:Inter,sans-serif;outline:none;box-sizing:border-box;" onkeydown="if(event.key==='Enter')saveSportsTeams()"/>
+      <button onclick="saveSportsTeams()" style="margin-top:0.75rem;width:100%;padding:10px;border-radius:10px;background:#9DBF10;color:white;font-weight:700;font-size:0.88rem;border:none;cursor:pointer;">save my teams</button>
+    </div>`;
+  } else {
+    html += `<div class="life-card" id="sports-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <div class="life-card-title" style="margin:0;">\u{1F3C0} Sports</div>
+        <button onclick="STATE.sportsTeams=[];saveState();initLife();" style="font-size:0.65rem;color:#9A96A8;background:none;border:none;cursor:pointer;">edit teams</button>
       </div>
-    `).join('')}
-  </div>`;
+      <div id="sports-scores" style="color:#9A96A8;font-size:0.82rem;">loading scores...</div>
+    </div>`;
+    // Fetch real ESPN data
+    _fetchSportsScores(savedTeams);
+  }
 
   // Card 4: Health
   const health = getMockHealth();
@@ -1922,29 +1985,14 @@ function initLife() {
     </div>
   </div>`;
 
-  // Card 6: Personal Goals
-  const goals = STATE.profile.goals || STATE.profile.challenge || '';
-  html += `<div class="life-card">
-    <div class="life-card-title">\u{1F3AF} Goals</div>
-    ${goals ? `<div style="font-size:0.88rem;color:#1A1A2E;line-height:1.5;">${goals}</div>
-    <div style="font-size:0.75rem;color:#9A96A8;margin-top:0.5rem;">your buddy will check in on these over time</div>`
-    : `<div style="color:#9A96A8;font-size:0.85rem;">tell your buddy about your goals in chat and they'll show up here</div>`}
-  </div>`;
-
-  // Card 7: Music
-  const music = getMockMusic();
-  html += `<div class="life-card">
-    <div class="life-card-title">\u{1F3B5} Recently Played</div>
-    ${music.map(t => `
-      <div style="display:flex;align-items:center;gap:0.75rem;padding:0.45rem 0;">
-        <div style="width:36px;height:36px;border-radius:8px;background:${t.color};display:flex;align-items:center;justify-content:center;font-size:0.9rem;">\u{1F3B5}</div>
-        <div style="flex:1;">
-          <div style="font-weight:600;font-size:0.82rem;color:#1A1A2E;">${t.title}</div>
-          <div style="font-size:0.72rem;color:#9A96A8;">${t.artist}</div>
-        </div>
-        <div style="font-size:0.7rem;color:#C4C0D0;">${t.time}</div>
-      </div>
-    `).join('')}
+  // "What should we add next?" suggestion box
+  html += `<div class="life-card" style="text-align:center;border:1px dashed rgba(0,0,0,0.1);">
+    <div class="life-card-title">💡 What should we add next?</div>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <input id="widget-suggest" type="text" placeholder="a widget idea..." style="flex:1;padding:8px 12px;border-radius:10px;border:1px solid #E0DDD6;font-size:0.85rem;font-family:Inter,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')submitWidgetIdea()"/>
+      <button onclick="submitWidgetIdea()" style="padding:8px 16px;border-radius:10px;background:#9DBF10;color:white;font-weight:600;font-size:0.8rem;border:none;cursor:pointer;">send</button>
+    </div>
+    <div id="widget-suggest-msg" style="font-size:0.75rem;color:#9A96A8;margin-top:0.5rem;"></div>
   </div>`;
 
   html += '<div style="height:4rem;"></div>';
