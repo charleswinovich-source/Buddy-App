@@ -85,35 +85,43 @@ function createBuddy3D(container, options = {}) {
     ctx.clearRect(0, 0, s, s);
 
     const cx = s / 2;
-    const cy = s / 2 + 6; // moved up ~10-15%
-    const spacing = 44; // wider apart ~10%
-    const w = 23; // slightly larger
-    const h = 28;
+    const cy = s / 2 + 4;
+    const spacing = 40;
+    const w = 18;
+    const h = 22;
 
     [-1, 1].forEach(side => {
       const ex = cx + side * spacing;
       ctx.save();
 
-      // Soft oval — slight inward tilt for curious/calm expression
+      // Solid dark eye — no gradient that creates hollow look
       ctx.beginPath();
-      ctx.ellipse(ex, cy, w, h, side * -0.12, 0, Math.PI * 2); // inward tilt
-      const grad = ctx.createRadialGradient(ex, cy - 4, 2, ex, cy, h);
-      grad.addColorStop(0, '#4a4a62');
-      grad.addColorStop(0.4, '#35354d');
-      grad.addColorStop(1, '#22223a');
-      ctx.fillStyle = grad;
+      ctx.ellipse(ex, cy, w, h, side * -0.1, 0, Math.PI * 2);
+      ctx.fillStyle = '#1a1a2e';
       ctx.fill();
 
-      // Soft highlight — top, calm and gentle
+      // Inner iris — slightly lighter, gives depth
       ctx.beginPath();
-      ctx.ellipse(ex + w * 0.22, cy - h * 0.28, 5, 5, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.7)';
+      ctx.ellipse(ex, cy, w * 0.75, h * 0.75, side * -0.1, 0, Math.PI * 2);
+      ctx.fillStyle = '#252540';
       ctx.fill();
 
-      // Tiny secondary — subtle
+      // Pupil — darkest center
       ctx.beginPath();
-      ctx.ellipse(ex - w * 0.15, cy + h * 0.18, 2.5, 2.5, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.ellipse(ex, cy + 1, w * 0.45, h * 0.45, 0, 0, Math.PI * 2);
+      ctx.fillStyle = '#0d0d1a';
+      ctx.fill();
+
+      // Main highlight — top right, big and bright
+      ctx.beginPath();
+      ctx.ellipse(ex + w * 0.25, cy - h * 0.25, 6, 6, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.9)';
+      ctx.fill();
+
+      // Secondary highlight — bottom left, smaller
+      ctx.beginPath();
+      ctx.ellipse(ex - w * 0.2, cy + h * 0.2, 3, 3, 0, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
       ctx.fill();
 
       ctx.restore();

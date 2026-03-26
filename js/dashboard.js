@@ -6,6 +6,23 @@ let _buddy3dCleanup = null;
 let _buddy3dState = null;
 let _realCalendarEvents = null; // cached real calendar events
 
+// ── Scratchpad ──
+let _scratchpadTimeout = null;
+function _saveScratchpad() {
+  clearTimeout(_scratchpadTimeout);
+  _scratchpadTimeout = setTimeout(() => {
+    const el = document.getElementById('scratchpad');
+    if (el) { STATE.scratchpad = el.value; saveState(); }
+  }, 500); // debounce 500ms
+}
+function _clearScratchpad() {
+  if (!confirm('clear your scratchpad?')) return;
+  STATE.scratchpad = '';
+  saveState();
+  const el = document.getElementById('scratchpad');
+  if (el) el.value = '';
+}
+
 // ── Fetch real calendar and refresh the UPCOMING widget ──
 async function _fetchRealCalendar() {
   try {
@@ -61,18 +78,27 @@ async function _fetchRealGmail() {
     const data = await res.json();
     if (data.ok && data.messages?.length >= 0) {
       _refreshMessagesWidget(data.messages);
+    } else if (data.authUrl) {
+      // Gmail not authorized — show connect prompt in messages widget
+      _refreshMessagesWidget(null, true);
     }
   } catch (e) {
     console.log('[gmail] Real gmail unavailable:', e.message);
   }
 }
 
-function _refreshMessagesWidget(messages) {
+function _refreshMessagesWidget(messages, needsAuth) {
   // Find the MESSAGES widget
   const widgets = document.querySelectorAll('.dash-widget-title');
   let card = null;
-  widgets.forEach(w => { if (w.textContent.includes('MESSAGES')) card = w.closest('.dash-widget-card'); });
+  widgets.forEach(w => { if (w.textContent.includes('MESSAGES') || w.textContent.includes('INBOX')) card = w.closest('.dash-widget-card'); });
   if (!card) return;
+
+  if (needsAuth) {
+    card.innerHTML = `<div class="dash-widget-title">📧 INBOX</div>
+      <a href="/api/connect/google" style="font-size:0.78rem;color:var(--accent);text-decoration:none;">connect Gmail →</a>`;
+    return;
+  }
 
   const unread = messages.slice(0, 4);
   const count = messages.length;
@@ -94,6 +120,45 @@ function _refreshMessagesWidget(messages) {
   }
 
   card.innerHTML = html;
+}
+
+// ── Fetch tomorrow's events for "day is done" card ──
+function _fetchTomorrowPreview() {
+  const el = document.getElementById('tomorrow-events');
+  if (!el) return;
+
+  const events = _realCalendarEvents || [];
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  // Filter for tomorrow's events (real calendar returns today + tomorrow)
+  const tomorrowEvents = events.filter(ev => {
+    if (ev.allDay) return false;
+    // Check if the event's start time suggests it's tomorrow
+    const evTime = ev.time?.match(/(\d+):(\d+)/);
+    if (!evTime) return false;
+    // If we only have today's data, we can't distinguish — show all future
+    return true;
+  });
+
+  // Since our API returns today + tomorrow, events after current time are either later today or tomorrow
+  // For now show a clean message; real tomorrow data will populate when calendar is connected
+  if (tomorrowEvents.length === 0) {
+    el.innerHTML = '<span style="color:var(--text-faint);">connect your calendar to see tomorrow\'s schedule</span>';
+    return;
+  }
+
+  // Show up to 4 tomorrow events
+  const preview = tomorrowEvents.slice(0, 4);
+  el.innerHTML = preview.map(ev => {
+    const isExt = ev.isExternal;
+    const dot = isExt ? '🔵' : '🟢';
+    return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.25rem 0;">
+      <span style="font-size:0.5rem;">${dot}</span>
+      <span style="font-size:0.72rem;color:var(--text-light);min-width:36px;">${ev.time}</span>
+      <span style="font-size:0.8rem;color:var(--text);">${ev.title}</span>
+    </div>`;
+  }).join('') + (tomorrowEvents.length > 4 ? `<div style="font-size:0.72rem;color:var(--text-faint);margin-top:0.25rem;">+ ${tomorrowEvents.length - 4} more</div>` : '');
 }
 
 function _refreshUpcomingWidget() {
@@ -173,7 +238,7 @@ function initDashboard() {
   renderBottomSheet();
 
   // Fetch real data in background — updates widgets when ready
-  _fetchRealCalendar();
+  _fetchRealCalendar().then(() => _fetchTomorrowPreview());
   _fetchRealGmail();
 }
 
@@ -320,7 +385,21 @@ function renderDashContent() {
   let greeting = 'Good evening';
   if (hour < 12) greeting = 'Good morning';
   else if (hour < 17) greeting = 'Good afternoon';
-  const name = STATE.profile.userName || 'friend';
+  // Try to get name from state, then from IAP
+  let name = STATE.profile.userName || '';
+  if (!name || name.length < 2) {
+    // Try to get from IAP user endpoint
+    fetch('/api/auth/me').then(r => r.json()).then(d => {
+      if (d.ok && d.user?.name && d.user.name.length > 2) {
+        const firstName = d.user.name.split(' ')[0].split('.')[0];
+        STATE.profile.userName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
+        saveState();
+        const el = document.getElementById('dash-greeting-text');
+        if (el) el.textContent = `${greeting}, ${STATE.profile.userName}!`;
+      }
+    }).catch(() => {});
+  }
+  if (!name || name.length < 2) name = 'there';
   const greetingText = `${greeting}, ${name}!`;
 
   const greetingArea = document.createElement('div');
@@ -369,6 +448,16 @@ function renderDashContent() {
     return evTotal > nowTotal;
   }).slice(0, 4);
 
+  // Tomorrow's meetings (for end-of-day prep)
+  const tomorrowEvents = allEvents.filter(ev => {
+    if (ev.allDay) return false;
+    // If we have real calendar, events from tomorrow will have different dates
+    // For mock data, just show last few events as "tomorrow"
+    const timeParts = ev.time?.match(/(\d+):(\d+)/);
+    if (!timeParts) return false;
+    return false; // Will be populated when real calendar returns 2 days
+  });
+
   let nowCardHtml = '';
   if (nextMeeting) {
     const isExt = nextMeeting.isExternal;
@@ -389,6 +478,23 @@ function renderDashContent() {
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
           ${joinBtn}
           ${prepBtn}
+        </div>
+      </div>`;
+  } else {
+    // Day is done — show wrap-up with tomorrow preview
+    const completedCount = allEvents.filter(e => !e.allDay).length;
+    const privCheck = STATE.privacy || {};
+    nowCardHtml = `
+      <div id="now-card" style="background:var(--surface);border-radius:16px;border-left:4px solid #8B5CF6;padding:1.25rem;margin-bottom:1rem;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+        <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.75rem;">YOUR DAY</div>
+        <div style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.15rem;color:var(--text);margin-bottom:0.25rem;">you're done for today ✨</div>
+        <div style="font-size:0.85rem;color:var(--text-light);line-height:1.6;margin-bottom:0.75rem;">
+          ${completedCount > 0 ? completedCount + ' meeting' + (completedCount > 1 ? 's' : '') + ' completed.' : 'clear day.'}
+          ${privCheck.postMeetingTranscript ? ' check summaries below.' : ''}
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:0.75rem;">
+          <div style="font-size:0.7rem;color:#8B5CF6;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.5rem;">PREP FOR TOMORROW</div>
+          <div style="font-size:0.8rem;color:var(--text-light);" id="tomorrow-events">loading tomorrow's schedule...</div>
         </div>
       </div>`;
   }
@@ -457,9 +563,24 @@ function renderDashContent() {
     ${nowCardHtml}
     ${laterHtml}
     ${doneHtml}
+
+    <!-- Scratchpad -->
+    <div style="background:var(--surface);border-radius:16px;padding:1rem 1.25rem;margin-bottom:1rem;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">✏️ SCRATCHPAD</div>
+        <button onclick="_clearScratchpad()" style="font-size:0.65rem;color:var(--text-faint);background:none;border:none;cursor:pointer;">clear</button>
+      </div>
+      <textarea id="scratchpad" placeholder="jot down thoughts, reminders, ideas..." oninput="_saveScratchpad()" style="
+        width:100%;min-height:80px;max-height:200px;resize:vertical;
+        background:none;border:none;outline:none;
+        font-family:'Inter',sans-serif;font-size:0.85rem;line-height:1.6;
+        color:var(--text);padding:0;
+      ">${(STATE.scratchpad || '').replace(/</g,'&lt;')}</textarea>
+    </div>
+
     ${msgHtml}
 
-    <div id="buddy-3d-inline" style="display:flex;justify-content:center;margin:0.5rem 0;pointer-events:none;"><canvas id="buddy-3d-canvas" width="140" height="140" style="width:140px;height:140px;pointer-events:none;"></canvas></div>
+    <div id="buddy-3d-inline" style="display:flex;justify-content:center;margin:0.5rem 0;pointer-events:none;"><canvas id="buddy-3d-canvas" width="120" height="120" style="width:120px;height:120px;pointer-events:none;"></canvas></div>
 
     <div class="dash-ai-input-wrap">
       <input type="text" id="dash-ai-input" placeholder="ask me anything..." onkeydown="if(event.key==='Enter')dashAskQuestion()" oninput="buddyReactToTyping(this.value)" />
@@ -987,6 +1108,13 @@ function initInsights() {
   const dateStr = `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}`;
   const pill = document.getElementById('insights-date-pill');
   if (pill) pill.textContent = `${dateStr} \u2022 ${timeStr}`;
+
+  // ── NEW: Clean signals-based insights ──
+  const insightsContent = document.querySelector('.insights-content');
+  if (insightsContent) {
+    insightsContent.querySelector('.insights-title').textContent = 'Signals';
+    insightsContent.querySelector('.insights-sub').textContent = 'things that need your attention';
+  }
 
   const feed = document.getElementById('insights-feed');
   if (!feed) return;
