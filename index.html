@@ -33,73 +33,133 @@
       <span class="nav-badge">Fivetran AI</span>
     </nav>
     <div class="welcome-hero-text">
-      <p class="hero-eyebrow">meet your ai work companion</p>
-      <h1>this is <span class="accent-word glow-text">buddy</span>.</h1>
-      <p class="welcome-sub">one assistant that knows your Salesforce, Gong, Slack, calendar, and everything in between. powered by Fivetran AI.</p>
+      <h1>your data is everywhere.<br><span class="accent-word glow-text">now it works for you.</span></h1>
+      <p class="welcome-sub">Every tool. Every system. Every team.<br>One AI that connects them all and takes action.</p>
       <div class="hero-btn-row">
-        <button class="hero-btn primary" onclick="goTo('creator')">get started <span class="arrow">&rarr;</span></button>
-        <button class="hero-btn secondary" onclick="document.querySelector('.welcome-features').scrollIntoView({behavior:'smooth'})">learn more <span class="arrow">&darr;</span></button>
+        <button class="hero-btn primary" onclick="goTo('creator')">try buddy <span class="arrow">&rarr;</span></button>
       </div>
     </div>
     <div id="hero-buddy-3d" class="hero-buddy-3d"></div>
     <div class="welcome-scroll-hint scroll-indicator">&darr;</div>
   </section>
 
-  <!-- Section 2: What Buddy Does -->
+  <!-- Section 2: The problem -->
   <section class="welcome-features">
-    <div class="features-pill">What Buddy Does</div>
-    <h2>your work, handled.</h2>
-    <p class="features-intro">Buddy connects to every tool you use and takes action &mdash; so you spend less time on busywork and more time closing deals.</p>
-    <div class="feature-cards">
-      <div class="feature-card">
-        <div class="feature-card-icon">🎧</div>
-        <h3>post-call autopilot</h3>
-        <p>After a Gong call, Buddy extracts MEDDPICC, next steps, and notes &mdash; then fills your Salesforce opp automatically.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">📅</div>
-        <h3>smart scheduling</h3>
-        <p>&ldquo;Schedule 30 min with Stephen to discuss MCP&rdquo; &mdash; Buddy checks both calendars and sends the invite.</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">💬</div>
-        <h3>knows your context</h3>
-        <p>Ask anything about your accounts, deals, or team. Buddy searches Salesforce, Gong, Slack, and Slab to give you real answers.</p>
+    <div class="statement-block">
+      <h2>your company runs on<br>47 different tools.<br>none of them talk<br>to each other.</h2>
+      <p class="statement-after">Until now.</p>
+    </div>
+  </section>
+
+  <!-- Section 3: The vision — role-agnostic -->
+  <section class="welcome-platform">
+    <div class="platform-content">
+      <div class="features-pill">The Vision</div>
+      <h2>AI that knows your <span class="accent-word glow-text">entire</span> business.</h2>
+      <p class="platform-desc">Not just one tool. Not just one team. Buddy connects to every system your company runs on and gives every employee an AI that actually understands their work.</p>
+
+      <div class="flow-steps">
+        <div class="flow-step">
+          <div class="flow-num">01</div>
+          <div class="flow-body">
+            <h4>Connect everything</h4>
+            <p>1,000+ data sources. CRM, support, engineering, finance, HR, product &mdash; all connected. Your data stays in your warehouse.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">02</div>
+          <div class="flow-body">
+            <h4>Understand context across systems</h4>
+            <p>Buddy knows that a Salesforce account is the same customer as a Zendesk org, a Jira project, a Slack channel, and a Gong call.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">03</div>
+          <div class="flow-body">
+            <h4>Adapt to every role</h4>
+            <p>Sales gets deal prep. Support gets ticket context. Engineering gets sprint analytics. Product gets customer evidence. Finance gets ARR models. Everyone gets answers.</p>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-num">04</div>
+          <div class="flow-body">
+            <h4>Act, don't just answer</h4>
+            <p>Fill Salesforce fields. File expense reports. Create Jira tickets. Draft emails. Schedule meetings. Buddy doesn't just tell you &mdash; it does.</p>
+          </div>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Section 3: Powered by Fivetran AI -->
-  <section class="welcome-platform">
+  <!-- Section 4: What it looks like for every team -->
+  <section class="welcome-features" style="background:#0A0A0A;">
+    <div class="features-pill">For Every Team</div>
+    <h2>not a chatbot.<br><span class="accent-word glow-text">an operating system for work.</span></h2>
+    <div class="feature-cards">
+      <div class="feature-card">
+        <div class="feature-card-icon">💼</div>
+        <h3>Sales &amp; SEs</h3>
+        <p>Post-call autopilot. Meeting intelligence. Deal prep with real customer data across every system.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">🛟</div>
+        <h3>Support</h3>
+        <p>Instant customer context. Ticket summaries. Escalation signals from across Zendesk, Jira, and Slack.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">📐</div>
+        <h3>Product</h3>
+        <p>Customer evidence for PRDs. Feature request signals. Churn investigation. Experiment design review.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">⚡</div>
+        <h3>Engineering</h3>
+        <p>Sprint analytics. PR reviews. BigQuery and Snowflake queries in natural language. Connector SDK.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">📊</div>
+        <h3>Finance</h3>
+        <p>ARR models. Revenue change analysis. Pricing impact estimates. Expense reports from receipt photos.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-card-icon">🧩</div>
+        <h3>63 Skills and Growing</h3>
+        <p>Every team builds skills. Every skill is available to every agent. The library grows every week.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: The Engine -->
+  <section class="welcome-platform" style="background:#0D0D0D;">
     <div class="platform-content">
-      <div class="features-pill">Powered By</div>
+      <div class="features-pill">The Engine</div>
       <h2>Fivetran <span class="accent-word glow-text">AI</span></h2>
-      <p class="platform-desc">The governed data layer for AI agents. Any agent, any runtime, any enterprise data source &mdash; Fivetran connects them.</p>
+      <p class="platform-desc">The governed data layer for AI agents. Any agent. Any runtime. Any enterprise data source. No walled gardens. No vendor lock-in. Your data, your way.</p>
       <div class="platform-layers">
         <div class="layer-card">
           <div class="layer-number">01</div>
           <h4>Managed Embeddings</h4>
-          <p>Fivetran creates and maintains embeddings across 1,000+ connectors. Your data stays in your warehouse.</p>
+          <p>Automatic indexing across every connected source. Always fresh. Always governed. Always in sync.</p>
         </div>
         <div class="layer-card">
           <div class="layer-number">02</div>
-          <h4>Cross-Source Search</h4>
-          <p>Unified search that knows how a Salesforce account maps to a Zendesk org, a Jira project, and a Slack channel.</p>
+          <h4>Cross-Source Intelligence</h4>
+          <p>Entity resolution across systems. One customer, one view &mdash; no matter how many tools they touch.</p>
         </div>
         <div class="layer-card">
           <div class="layer-number">03</div>
           <h4>Skills &amp; Plugins</h4>
-          <p>Pre-built capabilities for support triage, account research, deal prep &mdash; available to any AI agent.</p>
+          <p>Pre-built capabilities for any AI agent. From Claude to ChatGPT to your own internal tools. Open, not walled.</p>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Section 4: CTA -->
+  <!-- Section 6: CTA -->
   <section class="welcome-buddy-teaser">
-    <h2>ready to meet your buddy?</h2>
-    <p class="teaser-sub">personalize your assistant, connect your tools, and let Buddy handle the rest.</p>
-    <button class="hero-btn primary" onclick="goTo('creator')">get started <span class="arrow">&rarr;</span></button>
+    <h2>this is the beginning.</h2>
+    <p class="teaser-sub">Democratizing data access for every role, at every company.</p>
+    <button class="hero-btn primary" onclick="goTo('creator')">try buddy <span class="arrow">&rarr;</span></button>
   </section>
 </div>
 
@@ -197,13 +257,13 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l9-9 9 9"/><path d="M5 10v10a1 1 0 001 1h3m10-11v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001 1h4a1 1 0 001-1v-5a1 1 0 011-1h2a1 1 0 011 1v5"/></svg>
       Buddy
     </button>
-    <button onclick="goTo('calendar'); initCalendar();" id="nav-calendar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-      Calendar
-    </button>
     <button onclick="goTo('insights'); initInsights();" id="nav-insights">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
       Pulse
+    </button>
+    <button onclick="goTo('calendar'); initCalendar();" id="nav-calendar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendar
     </button>
     <button onclick="goTo('life'); initLife();" id="nav-life">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>

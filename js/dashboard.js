@@ -755,12 +755,12 @@ function renderDashContent() {
 
   greetingArea.innerHTML = `
     <!-- Buddy Avatar — hero position -->
-    <div id="buddy-3d-inline" style="width:150px;height:150px;margin:0 auto 0.25rem;pointer-events:none;"></div>
+    <div id="buddy-3d-inline" style="width:160px;height:160px;margin:0 auto 0.5rem;pointer-events:none;"></div>
 
-    <h1 id="dash-greeting-text" style="margin-bottom:0.5rem;text-align:center;"></h1>
+    <h1 id="dash-greeting-text" style="margin-bottom:0.75rem;text-align:center;"></h1>
 
-    <!-- Command Bar -->
-    <div style="position:relative;margin:0 0 1rem;">
+    <!-- Command Bar — the main experience -->
+    <div style="position:relative;margin:0 0 0.5rem;">
       <div style="background:var(--surface);border-radius:20px;padding:4px;box-shadow:0 2px 16px rgba(0,0,0,0.08),0 0 0 1px rgba(0,0,0,0.04);">
         <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1.25rem;">
           <input type="text" id="dash-ai-input" placeholder="ask buddy anything..."
@@ -773,11 +773,6 @@ function renderDashContent() {
         </div>
       </div>
     </div>
-
-    ${nowCardHtml}
-    ${laterHtml}
-    ${doneHtml}
-    ${msgHtml}
   `;
   content.appendChild(greetingArea);
 
