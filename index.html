@@ -29,25 +29,148 @@
   <!-- Section 1: Hero -->
   <section class="welcome-hero">
     <nav class="welcome-nav">
-      <div class="vibetran-wordmark wordmark glow-text">vibetran</div>
-      <span class="nav-badge">Fivetran AI</span>
+      <div id="vibetran-logo" class="vibetran-wordmark wordmark glow-text" onclick="showEasterEgg()" style="cursor:pointer;transition:filter 0.3s,text-shadow 0.3s;">vibetran</div>
+      <span class="nav-badge" onclick="event.stopPropagation();goTo('profile');showProfile();" style="cursor:pointer;">Fivetran AI</span>
     </nav>
     <div class="welcome-hero-text">
-      <h1>your data is everywhere.<br><span class="accent-word glow-text">now it works for you.</span></h1>
-      <p class="welcome-sub">Every tool. Every system. Every team.<br>One AI that connects them all and takes action.</p>
+      <h1><span class="accent-word glow-text">Buddy OS</span></h1>
+      <p class="welcome-sub">Every tool. Every system. Every team. One AI.</p>
       <div class="hero-btn-row">
-        <button class="hero-btn primary" onclick="goTo('creator')">try buddy <span class="arrow">&rarr;</span></button>
+        <button class="hero-btn primary" onclick="goTo('creator')">meet your buddy <span class="arrow">&rarr;</span></button>
       </div>
     </div>
     <div id="hero-buddy-3d" class="hero-buddy-3d"></div>
     <div class="welcome-scroll-hint scroll-indicator">&darr;</div>
+    <script>
+    // Proximity glow on vibetran logo
+    document.addEventListener('mousemove', function(e){
+      var logo = document.getElementById('vibetran-logo');
+      if(!logo) return;
+      var rect = logo.getBoundingClientRect();
+      var cx = rect.left + rect.width/2;
+      var cy = rect.top + rect.height/2;
+      var dist = Math.sqrt(Math.pow(e.clientX - cx, 2) + Math.pow(e.clientY - cy, 2));
+      var maxDist = 1250;
+      var intensity = Math.max(0, 1 - dist/maxDist);
+      var glow = Math.round(intensity * 120);
+      var bright = 1 + intensity * 1.6;
+      logo.style.filter = 'drop-shadow(0 0 '+glow+'px rgba(200,240,49,'+Math.min(intensity*1.5,1)+')) brightness('+bright+')';
+      if(intensity > 0.8) logo.style.cursor = 'pointer';
+    });
+
+    var _petitionStep = 0;
+    var _boringRating = 0;
+    var _boringText = '';
+
+    function showEasterEgg(){
+      if(document.getElementById('petition-overlay'))return;
+      _petitionStep = 0;
+      var o=document.createElement('div');o.id='petition-overlay';
+      o.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;backdrop-filter:blur(10px);';
+      o.onclick=function(){o.remove()};
+      o.innerHTML='<div id="petition-card" style="background:rgba(200,240,49,0.04);border:1px solid rgba(200,240,49,0.15);border-radius:24px;padding:2.5rem;max-width:440px;width:90%;text-align:center;cursor:default;max-height:85vh;overflow-y:auto;" onclick="event.stopPropagation()"></div>';
+      document.body.appendChild(o);
+      showPetitionStep1();
+    }
+
+    // Step 1: Type the most boring thing about your job
+    function showPetitionStep1(){
+      var card=document.getElementById('petition-card');
+      card.innerHTML=`
+        <div style="font-size:1.5rem;margin-bottom:0.5rem;">😐</div>
+        <div style="color:#C8F031;font-family:Nunito,sans-serif;font-weight:800;font-size:1.1rem;margin-bottom:0.5rem;">before we begin...</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:0.88rem;line-height:1.7;margin-bottom:1.5rem;">what is the single most boring thing about your job?</div>
+        <textarea id="boring-input" placeholder="updating Salesforce after every call..." style="width:100%;min-height:70px;padding:12px 16px;border-radius:12px;border:1px solid rgba(200,240,49,0.15);background:rgba(255,255,255,0.04);color:#F5F5F5;font-size:0.9rem;font-family:Inter,sans-serif;outline:none;resize:none;box-sizing:border-box;"></textarea>
+        <button onclick="rateBoring()" style="margin-top:1rem;padding:12px 28px;border-radius:12px;background:#C8F031;color:#0D0D0D;font-weight:700;font-size:0.9rem;border:none;cursor:pointer;font-family:Inter,sans-serif;">rate my boredom</button>`;
+    }
+
+    // Rate it and transition to step 2
+    function rateBoring(){
+      var input=document.getElementById('boring-input');
+      _boringText=(input?input.value:'').trim();
+      if(!_boringText)return;
+      _boringRating=Math.floor(Math.random()*3)+8; // always 8-10 lol
+      var card=document.getElementById('petition-card');
+      card.innerHTML=`
+        <div style="font-size:3rem;margin-bottom:0.5rem;">${_boringRating===10?'💀':'😩'}</div>
+        <div style="color:#C8F031;font-family:Nunito,sans-serif;font-weight:800;font-size:2rem;margin-bottom:0.5rem;">${_boringRating}/10</div>
+        <div style="color:rgba(255,255,255,0.5);font-size:0.88rem;line-height:1.7;margin-bottom:0.5rem;">"${_boringText.substring(0,80)}"</div>
+        <div style="color:rgba(255,255,255,0.3);font-size:0.8rem;margin-bottom:2rem;">${_boringRating===10?'that is criminally boring. we are so sorry.':_boringRating===9?'yeah, brutal. nobody should have to do that.':'honestly? worse than we expected.'}</div>
+        <div style="color:rgba(255,255,255,0.45);font-size:0.85rem;margin-bottom:0.5rem;">one more thing.</div>
+        <div style="color:rgba(255,255,255,0.35);font-size:0.8rem;margin-bottom:1.5rem;">drag the corporate overlord into the trash to continue.</div>
+        <div style="position:relative;height:140px;display:flex;align-items:center;justify-content:space-around;">
+          <div id="boss-drag" draggable="true" ondragstart="event.dataTransfer.setData('text','boss')" style="font-size:3.5rem;cursor:grab;user-select:none;transition:transform 0.2s;" onmousedown="this.style.transform='scale(1.1)'" onmouseup="this.style.transform='scale(1)'">🧑‍💼</div>
+          <div id="trash-drop" ondragover="event.preventDefault();this.style.transform='scale(1.2)';this.style.background='rgba(200,240,49,0.15)'" ondragleave="this.style.transform='scale(1)';this.style.background='rgba(255,255,255,0.05)'" ondrop="event.preventDefault();trashBoss()" style="font-size:2.5rem;width:80px;height:80px;display:flex;align-items:center;justify-content:center;border-radius:16px;border:2px dashed rgba(255,255,255,0.15);background:rgba(255,255,255,0.05);transition:all 0.2s;">🗑️</div>
+        </div>`;
+    }
+
+    // Boss trashed — show the petition
+    function trashBoss(){
+      var boss=document.getElementById('boss-drag');
+      if(boss){boss.style.transform='scale(0)';boss.style.opacity='0';}
+      var trash=document.getElementById('trash-drop');
+      if(trash){trash.innerHTML='💥';trash.style.transform='scale(1.3)';trash.style.background='rgba(200,240,49,0.2)';}
+      setTimeout(showPetitionFinal,600);
+    }
+
+    // Final petition with sign form
+    function showPetitionFinal(){
+      var card=document.getElementById('petition-card');
+      card.innerHTML=`
+        <div style="font-size:2rem;margin-bottom:0.75rem;">📜</div>
+        <div style="color:#C8F031;font-family:Nunito,sans-serif;font-weight:800;font-size:1.3rem;margin-bottom:0.75rem;">the petition</div>
+        <div style="color:rgba(255,255,255,0.55);font-size:0.9rem;line-height:1.7;margin-bottom:1.5rem;">we, the employees of the world, formally request that work software stop being so painfully boring. we spend 8 hours a day in these tools. the least they could do is not make us want to close our laptops forever.</div>
+        <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+          <input id="petition-name" type="text" placeholder="your name" style="flex:1;padding:10px 14px;border-radius:10px;border:1px solid rgba(200,240,49,0.2);background:rgba(255,255,255,0.05);color:#F5F5F5;font-size:0.85rem;font-family:Inter,sans-serif;outline:none;" onkeydown="if(event.key==='Enter')signPetition()"/>
+          <button onclick="signPetition()" style="padding:10px 20px;border-radius:10px;background:#C8F031;color:#0D0D0D;font-weight:700;font-size:0.85rem;border:none;cursor:pointer;font-family:Inter,sans-serif;white-space:nowrap;">sign it</button>
+        </div>
+        <div id="petition-list" style="text-align:left;border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;">
+          <div style="color:rgba(255,255,255,0.25);font-size:0.75rem;text-align:center;">loading...</div>
+        </div>`;
+      loadPetitionSignatures();
+    }
+
+    async function signPetition(){
+      var name=document.getElementById('petition-name').value.trim();
+      if(!name)return;
+      document.getElementById('petition-name').value='';
+      try{
+        await fetch('/api/petition/sign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:name,boring:_boringText,rating:_boringRating})});
+        loadPetitionSignatures();
+      }catch(e){
+        var list=document.getElementById('petition-list');
+        var el=document.createElement('div');
+        el.style.cssText='color:rgba(255,255,255,0.5);font-size:0.82rem;padding:0.3rem 0;';
+        el.textContent=name;
+        list.prepend(el);
+      }
+    }
+    async function loadPetitionSignatures(){
+      var list=document.getElementById('petition-list');
+      if(!list)return;
+      try{
+        var res=await fetch('/api/petition/signatures');
+        var data=await res.json();
+        if(data.signatures&&data.signatures.length){
+          list.innerHTML='<div style="color:rgba(255,255,255,0.2);font-size:0.7rem;margin-bottom:0.5rem;text-transform:uppercase;letter-spacing:0.1em;">'+data.signatures.length+' signatures</div>'+
+            data.signatures.map(function(s){return '<div style="color:rgba(255,255,255,0.45);font-size:0.82rem;padding:0.25rem 0;">'+s.name+'</div>'}).join('');
+        }else{
+          list.innerHTML='<div style="color:rgba(255,255,255,0.25);font-size:0.75rem;text-align:center;">be the first to sign.</div>';
+        }
+      }catch(e){
+        list.innerHTML='<div style="color:rgba(255,255,255,0.25);font-size:0.75rem;text-align:center;">be the first to sign.</div>';
+      }
+    }
+    </script>
   </section>
 
   <!-- Section 2: The problem -->
   <section class="welcome-features">
     <div class="statement-block">
-      <h2>your company runs on<br>47 different tools.<br>none of them talk<br>to each other.</h2>
-      <p class="statement-after">Until now.</p>
+      <h2>AI has a context problem.</h2>
+      <p class="statement-mid">You've probably noticed. You ask an AI a question about your business and it sounds confident. Articulate. Completely wrong.</p>
+      <p class="statement-mid">That's because it doesn't know your data. It doesn't know your customers, your pipeline, your tickets, your team's conversations. It's guessing.</p>
+      <p class="statement-after">We're fixing that.</p>
     </div>
   </section>
 
@@ -55,78 +178,91 @@
   <section class="welcome-platform">
     <div class="platform-content">
       <div class="features-pill">The Vision</div>
-      <h2>AI that knows your <span class="accent-word glow-text">entire</span> business.</h2>
-      <p class="platform-desc">Not just one tool. Not just one team. Buddy connects to every system your company runs on and gives every employee an AI that actually understands their work.</p>
+      <h2>built around <span class="accent-word glow-text">how you work.</span></h2>
+      <p class="platform-desc">Stop switching between apps. Stop copy-pasting context. Stop searching for things you already know exist somewhere. Buddy is the operating system for your work &mdash; and you get to customize it.</p>
 
       <div class="flow-steps">
         <div class="flow-step">
           <div class="flow-num">01</div>
           <div class="flow-body">
-            <h4>Connect everything</h4>
-            <p>1,000+ data sources. CRM, support, engineering, finance, HR, product &mdash; all connected. Your data stays in your warehouse.</p>
+            <h4>Connected to everything</h4>
+            <p>Your CRM, your calls, your inbox, your tickets, your docs, your calendar. 1,000+ sources. One unified context.</p>
           </div>
         </div>
         <div class="flow-step">
           <div class="flow-num">02</div>
           <div class="flow-body">
-            <h4>Understand context across systems</h4>
-            <p>Buddy knows that a Salesforce account is the same customer as a Zendesk org, a Jira project, a Slack channel, and a Gong call.</p>
+            <h4>Tailored to your role</h4>
+            <p>Tell it what you do. It shapes the actions, the prep, the priorities around what actually matters to you.</p>
           </div>
         </div>
         <div class="flow-step">
           <div class="flow-num">03</div>
           <div class="flow-body">
-            <h4>Adapt to every role</h4>
-            <p>Sales gets deal prep. Support gets ticket context. Engineering gets sprint analytics. Product gets customer evidence. Finance gets ARR models. Everyone gets answers.</p>
+            <h4>Actions, not just answers</h4>
+            <p>Fill fields. Schedule meetings. Draft emails. File expenses. Prep for calls. Say it once &mdash; it's done.</p>
           </div>
         </div>
         <div class="flow-step">
           <div class="flow-num">04</div>
           <div class="flow-body">
-            <h4>Act, don't just answer</h4>
-            <p>Fill Salesforce fields. File expense reports. Create Jira tickets. Draft emails. Schedule meetings. Buddy doesn't just tell you &mdash; it does.</p>
+            <h4>Yours to customize</h4>
+            <p>Choose your skills. Set your automations. Decide what runs and when. This isn't one-size-fits-all &mdash; it's your OS.</p>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Section 4: What it looks like for every team -->
+  <!-- Section 4: Trust statement -->
+  <section class="welcome-features" style="background:#080808;">
+    <div class="statement-block">
+      <h2>your boundaries.<br><span class="accent-word glow-text">your rules.</span></h2>
+      <p class="statement-mid">some of you want AI in everything. full autopilot. let it rip.</p>
+      <p class="statement-mid">some of you want it for work but not personal stuff. some of you want to take it slow. some of you just want to try one thing and see what happens.</p>
+      <p class="statement-mid">all of that is fine.</p>
+      <p class="statement-mid" style="color:rgba(255,255,255,0.55);">Buddy only sees what you give it access to. Nothing more. You control what connects, what it can read, what it can do, and what stays private. No surprises. No dark patterns. No "we need this to work" guilt trips.</p>
+      <p class="statement-after" style="font-size:clamp(1.1rem,2.5vw,1.5rem);">this is your AI. you set the terms.</p>
+    </div>
+  </section>
+
+  <!-- Section 5: What it looks like for every team -->
   <section class="welcome-features" style="background:#0A0A0A;">
     <div class="features-pill">For Every Team</div>
     <h2>not a chatbot.<br><span class="accent-word glow-text">an operating system for work.</span></h2>
-    <div class="feature-cards">
-      <div class="feature-card">
-        <div class="feature-card-icon">💼</div>
-        <h3>Sales &amp; SEs</h3>
-        <p>Post-call autopilot. Meeting intelligence. Deal prep with real customer data across every system.</p>
+    <div class="team-accordion">
+      <div class="team-acc-item" onclick="toggleTeamAcc(this)">
+        <div class="team-acc-header"><span class="team-acc-name">Sales &amp; SEs</span><span class="team-acc-toggle">+</span></div>
+        <div class="team-acc-body">Post-call autopilot. Meeting intelligence. Deal prep with real customer data across every system. Say goodbye to manual Salesforce entry.</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">🛟</div>
-        <h3>Support</h3>
-        <p>Instant customer context. Ticket summaries. Escalation signals from across Zendesk, Jira, and Slack.</p>
+      <div class="team-acc-item" onclick="toggleTeamAcc(this)">
+        <div class="team-acc-header"><span class="team-acc-name">Support</span><span class="team-acc-toggle">+</span></div>
+        <div class="team-acc-body">Instant customer context. Ticket summaries. Escalation signals from across Zendesk, Jira, and Slack. Know the full story before you reply.</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">📐</div>
-        <h3>Product</h3>
-        <p>Customer evidence for PRDs. Feature request signals. Churn investigation. Experiment design review.</p>
+      <div class="team-acc-item" onclick="toggleTeamAcc(this)">
+        <div class="team-acc-header"><span class="team-acc-name">Product</span><span class="team-acc-toggle">+</span></div>
+        <div class="team-acc-body">Customer evidence for PRDs. Feature request signals ranked by ARR. Churn investigation. Experiment design review. Real data, not vibes.</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">⚡</div>
-        <h3>Engineering</h3>
-        <p>Sprint analytics. PR reviews. BigQuery and Snowflake queries in natural language. Connector SDK.</p>
+      <div class="team-acc-item" onclick="toggleTeamAcc(this)">
+        <div class="team-acc-header"><span class="team-acc-name">Engineering</span><span class="team-acc-toggle">+</span></div>
+        <div class="team-acc-body">Sprint analytics. PR reviews. BigQuery and Snowflake queries in natural language. Connector SDK. Build and ship faster.</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">📊</div>
-        <h3>Finance</h3>
-        <p>ARR models. Revenue change analysis. Pricing impact estimates. Expense reports from receipt photos.</p>
+      <div class="team-acc-item" onclick="toggleTeamAcc(this)">
+        <div class="team-acc-header"><span class="team-acc-name">Finance</span><span class="team-acc-toggle">+</span></div>
+        <div class="team-acc-body">ARR models. Revenue change analysis. Pricing impact estimates. Expense reports from receipt photos. Numbers on demand.</div>
       </div>
-      <div class="feature-card">
-        <div class="feature-card-icon">🧩</div>
-        <h3>63 Skills and Growing</h3>
-        <p>Every team builds skills. Every skill is available to every agent. The library grows every week.</p>
+      <div class="team-acc-item" onclick="toggleTeamAcc(this)">
+        <div class="team-acc-header"><span class="team-acc-name">Everyone</span><span class="team-acc-toggle">+</span></div>
+        <div class="team-acc-body">63 skills and growing. Every team builds skills. Every skill is available to every agent. Slack, Jira, Google Drive, Calendar, Gmail — all connected.</div>
       </div>
     </div>
+    <script>
+    function toggleTeamAcc(el){
+      var isOpen=el.classList.contains('open');
+      document.querySelectorAll('.team-acc-item').forEach(function(i){i.classList.remove('open')});
+      if(!isOpen)el.classList.add('open');
+    }
+    </script>
   </section>
 
   <!-- Section 5: The Engine -->
@@ -135,21 +271,27 @@
       <div class="features-pill">The Engine</div>
       <h2>Fivetran <span class="accent-word glow-text">AI</span></h2>
       <p class="platform-desc">The governed data layer for AI agents. Any agent. Any runtime. Any enterprise data source. No walled gardens. No vendor lock-in. Your data, your way.</p>
-      <div class="platform-layers">
-        <div class="layer-card">
-          <div class="layer-number">01</div>
-          <h4>Managed Embeddings</h4>
-          <p>Automatic indexing across every connected source. Always fresh. Always governed. Always in sync.</p>
+      <!-- Orbital animation — 3 rings, each with its own word -->
+      <div class="orbit-container">
+        <div class="orbit-ring orbit-ring-1"></div>
+        <div class="orbit-ring orbit-ring-2"></div>
+        <div class="orbit-ring orbit-ring-3"></div>
+        <div class="orbit-center">
+          <div class="orbit-center-text">vibetran</div>
         </div>
-        <div class="layer-card">
-          <div class="layer-number">02</div>
-          <h4>Cross-Source Intelligence</h4>
-          <p>Entity resolution across systems. One customer, one view &mdash; no matter how many tools they touch.</p>
+        <div class="orbit-track orbit-track-1"><div class="orbit-node"><span>Embeddings</span></div></div>
+        <div class="orbit-track orbit-track-2"><div class="orbit-node"><span>Cross-Source</span></div></div>
+        <div class="orbit-track orbit-track-3"><div class="orbit-node"><span>Skills</span></div></div>
+      </div>
+      <div class="orbit-descriptions">
+        <div class="orbit-desc">
+          <span style="color:#C8F031;font-weight:700;">Embeddings</span> &mdash; automatic indexing across every source. Always fresh. Always in sync.
         </div>
-        <div class="layer-card">
-          <div class="layer-number">03</div>
-          <h4>Skills &amp; Plugins</h4>
-          <p>Pre-built capabilities for any AI agent. From Claude to ChatGPT to your own internal tools. Open, not walled.</p>
+        <div class="orbit-desc">
+          <span style="color:#C8F031;font-weight:700;">Cross-Source</span> &mdash; one customer, one view, no matter how many tools they touch.
+        </div>
+        <div class="orbit-desc">
+          <span style="color:#C8F031;font-weight:700;">Skills</span> &mdash; pre-built capabilities for any AI agent. Open, not walled.
         </div>
       </div>
     </div>

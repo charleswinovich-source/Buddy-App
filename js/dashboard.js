@@ -1297,8 +1297,8 @@ function initInsights() {
   // ── NEW: Clean signals-based insights ──
   const insightsContent = document.querySelector('.insights-content');
   if (insightsContent) {
-    insightsContent.querySelector('.insights-title').textContent = 'Signals';
-    insightsContent.querySelector('.insights-sub').textContent = 'things that need your attention';
+    insightsContent.querySelector('.insights-title').textContent = 'Pulse';
+    insightsContent.querySelector('.insights-sub').textContent = 'everything happening across your systems';
   }
 
   const feed = document.getElementById('insights-feed');
@@ -1523,11 +1523,10 @@ function initInsights() {
 
   // ── Build sections HTML ──
   const sections = [
-    { id: 'meetings', icon: '\uD83D\uDCC5', title: 'Meetings', count: cal.length, items: meetingItems.join(''), collapsed: false },
-    { id: 'messages', icon: '\uD83D\uDCAC', title: 'Messages', count: allMessages.length, items: allMessages.join(''), collapsed: !hasWaiting },
+    { id: 'messages', icon: '\uD83D\uDCAC', title: 'Messages', count: allMessages.length, items: allMessages.join(''), collapsed: false },
     { id: 'email', icon: '\uD83D\uDCE7', title: 'Email', count: emailItems.length, items: emailItems.join(''), collapsed: !hasUrgentEmail && emails.needsReply.length === 0 },
     { id: 'tasks', icon: '\uD83C\uDFAF', title: 'Tasks', count: taskItems.length, items: taskItems.join(''), collapsed: !hasUrgentTask },
-    { id: 'signals', icon: '\uD83D\uDCCA', title: 'Signals', count: signalItems.length, items: signalItems.join(''), collapsed: true },
+    { id: 'signals', icon: '\uD83D\uDCCA', title: 'Signals', count: signalItems.length, items: signalItems.join(''), collapsed: false },
   ];
 
   feed.innerHTML = sections.filter(s => s.count > 0).map(s => `

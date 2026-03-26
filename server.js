@@ -1814,6 +1814,23 @@ app.post('/api/call/end', (req, res) => {
   res.json({ ok: true });
 });
 
+// ═══ Petition Easter Egg ═══
+let _petitionSignatures = []; // In-memory for now, persists per deploy
+
+app.post('/api/petition/sign', express.json(), (req, res) => {
+  const name = (req.body.name || '').trim().substring(0, 60);
+  if (!name) return res.json({ ok: false });
+  // Prevent duplicates
+  if (!_petitionSignatures.find(s => s.name.toLowerCase() === name.toLowerCase())) {
+    _petitionSignatures.unshift({ name, signed: new Date().toISOString() });
+  }
+  res.json({ ok: true, count: _petitionSignatures.length });
+});
+
+app.get('/api/petition/signatures', (req, res) => {
+  res.json({ signatures: _petitionSignatures, count: _petitionSignatures.length });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`\n🤖 Buddy Backend on :${PORT}`);
