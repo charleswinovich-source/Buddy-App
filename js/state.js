@@ -65,6 +65,7 @@ function defaultState() {
     xp: 0, level: 1, streak: 0, lastCheckin: null,
     quests: [], questsDate: null,
     scratchpad: '',
+    projects: [], // My Projects — [{id, name, type, source, query, status, createdAt}]
     moodLog: [],
     chatHistory: [],
     collectibles: ['starter-badge'],

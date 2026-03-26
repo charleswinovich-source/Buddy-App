@@ -177,6 +177,155 @@ function _clearScratchpad() {
   if (el) el.value = '';
 }
 
+// ── My Projects ──
+const PROJECT_TYPES = {
+  campaign:  { icon: '📣', label: 'Campaign',  sources: ['Marketo', 'Salesforce', 'GA4'], placeholder: 'e.g. Spring Webinar, SDK Launch Email' },
+  deal:      { icon: '💰', label: 'Deal',      sources: ['Salesforce', 'Gong'],           placeholder: 'e.g. Okta Expansion, Amplify Life' },
+  feature:   { icon: '🧩', label: 'Feature',   sources: ['Jira', 'GitHub', 'Amplitude'],  placeholder: 'e.g. Activations V2, Onboarding Redesign' },
+  service:   { icon: '🔧', label: 'Service',   sources: ['DataDog', 'GitHub', 'PagerDuty'], placeholder: 'e.g. sync-worker, connector-service' },
+  content:   { icon: '✍️', label: 'Content',   sources: ['GA4', 'Marketo'],               placeholder: 'e.g. Connector SDK Blog, Case Study: Okta' },
+  ticket:    { icon: '🎫', label: 'Ticket',    sources: ['Jira', 'Zendesk'],              placeholder: 'e.g. JIRA-4521, Zendesk #88432' },
+  account:   { icon: '🏢', label: 'Account',   sources: ['Salesforce', 'Gong', 'Zendesk'], placeholder: 'e.g. Okta, USAA, Amplify Life' },
+  experiment:{ icon: '🧪', label: 'Experiment', sources: ['Amplitude', 'AISQL'],           placeholder: 'e.g. Pricing Page A/B, Onboarding Flow Test' },
+  custom:    { icon: '📌', label: 'Custom',    sources: [],                               placeholder: 'describe what you\'re tracking' },
+};
+
+function _renderMyProjects(projects) {
+  if (!projects || projects.length === 0) {
+    return `
+      <div style="background:var(--surface);border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+          <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">📌 MY PROJECTS</div>
+        </div>
+        <p style="color:var(--text-light);font-size:0.85rem;line-height:1.6;margin-bottom:1rem;">Tell Buddy what you're working on and it'll track it for you.</p>
+        <button onclick="_showAddProject()" style="
+          width:100%;padding:10px;border-radius:12px;border:1.5px dashed var(--border);
+          background:none;color:var(--accent-dark);font-weight:600;font-size:0.85rem;
+          cursor:pointer;transition:all 0.2s;font-family:'Inter',sans-serif;
+        ">+ Add your first project</button>
+      </div>`;
+  }
+
+  const cards = projects.map((p, i) => {
+    const type = PROJECT_TYPES[p.type] || PROJECT_TYPES.custom;
+    const statusColors = { active: '#10B981', paused: '#F59E0B', done: '#6B7280' };
+    const statusColor = statusColors[p.status] || statusColors.active;
+    return `
+      <div style="display:flex;gap:0.75rem;padding:0.75rem 0;border-bottom:1px solid var(--border);cursor:pointer;" onclick="_askAboutProject(${i})">
+        <div style="font-size:1.3rem;flex-shrink:0;padding-top:2px;">${type.icon}</div>
+        <div style="flex:1;min-width:0;">
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+            <div style="font-weight:600;font-size:0.9rem;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.name}</div>
+            <span style="width:6px;height:6px;border-radius:50%;background:${statusColor};flex-shrink:0;"></span>
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-faint);margin-top:2px;">${type.label}${p.sources?.length ? ' · ' + p.sources.join(', ') : ''}</div>
+        </div>
+        <button onclick="event.stopPropagation();_removeProject(${i})" style="background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:0.8rem;padding:4px;">✕</button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div style="background:var(--surface);border-radius:16px;padding:1.25rem;margin-bottom:0.75rem;box-shadow:0 1px 8px rgba(0,0,0,0.04);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+        <div style="font-size:0.7rem;color:var(--text-light);font-weight:600;letter-spacing:0.08em;text-transform:uppercase;">📌 MY PROJECTS</div>
+        <button onclick="_showAddProject()" style="font-size:0.75rem;color:var(--accent-dark);background:none;border:none;cursor:pointer;font-weight:600;">+ Add</button>
+      </div>
+      ${cards}
+    </div>`;
+}
+
+function _showAddProject() {
+  const typeOptions = Object.entries(PROJECT_TYPES).map(([key, t]) =>
+    `<button onclick="_selectProjectType('${key}')" class="proj-type-btn" data-type="${key}" style="
+      display:flex;align-items:center;gap:0.5rem;padding:10px 14px;border-radius:10px;
+      border:1px solid var(--border);background:var(--surface);cursor:pointer;
+      font-size:0.8rem;font-family:'Inter',sans-serif;color:var(--text);transition:all 0.2s;
+    ">${t.icon} ${t.label}</button>`
+  ).join('');
+
+  const modal = document.createElement('div');
+  modal.id = 'add-project-modal';
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem;';
+  modal.innerHTML = `
+    <div style="background:var(--bg);border-radius:20px;padding:1.5rem;max-width:420px;width:100%;max-height:80vh;overflow-y:auto;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h3 style="font-family:'Nunito',sans-serif;font-weight:800;font-size:1.1rem;color:var(--text);">What are you working on?</h3>
+        <button onclick="document.getElementById('add-project-modal')?.remove()" style="background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-light);">✕</button>
+      </div>
+      <p style="color:var(--text-light);font-size:0.8rem;margin-bottom:1rem;">Pick a type, name it, and Buddy will start tracking it for you.</p>
+      <div id="proj-type-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:0.5rem;margin-bottom:1rem;">${typeOptions}</div>
+      <div id="proj-name-section" style="display:none;">
+        <input id="proj-name-input" type="text" placeholder="" style="
+          width:100%;padding:12px 16px;border-radius:12px;border:1.5px solid var(--border);
+          font-size:0.95rem;font-family:'Inter',sans-serif;color:var(--text);
+          background:var(--surface);outline:none;box-sizing:border-box;margin-bottom:0.75rem;
+        " />
+        <button onclick="_addProject()" style="
+          width:100%;padding:12px;border-radius:12px;border:none;
+          background:var(--accent);color:var(--text);font-weight:700;font-size:0.9rem;
+          cursor:pointer;font-family:'Inter',sans-serif;
+        ">Track this project</button>
+      </div>
+    </div>`;
+  modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+  document.body.appendChild(modal);
+}
+
+let _selectedProjectType = null;
+function _selectProjectType(type) {
+  _selectedProjectType = type;
+  const pt = PROJECT_TYPES[type];
+  document.querySelectorAll('.proj-type-btn').forEach(b => {
+    b.style.borderColor = b.dataset.type === type ? 'var(--accent-dark)' : 'var(--border)';
+    b.style.background = b.dataset.type === type ? 'var(--accent-soft)' : 'var(--surface)';
+  });
+  const nameSection = document.getElementById('proj-name-section');
+  const nameInput = document.getElementById('proj-name-input');
+  if (nameSection) nameSection.style.display = 'block';
+  if (nameInput) { nameInput.placeholder = pt.placeholder; nameInput.focus(); }
+}
+
+function _addProject() {
+  const nameInput = document.getElementById('proj-name-input');
+  const name = nameInput?.value?.trim();
+  if (!name || !_selectedProjectType) return;
+  const pt = PROJECT_TYPES[_selectedProjectType];
+  const project = {
+    id: Date.now().toString(36),
+    name,
+    type: _selectedProjectType,
+    sources: pt.sources,
+    status: 'active',
+    createdAt: new Date().toISOString(),
+  };
+  if (!STATE.projects) STATE.projects = [];
+  STATE.projects.push(project);
+  saveState();
+  document.getElementById('add-project-modal')?.remove();
+  // Re-render projects
+  const section = document.getElementById('my-projects-section');
+  if (section) section.innerHTML = _renderMyProjects(STATE.projects);
+}
+
+function _removeProject(idx) {
+  if (!confirm('Remove this project?')) return;
+  STATE.projects.splice(idx, 1);
+  saveState();
+  const section = document.getElementById('my-projects-section');
+  if (section) section.innerHTML = _renderMyProjects(STATE.projects);
+}
+
+function _askAboutProject(idx) {
+  const project = STATE.projects[idx];
+  if (!project) return;
+  const input = document.getElementById('dash-ai-input');
+  if (input) {
+    input.value = `How is my "${project.name}" ${project.type} doing?`;
+    input.focus();
+    dashAskQuestion();
+  }
+}
+
 // ── Idea Machine helpers ──
 let _ideaTimeout;
 function _saveIdeaRaw() {
@@ -808,6 +957,13 @@ function renderDashContent() {
       });
     });
   }
+
+  // ── My Projects section ──
+  const projects = STATE.projects || [];
+  const projSection = document.createElement('div');
+  projSection.id = 'my-projects-section';
+  projSection.innerHTML = _renderMyProjects(projects);
+  content.appendChild(projSection);
 
   // ── Explore Actions button ──
   const exploreBtn = document.createElement('button');
