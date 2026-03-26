@@ -2320,7 +2320,8 @@ function renderDashSuggestions() { /* handled by renderDashContent */ }
 function renderDashWidgets() { /* handled by renderDashContent */ }
 function renderDashBody() { renderDashContent(); }
 
-function _legacyRenderDashBody_UNUSED() {
+/* REMOVED: _legacyRenderDashBody_UNUSED — 246 lines of dead code cleaned up */
+function _legacyRenderDashBody_REMOVED() { return; /* stub */
   const body = document.getElementById('dash-body');
   if (!body) return;
   body.innerHTML = '';

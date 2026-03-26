@@ -192,7 +192,9 @@ function goTo(screenId) {
     try { closeBottomSheet(); } catch(e) {}
   }
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(screenId).classList.add('active');
+  const targetScreen = document.getElementById(screenId);
+  if (!targetScreen) { console.warn('Screen not found:', screenId); return; }
+  targetScreen.classList.add('active');
 
   // Update all bottom nav active states across all screens
   document.querySelectorAll('.dash-bottom-nav button').forEach(b => b.classList.remove('active'));

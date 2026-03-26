@@ -780,6 +780,7 @@ async function slackAPI(method, body) {
     headers: { 'Authorization': `Bearer ${SLACK_TOKEN}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
+  if (!res.ok) throw new Error(`Slack API ${method} failed: ${res.status}`);
   return res.json();
 }
 
