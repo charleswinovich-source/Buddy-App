@@ -1831,6 +1831,114 @@ app.get('/api/petition/signatures', (req, res) => {
   res.json({ signatures: _petitionSignatures, count: _petitionSignatures.length });
 });
 
+// ═══ ESPN Sports API ═══
+const ESPN_LEAGUES = {
+  // NFL, NBA, MLB, NHL, MLS, NCAAF, NCAAB
+  nfl: { sport: 'football', league: 'nfl' },
+  nba: { sport: 'basketball', league: 'nba' },
+  mlb: { sport: 'baseball', league: 'mlb' },
+  nhl: { sport: 'hockey', league: 'nhl' },
+  mls: { sport: 'soccer', league: 'usa.1' },
+  ncaaf: { sport: 'football', league: 'college-football' },
+  ncaab: { sport: 'basketball', league: 'mens-college-basketball' },
+  epl: { sport: 'soccer', league: 'eng.1' },
+  laliga: { sport: 'soccer', league: 'esp.1' },
+};
+
+// Team name -> ESPN team ID mapping (populated on first search)
+const _teamCache = {};
+
+app.get('/api/sports/scores', async (req, res) => {
+  const teams = (req.query.teams || '').split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+  if (!teams.length) return res.json({ ok: false, error: 'No teams specified' });
+
+  const results = [];
+
+  for (const teamName of teams) {
+    try {
+      // Search across major leagues for this team
+      let found = false;
+      for (const [leagueKey, cfg] of Object.entries(ESPN_LEAGUES)) {
+        const scoreUrl = `https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/scoreboard`;
+        const scoreRes = await fetch(scoreUrl);
+        const scoreData = await scoreRes.json();
+
+        // Find a game involving this team
+        const events = scoreData.events || [];
+        for (const event of events) {
+          const competitors = event.competitions?.[0]?.competitors || [];
+          const match = competitors.find(c =>
+            c.team?.displayName?.toLowerCase().includes(teamName) ||
+            c.team?.shortDisplayName?.toLowerCase().includes(teamName) ||
+            c.team?.abbreviation?.toLowerCase() === teamName
+          );
+          if (match) {
+            const home = competitors.find(c => c.homeAway === 'home');
+            const away = competitors.find(c => c.homeAway === 'away');
+            results.push({
+              team: teamName,
+              league: leagueKey.toUpperCase(),
+              status: event.status?.type?.description || 'Unknown',
+              statusDetail: event.status?.type?.detail || '',
+              home: { name: home?.team?.displayName, score: home?.score, logo: home?.team?.logo },
+              away: { name: away?.team?.displayName, score: away?.score, logo: away?.team?.logo },
+              headline: event.competitions?.[0]?.notes?.[0]?.headline || '',
+              link: event.links?.[0]?.href || ''
+            });
+            found = true;
+            break;
+          }
+        }
+        if (found) break;
+      }
+
+      // If no live/today game, get team news
+      if (!found) {
+        for (const [leagueKey, cfg] of Object.entries(ESPN_LEAGUES)) {
+          try {
+            const teamsUrl = `https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/teams?limit=100`;
+            const teamsRes = await fetch(teamsUrl);
+            const teamsData = await teamsRes.json();
+            const teamObj = (teamsData.sports?.[0]?.leagues?.[0]?.teams || []).find(t =>
+              t.team?.displayName?.toLowerCase().includes(teamName) ||
+              t.team?.shortDisplayName?.toLowerCase().includes(teamName)
+            );
+            if (teamObj) {
+              // Get team news
+              const newsUrl = `https://site.api.espn.com/apis/site/v2/sports/${cfg.sport}/${cfg.league}/news?team=${teamObj.team.id}&limit=3`;
+              const newsRes = await fetch(newsUrl);
+              const newsData = await newsRes.json();
+              const articles = (newsData.articles || []).slice(0, 2);
+              results.push({
+                team: teamName,
+                league: leagueKey.toUpperCase(),
+                status: 'No game today',
+                news: articles.map(a => ({
+                  headline: a.headline,
+                  description: a.description?.substring(0, 120) || '',
+                  link: a.links?.web?.href || '',
+                  image: a.images?.[0]?.url || ''
+                })),
+                logo: teamObj.team?.logos?.[0]?.href || ''
+              });
+              found = true;
+              break;
+            }
+          } catch(e) { /* skip league */ }
+        }
+      }
+
+      if (!found) {
+        results.push({ team: teamName, status: 'Team not found', error: true });
+      }
+    } catch(e) {
+      results.push({ team: teamName, status: 'Error', error: true });
+    }
+  }
+
+  res.json({ ok: true, results });
+});
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`\n🤖 Buddy Backend on :${PORT}`);
