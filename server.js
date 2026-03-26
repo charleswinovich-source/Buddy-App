@@ -150,23 +150,17 @@ app.get('/api/calendar/events', async (req, res) => {
 
     const calendar = google.calendar({ version: 'v3', auth: oauth2 });
 
-    // Support ?date=YYYY-MM-DD param — use Pacific timezone
-    const dateParam = req.query.date;
+    // Support ?date=YYYY-MM-DD param — always use Pacific timezone
     const tz = 'America/Los_Angeles';
-    let timeMin, timeMax;
-    if (dateParam) {
-      // Use explicit timezone offset to avoid UTC issues on Cloud Run
-      timeMin = dateParam + 'T00:00:00-07:00';
-      timeMax = dateParam + 'T23:59:59-07:00';
-    } else {
-      const now = new Date();
-      const startOfDay = new Date(now);
-      startOfDay.setHours(0, 0, 0, 0);
-      const endOfDay = new Date(now);
-      endOfDay.setHours(23, 59, 59, 999);
-      timeMin = startOfDay.toISOString();
-      timeMax = endOfDay.toISOString();
-    }
+    const dateParam = req.query.date;
+    // Get today in Pacific if no date param
+    const todayPacific = new Date().toLocaleDateString('en-CA', { timeZone: tz }); // YYYY-MM-DD format
+    const targetDate = dateParam || todayPacific;
+    // PDT is -07:00, PST is -08:00 — use -07:00 for March (PDT)
+    // TODO: auto-detect DST properly
+    const offset = '-07:00';
+    const timeMin = targetDate + 'T00:00:00' + offset;
+    const timeMax = targetDate + 'T23:59:59' + offset;
 
     const response = await calendar.events.list({
       calendarId: 'primary',
