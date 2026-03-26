@@ -85,43 +85,30 @@ function createBuddy3D(container, options = {}) {
     ctx.clearRect(0, 0, s, s);
 
     const cx = s / 2;
-    const cy = s / 2 + 4;
-    const spacing = 40;
-    const w = 18;
-    const h = 22;
+    const cy = s / 2; // centered vertically
+    const spacing = 42; // wide apart
+    const r = 20; // circular eyes
 
     [-1, 1].forEach(side => {
       const ex = cx + side * spacing;
       ctx.save();
 
-      // Solid dark eye — no gradient that creates hollow look
+      // Solid round eye
       ctx.beginPath();
-      ctx.ellipse(ex, cy, w, h, side * -0.1, 0, Math.PI * 2);
+      ctx.arc(ex, cy, r, 0, Math.PI * 2);
       ctx.fillStyle = '#1a1a2e';
       ctx.fill();
 
-      // Inner iris — slightly lighter, gives depth
+      // Big bright highlight — top right, makes it look alive
       ctx.beginPath();
-      ctx.ellipse(ex, cy, w * 0.75, h * 0.75, side * -0.1, 0, Math.PI * 2);
-      ctx.fillStyle = '#252540';
+      ctx.arc(ex + side * 6, cy - 7, 8, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.95)';
       ctx.fill();
 
-      // Pupil — darkest center
+      // Small secondary highlight
       ctx.beginPath();
-      ctx.ellipse(ex, cy + 1, w * 0.45, h * 0.45, 0, 0, Math.PI * 2);
-      ctx.fillStyle = '#0d0d1a';
-      ctx.fill();
-
-      // Main highlight — top right, big and bright
-      ctx.beginPath();
-      ctx.ellipse(ex + w * 0.25, cy - h * 0.25, 6, 6, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      ctx.fill();
-
-      // Secondary highlight — bottom left, smaller
-      ctx.beginPath();
-      ctx.ellipse(ex - w * 0.2, cy + h * 0.2, 3, 3, 0, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.arc(ex - side * 4, cy + 5, 4, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(255,255,255,0.45)';
       ctx.fill();
 
       ctx.restore();
@@ -132,12 +119,12 @@ function createBuddy3D(container, options = {}) {
 
   drawEyes();
 
-  const eyePlaneGeo = new THREE.PlaneGeometry(1.5 * size, 1.5 * size);
+  const eyePlaneGeo = new THREE.PlaneGeometry(1.8 * size, 1.8 * size);
   const eyePlaneMat = new THREE.MeshBasicMaterial({
     map: eyeTex, transparent: true, depthWrite: false,
   });
   const eyePlane = new THREE.Mesh(eyePlaneGeo, eyePlaneMat);
-  eyePlane.position.set(0, -0.05 * size, 1.05 * size);
+  eyePlane.position.set(0, 0.15 * size, 1.02 * size);
   eyePlane.renderOrder = 1;
   body.add(eyePlane);
   disposables.push(eyePlaneGeo, eyePlaneMat, eyeTex);

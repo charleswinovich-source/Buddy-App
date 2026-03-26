@@ -188,19 +188,15 @@ function buddyReactToTyping(text) {
 
 function initBuddy3D(containerOrCanvas) {
   if (_buddy3dCleanup) _buddy3dCleanup();
-  // The dashboard uses a canvas element; createBuddy3D expects a container div
-  // If a canvas is passed, use its parent; if container div, use directly
   let container = containerOrCanvas;
   if (!container) {
-    const canvas = document.getElementById('buddy-3d-canvas');
-    if (!canvas) return;
-    container = canvas.parentElement;
-    container.innerHTML = ''; // remove the canvas, createBuddy3D will create its own
+    container = document.getElementById('buddy-3d-inline');
+    if (!container) return;
   }
-  if (container && container.tagName === 'CANVAS') {
+  if (container.tagName === 'CANVAS') {
     container = container.parentElement;
-    container.innerHTML = '';
   }
+  container.innerHTML = '';
   const buddy = createBuddy3D(container, {
     color: STATE.avatar.color || '#E8634A',
     mood: STATE.avatar.mood || 'happy',
@@ -385,20 +381,8 @@ function renderDashContent() {
   let greeting = 'Good evening';
   if (hour < 12) greeting = 'Good morning';
   else if (hour < 17) greeting = 'Good afternoon';
-  // Try to get name from state, then from IAP
+  // Get name from state
   let name = STATE.profile.userName || '';
-  if (!name || name.length < 2) {
-    // Try to get from IAP user endpoint
-    fetch('/api/auth/me').then(r => r.json()).then(d => {
-      if (d.ok && d.user?.name && d.user.name.length > 2) {
-        const firstName = d.user.name.split(' ')[0].split('.')[0];
-        STATE.profile.userName = firstName.charAt(0).toUpperCase() + firstName.slice(1);
-        saveState();
-        const el = document.getElementById('dash-greeting-text');
-        if (el) el.textContent = `${greeting}, ${STATE.profile.userName}!`;
-      }
-    }).catch(() => {});
-  }
   if (!name || name.length < 2) name = 'there';
   const greetingText = `${greeting}, ${name}!`;
 
@@ -557,8 +541,25 @@ function renderDashContent() {
   </div>` : '';
 
   greetingArea.innerHTML = `
-    <h1 id="dash-greeting-text"></h1>
-    <p class="dash-greeting-sub">how can i help you today?</p>
+    <!-- Buddy Avatar — hero position -->
+    <div id="buddy-3d-inline" style="width:150px;height:150px;margin:0 auto 0.25rem;pointer-events:none;"></div>
+
+    <h1 id="dash-greeting-text" style="margin-bottom:0.5rem;text-align:center;"></h1>
+
+    <!-- Command Bar -->
+    <div style="position:relative;margin:0 0 1rem;">
+      <div style="background:var(--surface);border-radius:20px;padding:4px;box-shadow:0 2px 16px rgba(0,0,0,0.08),0 0 0 1px rgba(0,0,0,0.04);">
+        <div style="display:flex;align-items:center;gap:0.75rem;padding:0.85rem 1.25rem;">
+          <input type="text" id="dash-ai-input" placeholder="ask buddy anything..."
+            onkeydown="if(event.key==='Enter')dashAskQuestion()"
+            oninput="buddyReactToTyping(this.value)"
+            style="flex:1;border:none;outline:none;background:none;font-size:1.05rem;font-family:'Inter',sans-serif;color:var(--text);padding:0;" />
+          <button id="dash-ai-send" onclick="dashAskQuestion()" style="width:38px;height:38px;border-radius:50%;background:var(--text);border:none;color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.15s;">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+          </button>
+        </div>
+      </div>
+    </div>
 
     ${nowCardHtml}
     ${laterHtml}
@@ -571,23 +572,14 @@ function renderDashContent() {
         <button onclick="_clearScratchpad()" style="font-size:0.65rem;color:var(--text-faint);background:none;border:none;cursor:pointer;">clear</button>
       </div>
       <textarea id="scratchpad" placeholder="jot down thoughts, reminders, ideas..." oninput="_saveScratchpad()" style="
-        width:100%;min-height:80px;max-height:200px;resize:vertical;
+        width:100%;min-height:70px;max-height:160px;resize:vertical;
         background:none;border:none;outline:none;
         font-family:'Inter',sans-serif;font-size:0.85rem;line-height:1.6;
-        color:var(--text);padding:0;
+        color:var(--text);padding:0;box-sizing:border-box;
       ">${(STATE.scratchpad || '').replace(/</g,'&lt;')}</textarea>
     </div>
 
     ${msgHtml}
-
-    <div id="buddy-3d-inline" style="display:flex;justify-content:center;margin:0.5rem 0;pointer-events:none;"><canvas id="buddy-3d-canvas" width="120" height="120" style="width:120px;height:120px;pointer-events:none;"></canvas></div>
-
-    <div class="dash-ai-input-wrap">
-      <input type="text" id="dash-ai-input" placeholder="ask me anything..." onkeydown="if(event.key==='Enter')dashAskQuestion()" oninput="buddyReactToTyping(this.value)" />
-      <button id="dash-ai-send" onclick="dashAskQuestion()">
-        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-      </button>
-    </div>
   `;
   content.appendChild(greetingArea);
 
