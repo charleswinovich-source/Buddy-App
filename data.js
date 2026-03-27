@@ -29,7 +29,7 @@ const ROLE_DATA = {
           { title: 'What are customers at ___ saying about us?', category: 'question', type: 'ask', meta: 'Gong + Zendesk', tags: ['gong', 'zendesk'], template: [{slot: 'account', placeholder: 'e.g. USAA'}], top: true },
           { title: 'Open support tickets for ___', category: 'question', type: 'ask', meta: 'Zendesk', tags: ['zendesk'], template: [{slot: 'account', placeholder: 'e.g. Amplify Life'}], top: true },
           { title: 'Which competitors came up in calls with ___?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'account', placeholder: 'e.g. Okta'}] },
-          { title: 'Enrich ___ with latest firmographic data', category: 'action', type: 'act', meta: 'Salesforce + Clearbit', tags: ['salesforce'], template: [{slot: 'account or list', placeholder: 'account name or paste list'}] },
+          { title: 'Enrich ___ with latest firmographic data', category: 'action', type: 'act', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'account or list', placeholder: 'account name or paste list'}] },
         ]
       },
       {
@@ -49,7 +49,7 @@ const ROLE_DATA = {
         actions: [
           { title: 'Which accounts in my territory haven\'t been contacted?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], top: true },
           { title: 'What are customers saying about ___?', category: 'question', type: 'ask', meta: 'Gong + Zendesk', tags: ['gong', 'zendesk'], template: [{slot: 'topic, competitor, or feature', placeholder: 'e.g. Airbyte, connector SDK, pricing'}], top: true },
-          { title: 'Draft a cold email to ___ at ___', category: 'generator', type: 'ask', meta: 'Salesforce + LinkedIn', tags: ['salesforce'], template: [{slot: 'person', placeholder: 'e.g. VP of Data'}, {slot: 'company', placeholder: 'e.g. Stripe'}] },
+          { title: 'Draft a cold email to ___ at ___', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'person', placeholder: 'e.g. VP of Data'}, {slot: 'company', placeholder: 'e.g. Stripe'}] },
           { title: 'Enrich my prospect spreadsheet', category: 'action', type: 'act', meta: 'Salesforce', tags: ['salesforce'], top: true },
         ]
       },
@@ -69,11 +69,11 @@ const ROLE_DATA = {
         desc: 'Prospecting, sequences, cold outreach, territory mining',
         actions: [
           { title: 'Which accounts in my territory have never been contacted?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Show me companies matching our ICP that are not in Salesforce yet', category: 'question', type: 'ask', meta: 'Clearbit + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which inbound leads have not been followed up within 24 hours?', category: 'question', type: 'ask', meta: 'Salesforce + Marketo', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Auto-add high-intent accounts to my outbound sequence weekly', category: 'automation', type: 'auto', meta: 'Bombora + Outreach + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Enrich all new leads with firmographic and technographic data', category: 'action', type: 'act', meta: 'Clearbit + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: false, top: false, rising: true },
-          { title: 'Generate personalized cold outreach email for a target account', category: 'generator', type: 'ask', meta: 'Salesforce + Clearbit + LinkedIn', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Show me companies matching our ICP that are not in Salesforce yet', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which inbound leads have not been followed up within 24 hours?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Auto-add high-intent accounts to my outbound sequence weekly', category: 'automation', type: 'auto', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Enrich all new leads with firmographic and technographic data', category: 'action', type: 'act', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: false, top: false, rising: true },
+          { title: 'Generate personalized cold outreach email for a target account', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: true },
         ]
       },
       {
@@ -81,7 +81,7 @@ const ROLE_DATA = {
         desc: 'Quota tracking, commit deals, pipeline coverage, deal velocity',
         actions: [
           { title: 'What is my current forecast vs quota this quarter?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which commit deals have had no activity in 14+ days?', category: 'question', type: 'ask', meta: 'Salesforce + Outreach', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which commit deals have had no activity in 14+ days?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Show me deals that slipped from last quarter and are still open', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
           { title: 'Push forecast summary to my manager in Slack every Monday', category: 'automation', type: 'auto', meta: 'Salesforce + Slack', tags: ['salesforce', 'slack'], multi: true, semantic: false, top: true, rising: false },
           { title: 'Generate pipeline coverage report with commit, best case, and upside', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
@@ -91,11 +91,11 @@ const ROLE_DATA = {
         id: 'account-research', name: 'Account Research', icon: '🔍',
         desc: 'Account intel, stakeholder mapping, competitive intel, buying signals',
         actions: [
-          { title: 'Which accounts are showing intent signals this week?', category: 'question', type: 'ask', meta: 'Bombora + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which accounts had a champion leave in the last 60 days?', category: 'question', type: 'ask', meta: 'Salesforce + LinkedIn', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Which accounts are showing intent signals this week?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which accounts had a champion leave in the last 60 days?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
           { title: 'What competitors are showing up in my deals and what is our win rate?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate a full account dossier with org chart, tech stack, and news', category: 'generator', type: 'ask', meta: 'Salesforce + Clearbit + LinkedIn', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: true },
-          { title: 'Daily alert when a target account publishes a job posting or press release', category: 'automation', type: 'auto', meta: 'LinkedIn + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a full account dossier with org chart, tech stack, and news', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Daily alert when a target account publishes a job posting or press release', category: 'automation', type: 'auto', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
@@ -103,10 +103,10 @@ const ROLE_DATA = {
         desc: 'Follow-up drafts, intro emails, proposals, meeting recaps',
         actions: [
           { title: 'Draft a follow-up email based on my last Gong call with this account', category: 'generator', type: 'ask', meta: 'Gong + Salesforce', tags: ['gong', 'salesforce'], multi: true, semantic: true, top: true, rising: true },
-          { title: 'Generate an executive intro email for a multi-threaded deal', category: 'generator', type: 'ask', meta: 'Salesforce + LinkedIn', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which deals have no follow-up email sent within 48 hours of last meeting?', category: 'question', type: 'ask', meta: 'Outreach + Gong + Salesforce', tags: ['aisql', 'gong', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Generate an executive intro email for a multi-threaded deal', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which deals have no follow-up email sent within 48 hours of last meeting?', category: 'question', type: 'ask', meta: 'Gong + Salesforce', tags: ['aisql', 'gong', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Draft a proposal summary email pulling in deal terms and ROI', category: 'generator', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Auto-send meeting recap to attendees after every Gong call', category: 'automation', type: 'auto', meta: 'Gong + Outreach', tags: ['gong', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Auto-send meeting recap to attendees after every Gong call', category: 'automation', type: 'auto', meta: 'Gong', tags: ['gong', 'aisql'], multi: true, semantic: true, top: true, rising: false },
         ]
       },
       {
@@ -197,7 +197,7 @@ const ROLE_DATA = {
           { title: 'How does ___ work internally?', category: 'question', type: 'ask', meta: 'Slab + Docs', tags: ['slab', 'docs'], template: [{slot: 'system or process', placeholder: 'e.g. sync scheduling, pricing engine'}], top: true },
           { title: 'Search internal knowledge for ___', category: 'question', type: 'ask', meta: 'Slab + Docs + Jira', tags: ['slab', 'docs', 'jira'], template: [{slot: 'anything', placeholder: 'type your question'}] },
           { title: 'Create a Fivetran-branded deck about ___', category: 'generator', type: 'ask', meta: 'Google Slides', tags: ['slides'], template: [{slot: 'topic', placeholder: 'e.g. Q1 product review, feature launch'}] },
-          { title: 'File my expense report from receipts', category: 'action', type: 'act', meta: 'Coupa', tags: ['aisql'] },
+          { title: 'File my expense report from receipts', category: 'action', type: 'act', meta: 'Fivetran AI', tags: ['aisql'] },
         ]
       },
     ]
@@ -270,12 +270,12 @@ const ROLE_DATA = {
         id: 'my-oncall', name: 'My On-Call', icon: '🚨',
         desc: 'Incidents, blast radius, root cause — when you\'re on the hook',
         actions: [
-          { title: 'Am I on-call right now? What\'s open?', category: 'question', type: 'ask', meta: 'PagerDuty', tags: ['aisql'], top: true },
+          { title: 'Am I on-call right now? What\'s open?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], top: true },
           { title: 'Which customers are in the blast radius of ___?', category: 'question', type: 'ask', meta: 'Fivetran AI + Salesforce', tags: ['fivetran-ai', 'salesforce'], template: [{slot: 'incident or outage', placeholder: 'e.g. Postgres sync outage, INC-4521'}], top: true },
           { title: 'What changed in the ___ before ___ started?', category: 'question', type: 'ask', meta: 'GitHub + Fivetran AI', tags: ['github', 'fivetran-ai'], template: [{slot: 'time window', placeholder: '24 hours', options: ['1 hour','6 hours','24 hours']}, {slot: 'the incident', placeholder: 'e.g. latency spike, sync failures'}], top: true },
           { title: 'All P1 incidents in the last ___ with resolution time', category: 'question', type: 'ask', meta: 'Fivetran AI (AISQL)', tags: ['fivetran-ai'], template: [{slot: 'time range', placeholder: '90 days', options: ['30 days','90 days','6 months']}] },
-          { title: 'Draft a customer comms update for ___', category: 'generator', type: 'ask', meta: 'PagerDuty + Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'incident', placeholder: 'e.g. the Postgres outage'}] },
-          { title: 'Generate a post-incident review doc for ___', category: 'generator', type: 'ask', meta: 'PagerDuty + GitHub + Fivetran AI', tags: ['aisql', 'github', 'fivetran-ai'], template: [{slot: 'incident', placeholder: 'describe what happened'}] },
+          { title: 'Draft a customer comms update for ___', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'incident', placeholder: 'e.g. the Postgres outage'}] },
+          { title: 'Generate a post-incident review doc for ___', category: 'generator', type: 'ask', meta: 'GitHub + Fivetran AI', tags: ['aisql', 'github', 'fivetran-ai'], template: [{slot: 'incident', placeholder: 'describe what happened'}] },
           { title: 'Auto-alert CSMs when enterprise accounts are affected', category: 'automation', type: 'auto', meta: 'Fivetran AI + Salesforce + Slack', tags: ['fivetran-ai', 'salesforce', 'slack'] },
         ]
       },
@@ -304,7 +304,7 @@ const ROLE_DATA = {
           { title: 'Search internal knowledge for ___', category: 'question', type: 'ask', meta: 'Slab + Fivetran Docs + Jira', tags: ['slab', 'docs', 'jira'], template: [{slot: 'anything', placeholder: 'type your question'}], top: true },
           { title: 'What Fivetran design system components should I use for ___?', category: 'question', type: 'ask', meta: 'Design System', tags: ['design-system'], template: [{slot: 'UI element', placeholder: 'e.g. data table, filter bar, status badge'}] },
           { title: 'How do I deploy an internal app at Fivetran?', category: 'question', type: 'ask', meta: 'Slab', tags: ['slab'] },
-          { title: 'File my expense report from receipts', category: 'action', type: 'act', meta: 'Coupa', tags: ['aisql'] },
+          { title: 'File my expense report from receipts', category: 'action', type: 'act', meta: 'Fivetran AI', tags: ['aisql'] },
         ]
       },
     ]
@@ -320,20 +320,20 @@ const ROLE_DATA = {
         id: 'my-campaigns', name: 'My Campaigns', icon: '🎯',
         desc: 'Track the specific campaigns you\'re running right now',
         actions: [
-          { title: 'How is my ___ campaign performing?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'campaign name', placeholder: 'e.g. Spring Webinar, SDK Launch Email'}], top: true },
-          { title: 'How many leads from my ___ converted to opps?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'campaign', placeholder: 'campaign name'}], top: true },
-          { title: 'Registration / sign-up count for my ___ this week', category: 'question', type: 'ask', meta: 'Marketo', tags: ['aisql'], template: [{slot: 'event or campaign', placeholder: 'e.g. NYC Dinner, Webinar'}], top: true },
-          { title: 'A/B test results for my ___ experiment', category: 'question', type: 'ask', meta: 'Marketo + GA4', tags: ['aisql'], template: [{slot: 'test name', placeholder: 'e.g. subject line test, CTA variant'}], top: true },
-          { title: 'Alert me when my ___ hits ___ registrations', category: 'automation', type: 'auto', meta: 'Marketo + Slack', tags: ['aisql', 'slack'], template: [{slot: 'campaign', placeholder: 'campaign name'}, {slot: 'target', placeholder: '100'}] },
+          { title: 'How is my ___ campaign performing?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'campaign name', placeholder: 'e.g. Spring Webinar, SDK Launch Email'}], top: true },
+          { title: 'How many leads from my ___ converted to opps?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'campaign', placeholder: 'campaign name'}], top: true },
+          { title: 'Registration / sign-up count for my ___ this week', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], template: [{slot: 'event or campaign', placeholder: 'e.g. NYC Dinner, Webinar'}], top: true },
+          { title: 'A/B test results for my ___ experiment', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], template: [{slot: 'test name', placeholder: 'e.g. subject line test, CTA variant'}], top: true },
+          { title: 'Alert me when my ___ hits ___ registrations', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], template: [{slot: 'campaign', placeholder: 'campaign name'}, {slot: 'target', placeholder: '100'}] },
         ]
       },
       {
         id: 'my-content', name: 'My Content', icon: '✍️',
         desc: 'How the content YOU wrote is performing',
         actions: [
-          { title: 'How is my ___ blog post doing?', category: 'question', type: 'ask', meta: 'GA4', tags: ['aisql'], template: [{slot: 'post title or URL', placeholder: 'e.g. Connector SDK Deep Dive'}], top: true },
-          { title: 'Which of my recent posts drove the most form fills?', category: 'question', type: 'ask', meta: 'GA4 + Marketo', tags: ['aisql'], top: true },
-          { title: 'Traffic trend for my ___ landing page since launch', category: 'question', type: 'ask', meta: 'GA4', tags: ['aisql'], template: [{slot: 'page', placeholder: 'page URL or name'}], top: true },
+          { title: 'How is my ___ blog post doing?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], template: [{slot: 'post title or URL', placeholder: 'e.g. Connector SDK Deep Dive'}], top: true },
+          { title: 'Which of my recent posts drove the most form fills?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], top: true },
+          { title: 'Traffic trend for my ___ landing page since launch', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], template: [{slot: 'page', placeholder: 'page URL or name'}], top: true },
           { title: 'What are customers actually saying about ___ on Gong calls? Help me write about it.', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'topic', placeholder: 'e.g. reverse ETL, connector SDK, data lakes'}], top: true },
           { title: 'Draft a blog post about ___ using real customer language from Gong', category: 'generator', type: 'ask', meta: 'Gong + Fivetran Docs', tags: ['gong'], template: [{slot: 'topic', placeholder: 'e.g. why companies switch from Airbyte'}] },
         ]
@@ -342,10 +342,10 @@ const ROLE_DATA = {
         id: 'my-audience', name: 'My Audience', icon: '👥',
         desc: 'Who should you be targeting based on real signals',
         actions: [
-          { title: 'Which accounts in ___ segment are showing intent signals this week?', category: 'question', type: 'ask', meta: 'Bombora + Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'segment', placeholder: 'e.g. Enterprise, Mid-Market, Data Teams'}], top: true },
+          { title: 'Which accounts in ___ segment are showing intent signals this week?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], template: [{slot: 'segment', placeholder: 'e.g. Enterprise, Mid-Market, Data Teams'}], top: true },
           { title: 'Build an invite list for my ___ event from accounts with open opps', category: 'action', type: 'act', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'event', placeholder: 'e.g. NYC Dinner, Summit'}], top: true },
-          { title: 'Which companies visit our ___ page but haven\'t converted?', category: 'question', type: 'ask', meta: 'GA4 + Clearbit', tags: ['aisql'], template: [{slot: 'page', placeholder: 'e.g. pricing, connectors, vs-airbyte'}], top: true },
-          { title: 'Find lookalike accounts to our best ___ customers', category: 'question', type: 'ask', meta: 'Salesforce + Clearbit + AISQL', tags: ['salesforce', 'aisql'], template: [{slot: 'segment or product', placeholder: 'e.g. HVR, database connectors'}], top: true },
+          { title: 'Which companies visit our ___ page but haven\'t converted?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], template: [{slot: 'page', placeholder: 'e.g. pricing, connectors, vs-airbyte'}], top: true },
+          { title: 'Find lookalike accounts to our best ___ customers', category: 'question', type: 'ask', meta: 'Salesforce + AISQL', tags: ['salesforce', 'aisql'], template: [{slot: 'segment or product', placeholder: 'e.g. HVR, database connectors'}], top: true },
         ]
       },
       {
@@ -498,63 +498,63 @@ const ROLE_DATA = {
         id: 'revenue-tracking', name: 'Revenue Tracking', icon: '📈',
         desc: 'ARR, MRR, NRR, churn, forecast vs budget',
         actions: [
-          { title: 'ARR, MRR, and net revenue retention trends for last 8 quarters', category: 'question', type: 'ask', meta: 'Salesforce + Billing', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Current revenue forecast vs budget this quarter', category: 'question', type: 'ask', meta: 'Salesforce + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Revenue concentration risk — top 10 customers as percent of ARR', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: true },
-          { title: 'Push weekly revenue actuals vs forecast to finance Slack', category: 'automation', type: 'auto', meta: 'Salesforce + Billing + Slack', tags: ['salesforce', 'aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a revenue waterfall showing new, expansion, contraction, and churn', category: 'generator', type: 'ask', meta: 'Salesforce + Billing', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'What\\\'s ___ ARR trend over the last ___ quarters?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Current revenue forecast vs budget this quarter', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'What percent of ARR comes from ___?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: true },
+          { title: 'Push weekly revenue actuals vs forecast to finance Slack', category: 'automation', type: 'auto', meta: 'Salesforce + Slack', tags: ['salesforce', 'aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Generate a revenue waterfall showing new, expansion, contraction, and churn', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
         ]
       },
       {
         id: 'cost-budget', name: 'Cost & Budget', icon: '💸',
         desc: 'Department spend, vendor costs, budget variance',
         actions: [
-          { title: 'Total spend by department vs budget this quarter', category: 'question', type: 'ask', meta: 'Finance + HRIS', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Cloud infrastructure cost trend vs revenue growth', category: 'question', type: 'ask', meta: 'AWS + Finance', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Which budget categories are exceeding 110% of plan?', category: 'question', type: 'ask', meta: 'Finance', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Flag budget categories exceeding threshold automatically', category: 'automation', type: 'auto', meta: 'Finance + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a variance analysis report for the monthly close', category: 'generator', type: 'ask', meta: 'Finance', tags: ['aisql'], multi: false, semantic: true, top: true, rising: false },
+          { title: 'How much did ___ spend vs budget this quarter?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Cloud cost trend for ___ vs revenue growth', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, template: [{"slot":"service or team","placeholder":"e.g. AWS, GCP, Engineering"}], top: false, rising: true },
+          { title: 'Is ___ exceeding budget this quarter?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
+          { title: 'Alert me when ___ exceeds ___% of budget', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, template: [{"slot":"category","placeholder":"e.g. Cloud, Headcount"},{"slot":"threshold","placeholder":"110"}], top: true, rising: false },
+          { title: 'Generate a variance analysis report for the monthly close', category: 'generator', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: true, top: true, rising: false },
         ]
       },
       {
         id: 'saas-vendors', name: 'SaaS & Vendors', icon: '🔧',
         desc: 'Tool utilization, contract renewals, consolidation',
         actions: [
-          { title: 'Which SaaS tools have less than 50% of seats active?', category: 'question', type: 'ask', meta: 'Finance + Okta', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'All software contracts expiring in the next 90 days', category: 'question', type: 'ask', meta: 'Finance', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'What would consolidating overlapping tools save annually?', category: 'question', type: 'ask', meta: 'Finance + Okta', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Push SaaS renewal reminders 90 days before each expiry', category: 'automation', type: 'auto', meta: 'Finance + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a SaaS optimization report with utilization and savings opportunities', category: 'generator', type: 'ask', meta: 'Finance + Okta', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'How many people actually use ___?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'When does our ___ contract expire?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
+          { title: 'What would consolidating overlapping tools save annually?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Push SaaS renewal reminders 90 days before each expiry', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Generate a SaaS optimization report with utilization and savings opportunities', category: 'generator', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'board-reporting', name: 'Board & Reporting', icon: '📊',
         desc: 'Exec decks, financial close, metric summaries',
         actions: [
-          { title: 'Are we on track to hit the board plan this quarter?', category: 'question', type: 'ask', meta: 'Salesforce + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Build a board-ready financial summary deck', category: 'generator', type: 'ask', meta: 'Finance + Salesforce + HRIS', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Auto-generate monthly financial close summary', category: 'automation', type: 'auto', meta: 'Finance + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate an investor update with key metrics and narrative', category: 'generator', type: 'ask', meta: 'Finance + Salesforce + HRIS', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Are we on track to hit the board plan this quarter?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Build a board-ready financial summary deck', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Auto-generate monthly financial close summary', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Generate an investor update with key metrics and narrative', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'unit-economics', name: 'Unit Economics', icon: '🧮',
         desc: 'CAC, LTV, payback, gross margin',
         actions: [
-          { title: 'CAC, LTV, and payback period by segment and channel', category: 'question', type: 'ask', meta: 'Salesforce + Finance + Marketo', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'How is our gross margin trending by customer segment?', category: 'question', type: 'ask', meta: 'Finance + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What is our burn multiple this quarter?', category: 'question', type: 'ask', meta: 'Finance', tags: ['aisql'], multi: false, semantic: false, top: true, rising: true },
-          { title: 'Generate a unit economics dashboard for the leadership review', category: 'generator', type: 'ask', meta: 'Finance + Salesforce + Marketo', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'What\'s the CAC and LTV for ___?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'How is our gross margin trending by customer segment?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'What\'s our burn multiple for ___?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: false, top: true, rising: true },
+          { title: 'Generate a unit economics dashboard for the leadership review', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'planning-modeling', name: 'Planning & Modeling', icon: '📋',
         desc: 'Scenario planning, headcount impact, forecasts',
         actions: [
-          { title: 'What is the financial impact of adding 10 more heads next quarter?', category: 'question', type: 'ask', meta: 'Finance + HRIS', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'If we hit 90% of pipeline, what does revenue look like?', category: 'question', type: 'ask', meta: 'Salesforce + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Burn rate this quarter vs plan and runway at current spend', category: 'question', type: 'ask', meta: 'Finance', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Generate a scenario model with base, upside, and downside cases', category: 'generator', type: 'ask', meta: 'Finance + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'What is the financial impact of adding 10 more heads next quarter?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'If we hit 90% of pipeline, what does revenue look like?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Burn rate this quarter vs plan and runway at current spend', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
+          { title: 'Generate a scenario model with base, upside, and downside cases', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: true },
         ]
       },
     ]
@@ -592,20 +592,20 @@ const ROLE_DATA = {
         id: 'metrics-semantic', name: 'Metrics & Semantic', icon: '🧊',
         desc: 'Metric definitions, lineage, conflicts',
         actions: [
-          { title: 'All metrics defined in our semantic layer and their owner', category: 'question', type: 'ask', meta: 'dbt + Looker', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Business metrics with conflicting definitions across teams', category: 'question', type: 'ask', meta: 'dbt + Looker + Tableau', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'All metrics defined in our semantic layer and their owner', category: 'question', type: 'ask', meta: 'dbt', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Business metrics with conflicting definitions across teams', category: 'question', type: 'ask', meta: 'dbt', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Full lineage for our ARR metric — every table and transform', category: 'question', type: 'ask', meta: 'dbt + Snowflake', tags: ['aisql', 'snowflake'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Auto-generate docs for undocumented dbt models', category: 'automation', type: 'auto', meta: 'aisql', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Generate a metric catalog with definitions, owners, and lineage', category: 'generator', type: 'ask', meta: 'dbt + Looker + Tableau', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a metric catalog with definitions, owners, and lineage', category: 'generator', type: 'ask', meta: 'dbt', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'dashboard-health', name: 'Dashboard Health', icon: '📺',
         desc: 'Usage, stale reports, broken charts',
         actions: [
-          { title: 'Which dashboards are most viewed and by which teams?', category: 'question', type: 'ask', meta: 'Looker + Tableau', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Reports not viewed in 90+ days that could be retired', category: 'question', type: 'ask', meta: 'Looker + Tableau', tags: ['aisql'], multi: true, semantic: false, top: true, rising: true },
-          { title: 'Dashboards with broken charts from upstream schema changes', category: 'question', type: 'ask', meta: 'Looker + dbt + Fivetran', tags: ['aisql', 'fivetran'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which dashboards are most viewed and by which teams?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Reports not viewed in 90+ days that could be retired', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: false, top: true, rising: true },
+          { title: 'Dashboards with broken charts from upstream schema changes', category: 'question', type: 'ask', meta: 'dbt + Fivetran', tags: ['aisql', 'fivetran'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Auto-notify dashboard owners when upstream schema changes', category: 'automation', type: 'auto', meta: 'Fivetran + dbt + Slack', tags: ['fivetran', 'aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
         ]
       },
@@ -615,9 +615,9 @@ const ROLE_DATA = {
         actions: [
           { title: 'Which teams make the most ad-hoc data requests?', category: 'question', type: 'ask', meta: 'Jira + Slack', tags: ['jira', 'slack'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Most common data questions asked in Slack by business teams', category: 'question', type: 'ask', meta: 'Slack', tags: ['slack'], multi: false, semantic: true, top: true, rising: false },
-          { title: 'Which ad-hoc requests could be answered by existing dashboards?', category: 'question', type: 'ask', meta: 'Looker + Slack', tags: ['aisql', 'slack'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate a self-serve enablement guide based on most common requests', category: 'generator', type: 'ask', meta: 'Slack + Looker + dbt', tags: ['slack', 'aisql'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Auto-respond to common Slack data questions with dashboard links', category: 'automation', type: 'auto', meta: 'Slack + Looker', tags: ['slack', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Which ad-hoc requests could be answered by existing dashboards?', category: 'question', type: 'ask', meta: 'Slack', tags: ['aisql', 'slack'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Generate a self-serve enablement guide based on most common requests', category: 'generator', type: 'ask', meta: 'Slack + dbt', tags: ['slack', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Auto-respond to common Slack data questions with dashboard links', category: 'automation', type: 'auto', meta: 'Slack', tags: ['slack', 'aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
@@ -626,7 +626,7 @@ const ROLE_DATA = {
         actions: [
           { title: 'Which queries are consuming the most warehouse credits?', category: 'question', type: 'ask', meta: 'Snowflake', tags: ['snowflake'], multi: false, semantic: false, top: true, rising: false },
           { title: 'Warehouse utilization and auto-suspend efficiency', category: 'question', type: 'ask', meta: 'Snowflake', tags: ['snowflake'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Data warehouse cost trend vs data volume growth', category: 'question', type: 'ask', meta: 'Snowflake + Finance', tags: ['snowflake', 'aisql'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Data warehouse cost trend vs data volume growth', category: 'question', type: 'ask', meta: 'Snowflake', tags: ['snowflake', 'aisql'], multi: true, semantic: true, top: true, rising: true },
           { title: 'Alert when compute costs exceed daily threshold', category: 'automation', type: 'auto', meta: 'Snowflake + Slack', tags: ['snowflake', 'slack'], multi: true, semantic: false, top: true, rising: false },
           { title: 'Generate a cost optimization report with specific query recommendations', category: 'generator', type: 'ask', meta: 'Snowflake', tags: ['snowflake'], multi: false, semantic: true, top: false, rising: true },
         ]
@@ -646,9 +646,9 @@ const ROLE_DATA = {
         actions: [
           { title: 'Salesforce accounts missing key fields like ARR, segment, or owner', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
           { title: 'Deals moved backwards in stage in the last 30 days', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: true, top: true, rising: false },
-          { title: 'Contacts with bounced emails or invalid phone numbers', category: 'question', type: 'ask', meta: 'Salesforce + Outreach', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Contacts with bounced emails or invalid phone numbers', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
           { title: 'Auto-flag incomplete records to owning rep in Slack', category: 'automation', type: 'auto', meta: 'Salesforce + Slack', tags: ['salesforce', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Enrich all accounts missing industry, employee count, or revenue', category: 'action', type: 'act', meta: 'Salesforce + Clearbit', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Enrich all accounts missing industry, employee count, or revenue', category: 'action', type: 'act', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: false, top: true, rising: false },
         ]
       },
       {
@@ -668,40 +668,40 @@ const ROLE_DATA = {
         actions: [
           { title: 'Quota attainment by rep, team, and region this quarter', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
           { title: 'Pipeline coverage ratio by rep vs their quota', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which territories are underserved based on TAM vs rep coverage?', category: 'question', type: 'ask', meta: 'Salesforce + Clearbit', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Which territories are underserved based on TAM vs rep coverage?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
           { title: 'Push weekly quota attainment summary to sales leadership', category: 'automation', type: 'auto', meta: 'Salesforce + Slack', tags: ['salesforce', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a territory rebalancing proposal based on performance data', category: 'generator', type: 'ask', meta: 'Salesforce + Clearbit', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a territory rebalancing proposal based on performance data', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'revenue-reporting', name: 'Revenue Reporting', icon: '📊',
         desc: 'ARR movements, forecast accuracy, pipeline metrics',
         actions: [
-          { title: 'New ARR, expansion, churn, and NRR this quarter', category: 'question', type: 'ask', meta: 'Salesforce + Billing', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Revenue bridge from last quarter showing all movements', category: 'question', type: 'ask', meta: 'Salesforce + Billing', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'ARR breakdown for ___ this quarter', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, template: [{"slot":"segment","placeholder":"e.g. Enterprise, Mid-Market, all"}], top: true, rising: false },
+          { title: 'Revenue bridge from last quarter showing all movements', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
           { title: 'How accurate has our forecast been vs actuals over the last 4 quarters?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: true, top: true, rising: false },
           { title: 'Push daily revenue and pipeline metrics to RevOps Slack', category: 'automation', type: 'auto', meta: 'Salesforce + Slack', tags: ['salesforce', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a board-ready revenue report with waterfall and commentary', category: 'generator', type: 'ask', meta: 'Salesforce + Billing + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a board-ready revenue report with waterfall and commentary', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'tool-stack', name: 'Tool Stack', icon: '🔌',
         desc: 'Utilization, overlap, integration health',
         actions: [
-          { title: 'Which sales tools are being paid for but not used?', category: 'question', type: 'ask', meta: 'Okta + Finance', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Time spent in each sales tool by rep and team', category: 'question', type: 'ask', meta: 'Salesforce + Outreach + Gong', tags: ['salesforce', 'aisql', 'gong'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What would consolidating our tech stack save annually?', category: 'question', type: 'ask', meta: 'Finance + Okta', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Generate a tool stack audit with utilization scores and consolidation recs', category: 'generator', type: 'ask', meta: 'Okta + Finance + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Which sales tools are being paid for but not used?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Time spent in each sales tool by rep and team', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'aisql', 'gong'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'What would consolidating our tech stack save annually?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a tool stack audit with utilization scores and consolidation recs', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'process-automation', name: 'Process Automation', icon: '⚙️',
         desc: 'Workflow gaps, manual tasks, efficiency opportunities',
         actions: [
-          { title: 'Which manual processes are reps spending the most time on?', category: 'question', type: 'ask', meta: 'Salesforce + Gong + Outreach', tags: ['salesforce', 'gong', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which manual processes are reps spending the most time on?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong', 'aisql'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Which Salesforce workflows have the highest failure rate?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
           { title: 'Auto-update deal stage based on Gong call disposition', category: 'automation', type: 'auto', meta: 'Gong + Salesforce', tags: ['gong', 'salesforce'], multi: true, semantic: true, top: true, rising: true },
-          { title: 'Generate a process efficiency report with automation opportunities', category: 'generator', type: 'ask', meta: 'Salesforce + Gong + Outreach', tags: ['salesforce', 'gong', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a process efficiency report with automation opportunities', category: 'generator', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong', 'aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
     ]
@@ -717,11 +717,11 @@ const ROLE_DATA = {
         id: 'company-pulse', name: 'Company Pulse', icon: '🏢',
         desc: 'Full health dashboard, ARR, headcount, CSAT, burn',
         actions: [
-          { title: 'Full company health dashboard — ARR, headcount, CSAT, burn, NRR', category: 'question', type: 'ask', meta: 'Salesforce + HRIS + Zendesk + Finance', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Year-over-year growth rate across all key company metrics', category: 'question', type: 'ask', meta: 'Salesforce + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What are our top 3 risks and top 3 wins this quarter?', category: 'question', type: 'ask', meta: 'Salesforce + HRIS + Zendesk + Finance', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: true },
-          { title: 'Auto-generate weekly company metrics digest to exec Slack', category: 'automation', type: 'auto', meta: 'Salesforce + HRIS + Finance + Zendesk + Slack', tags: ['salesforce', 'aisql', 'zendesk', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a Monday morning briefing with key metrics and action items', category: 'generator', type: 'ask', meta: 'Salesforce + HRIS + Zendesk + Finance', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Full company health dashboard — ARR, headcount, CSAT, burn, NRR', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'YoY growth for ___', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, template: [{"slot":"metric","placeholder":"e.g. ARR, headcount, NRR, logo count"}], top: true, rising: false },
+          { title: 'What are our top 3 risks and top 3 wins this quarter?', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Auto-generate weekly company metrics digest to exec Slack', category: 'automation', type: 'auto', meta: 'Salesforce + Zendesk + Slack', tags: ['salesforce', 'aisql', 'zendesk', 'slack'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Generate a Monday morning briefing with key metrics and action items', category: 'generator', type: 'ask', meta: 'Salesforce + Zendesk', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: true },
         ]
       },
       {
@@ -729,7 +729,7 @@ const ROLE_DATA = {
         desc: 'Forecast, deal involvement, segment trends',
         actions: [
           { title: 'Are we on track to hit the number this quarter?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'New ARR, expansion, churn, and net new in one view', category: 'question', type: 'ask', meta: 'Salesforce + Billing', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'New ARR, expansion, churn, and net new in one view', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Which deals need executive involvement to close this quarter?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Pipeline coverage vs where we need to be by segment', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce'], multi: false, semantic: false, top: true, rising: false },
           { title: 'Generate a revenue forecast report with risk factors and upside', category: 'generator', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], multi: true, semantic: true, top: false, rising: true },
@@ -739,31 +739,31 @@ const ROLE_DATA = {
         id: 'org-health', name: 'Org Health', icon: '❤️',
         desc: 'Attrition, engagement, span of control',
         actions: [
-          { title: 'Attrition rate by department and level across the company', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which departments have the lowest engagement scores?', category: 'question', type: 'ask', meta: 'Culture Amp', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Revenue per employee and how it has changed over 4 quarters', category: 'question', type: 'ask', meta: 'Finance + HRIS + Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Push monthly org health summary to CEO and CHRO', category: 'automation', type: 'auto', meta: 'HRIS + Culture Amp + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate an org health report with retention, engagement, and span analysis', category: 'generator', type: 'ask', meta: 'HRIS + Culture Amp + Finance', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Attrition rate by department and level across the company', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
+          { title: 'Which departments have the lowest engagement scores?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
+          { title: 'Revenue per employee and how it has changed over 4 quarters', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['aisql', 'salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Push monthly org health summary to CEO and CHRO', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
+          { title: 'Generate an org health report with retention, engagement, and span analysis', category: 'generator', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
         id: 'strategic-initiatives', name: 'Strategic Initiatives', icon: '🎯',
         desc: 'Initiative tracking, ROI, market opportunities',
         actions: [
-          { title: 'Status of all active strategic initiatives and their KPIs', category: 'question', type: 'ask', meta: 'Jira + Salesforce + Finance', tags: ['jira', 'salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which initiatives are off track and what is the business impact?', category: 'question', type: 'ask', meta: 'Jira + Finance', tags: ['jira', 'aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which markets should we double down on based on growth data?', category: 'question', type: 'ask', meta: 'Salesforce + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
-          { title: 'Generate a strategic initiative scorecard for the leadership review', category: 'generator', type: 'ask', meta: 'Jira + Salesforce + Finance', tags: ['jira', 'salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Status of all active strategic initiatives and their KPIs', category: 'question', type: 'ask', meta: 'Jira + Salesforce', tags: ['jira', 'salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which initiatives are off track and what is the business impact?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which markets should we double down on based on growth data?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Generate a strategic initiative scorecard for the leadership review', category: 'generator', type: 'ask', meta: 'Jira + Salesforce', tags: ['jira', 'salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
         ]
       },
       {
         id: 'board-prep', name: 'Board Prep', icon: '📋',
         desc: 'Deck generation, metric summaries, QBR prep',
         actions: [
-          { title: 'Build a board-ready deck with performance, pipeline, and org health', category: 'generator', type: 'ask', meta: 'Salesforce + Finance + HRIS + Zendesk', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What questions is the board likely to ask based on current metrics?', category: 'question', type: 'ask', meta: 'Salesforce + Finance + HRIS', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: true },
-          { title: 'Generate a QBR prep doc with key metrics, wins, risks, and asks', category: 'generator', type: 'ask', meta: 'Salesforce + Finance + HRIS + Jira', tags: ['salesforce', 'aisql', 'jira'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate board meeting talking points with data-backed narratives', category: 'generator', type: 'ask', meta: 'Salesforce + Finance + HRIS', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Build a board-ready deck with performance, pipeline, and org health', category: 'generator', type: 'ask', meta: 'Salesforce + Zendesk', tags: ['salesforce', 'aisql', 'zendesk'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'What questions is the board likely to ask based on current metrics?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Generate a QBR prep doc with key metrics, wins, risks, and asks', category: 'generator', type: 'ask', meta: 'Salesforce + Jira', tags: ['salesforce', 'aisql', 'jira'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Generate board meeting talking points with data-backed narratives', category: 'generator', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: false, rising: true },
         ]
       },
       {
@@ -771,7 +771,7 @@ const ROLE_DATA = {
         desc: 'Market positioning, win/loss trends, expansion targets',
         actions: [
           { title: 'What is our win rate by competitor and how is it trending?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which market segments are growing fastest for us?', category: 'question', type: 'ask', meta: 'Salesforce + Finance', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which market segments are growing fastest for us?', category: 'question', type: 'ask', meta: 'Salesforce', tags: ['salesforce', 'aisql'], multi: true, semantic: true, top: true, rising: false },
           { title: 'What messaging is winning in competitive deals?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], multi: false, semantic: true, top: false, rising: true },
           { title: 'Generate a competitive landscape briefing for the leadership team', category: 'generator', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], multi: true, semantic: true, top: true, rising: false },
           { title: 'Push weekly win/loss summary to exec Slack with competitor breakdown', category: 'automation', type: 'auto', meta: 'Salesforce + Gong + Slack', tags: ['salesforce', 'gong', 'slack'], multi: true, semantic: true, top: false, rising: true },
@@ -844,7 +844,7 @@ const ROLE_DATA = {
           { title: 'Open security incidents assigned to me or my team', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
           { title: 'All P1/P2 security tickets in the last ___ days', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira', 'aisql'], template: [{slot: 'days', placeholder: '30', options: ['7','30','90']}], top: true },
           { title: 'Mean time to detect and resolve security incidents this quarter', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira', 'aisql'], multi: true, semantic: true, top: true },
-          { title: 'Trending security alert types — what\'s spiking?', category: 'question', type: 'ask', meta: 'AISQL + PagerDuty', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Trending security alert types — what\'s spiking?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
           { title: 'Generate an incident summary report for leadership', category: 'generator', type: 'ask', meta: 'Jira + AISQL', tags: ['jira', 'aisql'], multi: true, semantic: true },
         ]
       },
@@ -852,32 +852,32 @@ const ROLE_DATA = {
         id: 'access-compliance', name: 'Access & Compliance', icon: '🔑',
         desc: 'Access reviews, SOC2, audit prep, policy compliance',
         actions: [
-          { title: 'Which users have production database access?', category: 'question', type: 'ask', meta: 'Okta + AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
-          { title: 'Unused licenses by tool — Slack, Zoom, GitHub, Figma', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Which users have production database access?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Unused licenses by tool — Slack, Zoom, GitHub, Figma', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
           { title: 'SOC2-relevant Jira tickets completed this quarter', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
-          { title: 'Users who haven\'t completed security training', category: 'question', type: 'ask', meta: 'HRIS + Okta', tags: ['aisql'], multi: true, semantic: false, top: true },
-          { title: 'Generate a quarterly access review report', category: 'generator', type: 'ask', meta: 'Okta + AISQL', tags: ['aisql'], multi: true, semantic: true },
+          { title: 'Users who haven\'t completed security training', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Generate a quarterly access review report', category: 'generator', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true },
         ]
       },
       {
         id: 'vendor-tools', name: 'Vendor & Tools', icon: '🛠️',
         desc: 'Vendor management, tool adoption, spend',
         actions: [
-          { title: 'Which tools have the lowest adoption across the org?', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql'], multi: true, semantic: true, top: true },
-          { title: 'Tool spend by vendor this quarter vs last', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Which tools have the lowest adoption across the org?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Tool spend by vendor this quarter vs last', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
           { title: 'Which vendors handle PII and when were they last reviewed?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
-          { title: 'Overlap analysis — which tools have redundant functionality?', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql'], multi: true, semantic: true, top: true },
-          { title: 'Auto-flag when a new SaaS vendor is added without security review', category: 'automation', type: 'auto', meta: 'Okta + Slack', tags: ['aisql', 'slack'] },
+          { title: 'Overlap analysis — which tools have redundant functionality?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Auto-flag when a new SaaS vendor is added without security review', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'] },
         ]
       },
       {
         id: 'infra-health', name: 'Infra Health', icon: '🖥️',
         desc: 'System uptime, service health, capacity',
         actions: [
-          { title: 'Internal service SLA compliance this quarter', category: 'question', type: 'ask', meta: 'AISQL + DataDog', tags: ['aisql'], multi: true, semantic: false, top: true },
-          { title: 'Which internal services had the most downtime this month?', category: 'question', type: 'ask', meta: 'AISQL + PagerDuty', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Internal service SLA compliance this quarter', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Which internal services had the most downtime this month?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
           { title: 'Cloud cost breakdown by team and service', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: false, top: true },
-          { title: 'Alert me when any internal service P99 latency exceeds ___ms', category: 'automation', type: 'auto', meta: 'DataDog + Slack', tags: ['aisql', 'slack'], template: [{slot: 'threshold', placeholder: '500', options: ['200','500','1000','2000']}] },
+          { title: 'Alert me when any internal service P99 latency exceeds ___ms', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], template: [{slot: 'threshold', placeholder: '500', options: ['200','500','1000','2000']}] },
         ]
       },
     ]
@@ -924,10 +924,10 @@ const ROLE_DATA = {
         id: 'procurement', name: 'Procurement Review', icon: '🏷️',
         desc: 'Vendor contracts, spend approval, compliance',
         actions: [
-          { title: 'Vendor contracts up for renewal in the next quarter', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql'], multi: true, semantic: false, top: true },
-          { title: 'Total spend by vendor category this fiscal year', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Vendor contracts up for renewal in the next quarter', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Total spend by vendor category this fiscal year', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
           { title: 'Which vendor agreements lack standard security clauses?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
-          { title: 'Generate a procurement compliance summary for audit', category: 'generator', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql'], multi: true, semantic: true },
+          { title: 'Generate a procurement compliance summary for audit', category: 'generator', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true },
         ]
       },
     ]
@@ -964,9 +964,9 @@ const ROLE_DATA = {
         id: 'tool-adoption', name: 'Tool Adoption', icon: '🧰',
         desc: 'Which tools are being used, by whom, and how much',
         actions: [
-          { title: 'Internal tool adoption rates by department', category: 'question', type: 'ask', meta: 'AISQL + Okta', tags: ['aisql'], multi: true, semantic: true, top: true },
-          { title: 'Which tools have the lowest ROI based on spend vs usage?', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql'], multi: true, semantic: true, top: true },
-          { title: 'New hire tool adoption — how quickly do they ramp?', category: 'question', type: 'ask', meta: 'AISQL + HRIS + Okta', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Internal tool adoption rates by department', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Which tools have the lowest ROI based on spend vs usage?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'New hire tool adoption — how quickly do they ramp?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
           { title: 'Triage adoption by department — who\'s using AI and who isn\'t?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
         ]
       },
@@ -974,8 +974,8 @@ const ROLE_DATA = {
         id: 'planning-reporting', name: 'Planning & Reporting', icon: '📊',
         desc: 'Quarterly planning, budget tracking, exec reporting',
         actions: [
-          { title: 'Budget vs actuals by department this quarter', category: 'question', type: 'ask', meta: 'AISQL + Finance', tags: ['aisql'], multi: true, semantic: false, top: true },
-          { title: 'Headcount plan vs actual by team', category: 'question', type: 'ask', meta: 'HRIS + Finance + AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Budget vs actuals by department this quarter', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
+          { title: 'Headcount plan vs actual by team', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: false, top: true },
           { title: 'Build a weekly ops report for leadership', category: 'generator', type: 'ask', meta: 'Salesforce + Zendesk + Jira + AISQL', tags: ['salesforce', 'zendesk', 'jira', 'aisql'], multi: true, semantic: true, top: true },
           { title: 'What changed week-over-week across our core business metrics?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
         ]
@@ -993,10 +993,10 @@ const ROLE_DATA = {
         id: 'my-services', name: 'My Services', icon: '🔧',
         desc: 'Services you own — health, latency, errors',
         actions: [
-          { title: 'Health check on ___ — latency, error rate, throughput', category: 'question', type: 'ask', meta: 'DataDog + AISQL', tags: ['aisql'], template: [{slot: 'service name', placeholder: 'e.g. connector-service, sync-worker'}], top: true },
-          { title: 'Which of my services have degraded in the last 24 hours?', category: 'question', type: 'ask', meta: 'DataDog + AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Health check on ___ — latency, error rate, throughput', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'service name', placeholder: 'e.g. connector-service, sync-worker'}], top: true },
+          { title: 'Has ___ degraded in the last ___?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
           { title: 'Service dependency map for ___', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'service', placeholder: 'service name'}], top: true },
-          { title: 'Alert me when ___ p99 latency exceeds ___ms', category: 'automation', type: 'auto', meta: 'DataDog + Slack', tags: ['aisql', 'slack'], template: [{slot: 'service', placeholder: 'service name'}, {slot: 'threshold', placeholder: '500'}], top: true },
+          { title: 'Alert me when ___ p99 latency exceeds ___ms', category: 'automation', type: 'auto', meta: 'Slack', tags: ['aisql', 'slack'], template: [{slot: 'service', placeholder: 'service name'}, {slot: 'threshold', placeholder: '500'}], top: true },
           { title: 'What\'s the cloud cost for ___ this month vs last?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], template: [{slot: 'service', placeholder: 'service name'}] },
         ]
       },
@@ -1004,8 +1004,8 @@ const ROLE_DATA = {
         id: 'deployments', name: 'Deployments', icon: '🚀',
         desc: 'Deploy frequency, rollbacks, build health',
         actions: [
-          { title: 'Deployment frequency and rollback rate this ___', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github', 'aisql'], template: [{slot: 'period', placeholder: 'week', options: ['week','month','quarter']}], top: true },
-          { title: 'My recent deployments — did any cause regressions?', category: 'question', type: 'ask', meta: 'GitHub + DataDog + AISQL', tags: ['github', 'aisql'], multi: true, semantic: true, top: true },
+          { title: 'Deployment frequency for ___ this ___', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github', 'aisql'], template: [{slot: 'period', placeholder: 'week', options: ['week','month','quarter']}], top: true },
+          { title: 'My recent deployments — did any cause regressions?', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github', 'aisql'], multi: true, semantic: true, top: true },
           { title: 'Average build time by repo — which are slowest?', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github', 'aisql'], multi: true, semantic: false, top: true },
           { title: 'Change failure rate by team this quarter', category: 'question', type: 'ask', meta: 'GitHub + AISQL', tags: ['github', 'aisql'], multi: true, semantic: true, top: true },
         ]
@@ -1014,10 +1014,10 @@ const ROLE_DATA = {
         id: 'on-call', name: 'On-Call', icon: '📟',
         desc: 'Pages, alert fatigue, incident response',
         actions: [
-          { title: 'Who\'s been paged the most this month and for what?', category: 'question', type: 'ask', meta: 'PagerDuty + AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
-          { title: 'Top 10 noisiest alerts — which should be tuned or muted?', category: 'question', type: 'ask', meta: 'PagerDuty + AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
-          { title: 'MTTR trend for production incidents this quarter', category: 'question', type: 'ask', meta: 'Jira + PagerDuty + AISQL', tags: ['jira', 'aisql'], multi: true, semantic: true, top: true },
-          { title: 'Generate a post-incident review for incident ___', category: 'generator', type: 'ask', meta: 'Jira + PagerDuty + Slack', tags: ['jira', 'aisql', 'slack'], template: [{slot: 'incident ID or name', placeholder: 'e.g. INC-1234'}], top: true },
+          { title: 'Who\'s been paged the most this month and for what?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Top 10 noisiest alerts — which should be tuned or muted?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'MTTR trend for production incidents this quarter', category: 'question', type: 'ask', meta: 'Jira + AISQL', tags: ['jira', 'aisql'], multi: true, semantic: true, top: true },
+          { title: 'Generate a post-incident review for incident ___', category: 'generator', type: 'ask', meta: 'Jira + Slack', tags: ['jira', 'aisql', 'slack'], template: [{slot: 'incident ID or name', placeholder: 'e.g. INC-1234'}], top: true },
         ]
       },
       {
@@ -1026,7 +1026,7 @@ const ROLE_DATA = {
         actions: [
           { title: 'Storage growth projection for the next quarter', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
           { title: 'Cloud cost per request by service — where are we overspending?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
-          { title: 'Which services have the most idle capacity?', category: 'question', type: 'ask', meta: 'AISQL + DataDog', tags: ['aisql'], multi: true, semantic: true, top: true },
+          { title: 'Which services have the most idle capacity?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: true, semantic: true, top: true },
           { title: 'Compute utilization by team and environment', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: false, top: true },
           { title: 'Generate a monthly infra cost report with optimization recommendations', category: 'generator', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true },
         ]
@@ -1046,7 +1046,7 @@ const ROLE_DATA = {
         actions: [
           { title: 'Customer health scorecard for ___', category: 'question', type: 'ask', meta: 'Salesforce + Zendesk + AISQL', tags: ['salesforce', 'zendesk', 'aisql'], template: [{slot: 'account', placeholder: 'e.g. Okta'}], top: true },
           { title: 'Which of my customers have declining connector usage?', category: 'question', type: 'ask', meta: 'AISQL', tags: ['aisql'], multi: false, semantic: true, top: true },
-          { title: 'Open support tickets across all my accounts by priority', category: 'question', type: 'ask', meta: 'Zendesk + Salesforce', tags: ['zendesk', 'salesforce'], multi: true, semantic: false, top: true },
+          { title: 'Open tickets for ___ by priority', category: 'question', type: 'ask', meta: 'Zendesk + Salesforce', tags: ['zendesk', 'salesforce'], multi: true, semantic: false, template: [{"slot":"account","placeholder":"e.g. Okta, USAA"}], top: true },
           { title: 'Which customers haven\'t been contacted in ___ days?', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce', 'gong'], template: [{slot: 'days', placeholder: '30', options: ['14','30','60']}], top: true },
           { title: 'Auto-alert me when a customer\'s sync failure rate spikes', category: 'automation', type: 'auto', meta: 'AISQL + Slack', tags: ['aisql', 'slack'] },
         ]
@@ -1174,7 +1174,7 @@ const EMPLOYEE_HELP = {
       name: 'Compensation & Benefits',
       icon: '💰',
       actions: [
-        { title: "What's my comp plan?", category: 'question', type: 'ask', meta: 'Workday + Finance', tags: ['Workday', 'Finance'], top: true },
+        { title: "What's my comp plan?", category: 'question', type: 'ask', meta: 'Workday', tags: ['Workday', 'Finance'], top: true },
         { title: 'When is open enrollment?', category: 'question', type: 'ask', meta: 'HR Portal', tags: ['HR'] },
         { title: 'How do I set up or change my 401k?', category: 'question', type: 'ask', meta: 'Fidelity + HR', tags: ['HR'] },
         { title: "What's our equity vesting schedule?", category: 'question', type: 'ask', meta: 'Carta + HR', tags: ['HR'] },
@@ -1186,11 +1186,11 @@ const EMPLOYEE_HELP = {
       name: 'Expenses & Travel',
       icon: '✈️',
       actions: [
-        { title: 'How do I submit an expense report?', category: 'question', type: 'ask', meta: 'Coupa', tags: ['Coupa'], top: true },
+        { title: 'How do I submit an expense report?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['Coupa'], top: true },
         { title: "What's our travel policy?", category: 'question', type: 'ask', meta: 'HR Portal', tags: ['HR'] },
-        { title: "What's the per diem for client dinners?", category: 'question', type: 'ask', meta: 'Finance', tags: ['Finance'] },
+        { title: "What's the per diem for client dinners?", category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['Finance'] },
         { title: 'How do I book a flight or hotel?', category: 'question', type: 'ask', meta: 'Navan', tags: ['Navan'] },
-        { title: 'Submit an expense report now', category: 'action', type: 'act', meta: 'Coupa', tags: ['Coupa'] },
+        { title: 'Submit an expense report now', category: 'action', type: 'act', meta: 'Fivetran AI', tags: ['Coupa'] },
       ]
     },
     {
@@ -1199,8 +1199,8 @@ const EMPLOYEE_HELP = {
       icon: '🔐',
       actions: [
         { title: "What's the office WiFi password?", category: 'question', type: 'ask', meta: 'IT', tags: ['IT'], top: true },
-        { title: 'How do I reset my password?', category: 'question', type: 'ask', meta: 'Okta', tags: ['Okta'] },
-        { title: 'How do I get access to a new tool?', category: 'question', type: 'ask', meta: 'IT + Okta', tags: ['IT', 'Okta'] },
+        { title: 'How do I reset my password?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['Okta'] },
+        { title: 'How do I get access to a new tool?', category: 'question', type: 'ask', meta: 'IT', tags: ['IT', 'Okta'] },
         { title: 'How do I set up VPN?', category: 'question', type: 'ask', meta: 'IT', tags: ['IT'] },
         { title: 'Request access to a system', category: 'action', type: 'act', meta: 'IT', tags: ['IT'] },
       ]
