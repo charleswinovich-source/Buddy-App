@@ -958,13 +958,6 @@ function renderDashContent() {
     });
   }
 
-  // ── My Projects section ──
-  const projects = STATE.projects || [];
-  const projSection = document.createElement('div');
-  projSection.id = 'my-projects-section';
-  projSection.innerHTML = _renderMyProjects(projects);
-  content.appendChild(projSection);
-
   // ── Explore Actions button ──
   const exploreBtn = document.createElement('button');
   exploreBtn.className = 'dash-explore-btn';
