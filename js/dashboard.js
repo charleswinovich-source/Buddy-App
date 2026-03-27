@@ -1040,7 +1040,7 @@ function renderBottomSheet() {
   const _AVAILABLE_SRC = new Set(['salesforce','gong','zendesk','slack','slab','jira','github','aisql','fivetran-schema','google-calendar','gmail']);
   const visibleFocusAreas = roleData.focusAreas.filter(fa => {
     if (!fa.actions || fa.actions.length === 0) return false;
-    return fa.actions.some(a => !a.tags || a.tags.length === 0 || a.tags.some(t => _AVAILABLE_SRC.has(t)));
+    return fa.actions.some(a => !a.tags || a.tags.length === 0 || a.tags.every(t => _AVAILABLE_SRC.has(t)));
   });
 
   if (visibleFocusAreas.length === 0) {
@@ -1090,14 +1090,14 @@ function renderSheetPrompts() {
   const focusArea = roleData.focusAreas.find(fa => fa.id === activeFocusId) || roleData.focusAreas[0];
   if (!focusArea) return;
 
-  // Only show actions whose data sources are currently available
+  // Only show actions where ALL required data sources are available
   const AVAILABLE_SOURCES = new Set([
     'salesforce', 'gong', 'zendesk', 'slack', 'slab', 'jira', 'github',
     'aisql', 'fivetran-schema', 'google-calendar', 'gmail',
   ]);
   const allActions = (focusArea.actions || []).filter(a => {
     if (!a.tags || a.tags.length === 0) return true; // no tags = always show
-    return a.tags.some(t => AVAILABLE_SOURCES.has(t)); // at least one source available
+    return a.tags.every(t => AVAILABLE_SOURCES.has(t)); // ALL sources must be available
   });
   const filtered = activeCategory === 'all' ? allActions : allActions.filter(a => a.category === activeCategory);
 
