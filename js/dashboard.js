@@ -1030,7 +1030,7 @@ function renderBottomSheet() {
   }
 
   // Category grid (focus areas) — only show areas that have available actions
-  const _AVAILABLE_SRC = new Set(['salesforce','gong','zendesk','slack','slab','jira','github','aisql','fivetran-schema','google-calendar','gmail']);
+  const _AVAILABLE_SRC = new Set(['salesforce','gong','zendesk','slack','slab','jira','github','fivetran-schema','google-calendar','gmail']);
   const visibleFocusAreas = roleData.focusAreas.filter(fa => {
     if (!fa.actions || fa.actions.length === 0) return false;
     return fa.actions.some(a => !a.tags || a.tags.length === 0 || a.tags.every(t => _AVAILABLE_SRC.has(t)));
@@ -1083,10 +1083,14 @@ function renderSheetPrompts() {
   const focusArea = roleData.focusAreas.find(fa => fa.id === activeFocusId) || roleData.focusAreas[0];
   if (!focusArea) return;
 
-  // Only show actions where ALL required data sources are available
+  // Only show actions where ALL required data sources are CONFIRMED available
+  // Triage MCP: salesforce, gong, zendesk, slack, slab, jira
+  // Google APIs: google-calendar, gmail
+  // Public APIs: fivetran-schema, github
+  // NOT including aisql — unverified warehouse data
   const AVAILABLE_SOURCES = new Set([
     'salesforce', 'gong', 'zendesk', 'slack', 'slab', 'jira', 'github',
-    'aisql', 'fivetran-schema', 'google-calendar', 'gmail',
+    'fivetran-schema', 'google-calendar', 'gmail',
   ]);
   const allActions = (focusArea.actions || []).filter(a => {
     if (!a.tags || a.tags.length === 0) return true; // no tags = always show
