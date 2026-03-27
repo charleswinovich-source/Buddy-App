@@ -442,73 +442,47 @@ const ROLE_DATA = {
   hr: {
     name: 'HR / People',
     icon: '👥',
-    desc: 'Headcount, retention, recruiting, engagement, comp, onboarding',
+    desc: 'Policy lookup, team culture, project tracking, internal knowledge',
     subroles: ['HRBP', 'People Ops', 'Recruiter', 'Talent Lead', 'HR Director'],
     focusAreas: [
       {
-        id: 'headcount-planning', name: 'Headcount & Planning', icon: '📋',
-        desc: 'Plan vs actuals, open roles, contractor mix',
+        id: 'policy-knowledge', name: 'Policy & Knowledge', icon: '📚',
+        desc: 'Find answers to HR policy and process questions fast',
         actions: [
-          { title: 'Headcount by department, level, and location vs approved plan', category: 'question', type: 'ask', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which departments are over or under approved headcount?', category: 'question', type: 'ask', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'What percentage of our workforce is contractor vs FTE by team?', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Push monthly headcount actuals vs plan report to Finance', category: 'automation', type: 'auto', meta: 'HRIS + Finance + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a headcount planning summary for the next quarter', category: 'generator', type: 'ask', meta: 'HRIS + Finance + ATS', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'What\'s our policy on ___?', category: 'question', type: 'ask', meta: 'Slab + Internal Docs', tags: ['slab'], template: [{slot: 'topic', placeholder: 'e.g. PTO, remote work, parental leave'}], top: true },
+          { title: 'Where do I find the ___ template?', category: 'question', type: 'ask', meta: 'Slab + Internal Docs', tags: ['slab'], template: [{slot: 'template', placeholder: 'e.g. offer letter, PIP, job description'}], top: true },
+          { title: 'What\'s the process for ___?', category: 'question', type: 'ask', meta: 'Slab + Internal Docs', tags: ['slab'], template: [{slot: 'process', placeholder: 'e.g. termination, promotion, transfer'}], top: true },
+          { title: 'Search internal docs for ___', category: 'question', type: 'ask', meta: 'Slab', tags: ['slab'], template: [{slot: 'topic', placeholder: 'any HR topic'}], top: true },
         ]
       },
       {
-        id: 'retention-risk', name: 'Retention & Risk', icon: '🚪',
-        desc: 'Flight risk, attrition patterns, manager impact',
+        id: 'hr-projects', name: 'My HR Projects', icon: '📋',
+        desc: 'Track your initiatives and open items in Jira',
         actions: [
-          { title: 'Who is showing flight risk signals right now?', category: 'question', type: 'ask', meta: 'HRIS + Culture Amp', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Attrition rate by department, level, and tenure cohort', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which managers have the highest attrition this year?', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: true, top: true, rising: false },
-          { title: 'Push flight risk scores to each HRBP weekly', category: 'automation', type: 'auto', meta: 'HRIS + Culture Amp + Slack', tags: ['aisql', 'slack'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate a retention risk briefing for the leadership team', category: 'generator', type: 'ask', meta: 'HRIS + Culture Amp', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'Show my open Jira tickets', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Which of my HR project tasks are overdue?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], top: true },
+          { title: 'Create a Jira ticket for ___', category: 'action', type: 'act', meta: 'Jira', tags: ['jira'], template: [{slot: 'task', placeholder: 'e.g. update handbook, review job descriptions'}], top: true },
+          { title: 'What\'s the status of the ___ initiative?', category: 'question', type: 'ask', meta: 'Jira', tags: ['jira'], template: [{slot: 'project', placeholder: 'e.g. DEI program, manager training rollout'}], top: true },
         ]
       },
       {
-        id: 'recruiting-pipeline', name: 'Recruiting Pipeline', icon: '🎯',
-        desc: 'Time-to-fill, offer rates, sourcing quality',
+        id: 'team-culture', name: 'Team & Culture', icon: '💬',
+        desc: 'What\'s happening across the org in Slack',
         actions: [
-          { title: 'Average time-to-fill by role level and department', category: 'question', type: 'ask', meta: 'ATS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which sourcing channels produce the highest quality hires?', category: 'question', type: 'ask', meta: 'ATS + HRIS', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What is our offer acceptance rate by role and team this quarter?', category: 'question', type: 'ask', meta: 'ATS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Flag candidates stuck in interview stage for 2+ weeks', category: 'automation', type: 'auto', meta: 'ATS + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a weekly recruiting pipeline report for hiring managers', category: 'generator', type: 'ask', meta: 'ATS', tags: ['aisql'], multi: false, semantic: false, top: false, rising: true },
+          { title: 'What\'s trending in ___ Slack channel this week?', category: 'question', type: 'ask', meta: 'Slack', tags: ['slack'], template: [{slot: 'channel', placeholder: 'e.g. #general, #watercooler, #people-team'}], top: true },
+          { title: 'Are there any team concerns being raised in public channels?', category: 'question', type: 'ask', meta: 'Slack', tags: ['slack'], top: true },
+          { title: 'What questions are people asking in #ask-hr this week?', category: 'question', type: 'ask', meta: 'Slack', tags: ['slack'], top: true },
+          { title: 'Draft a Slack announcement about ___', category: 'generator', type: 'ask', meta: 'Slack', tags: ['slack'], template: [{slot: 'topic', placeholder: 'e.g. open enrollment, new hire intro, policy change'}], top: true },
         ]
       },
       {
-        id: 'engagement', name: 'Engagement', icon: '❤️',
-        desc: 'Survey scores, themes, team health',
+        id: 'org-data', name: 'Org Data', icon: '🏢',
+        desc: 'Company-level metrics available through Fivetran data',
         actions: [
-          { title: 'Engagement scores by team, level, and tenure from last survey', category: 'question', type: 'ask', meta: 'Culture Amp', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Top themes in open-text survey responses this cycle', category: 'question', type: 'ask', meta: 'Culture Amp', tags: ['aisql'], multi: false, semantic: true, top: true, rising: false },
-          { title: 'Correlate engagement scores with voluntary attrition by team', category: 'question', type: 'ask', meta: 'Culture Amp + HRIS', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Alert HRBPs when a team engagement score drops below threshold', category: 'automation', type: 'auto', meta: 'Culture Amp + Slack', tags: ['aisql', 'slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate an engagement insights report with themes and action items', category: 'generator', type: 'ask', meta: 'Culture Amp + HRIS', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
-        ]
-      },
-      {
-        id: 'compensation', name: 'Compensation', icon: '💰',
-        desc: 'Band analysis, equity gaps, market benchmarks',
-        actions: [
-          { title: 'Compensation distribution by level, gender, and tenure', category: 'question', type: 'ask', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which employees are outside their salary band?', category: 'question', type: 'ask', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Are there pay equity gaps by gender or ethnicity at any level?', category: 'question', type: 'ask', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: true, top: true, rising: true },
-          { title: 'Flag high performers compensated below band midpoint', category: 'automation', type: 'auto', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate a compensation review summary for the next cycle', category: 'generator', type: 'ask', meta: 'HRIS + Finance', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
-        ]
-      },
-      {
-        id: 'onboarding', name: 'Onboarding', icon: '🎓',
-        desc: 'New hire ramp, 90-day check-ins, buddy assignments',
-        actions: [
-          { title: 'Which new hires are past 30 days and have not completed onboarding?', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'What is the average time to productivity by role and team?', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: true, top: true, rising: false },
-          { title: 'Which new hires do not have a buddy assigned yet?', category: 'question', type: 'ask', meta: 'HRIS', tags: ['aisql'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Auto-send 90-day check-in survey to new hires and their managers', category: 'automation', type: 'auto', meta: 'HRIS + Culture Amp', tags: ['aisql'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate an onboarding health report for the People team', category: 'generator', type: 'ask', meta: 'HRIS + Culture Amp', tags: ['aisql'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'How many people are at Fivetran by department?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], top: true },
+          { title: 'What does our org structure look like for ___?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], template: [{slot: 'department', placeholder: 'e.g. Engineering, Sales, Product'}], top: true },
+          { title: 'How has headcount changed quarter over quarter?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], top: true },
+          { title: 'Which teams have grown the most this year?', category: 'question', type: 'ask', meta: 'Fivetran AI', tags: ['aisql'], top: true },
         ]
       },
     ]
