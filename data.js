@@ -313,71 +313,59 @@ const ROLE_DATA = {
   marketing: {
     name: 'Marketing',
     icon: '📣',
-    desc: 'Campaigns, demand gen, content, ABM, attribution',
-    subroles: ['Demand Gen', 'Content Marketing', 'Product Marketing', 'Marketing Ops'],
+    desc: 'Your campaigns, your content, your audience — not the org dashboard',
+    subroles: ['Demand Gen', 'Content Marketing', 'Product Marketing', 'Field Marketing', 'Marketing Ops', 'Brand'],
     focusAreas: [
       {
-        id: 'campaign-performance', name: 'Campaign Performance', icon: '🎯',
-        desc: 'ROI, pipeline attribution, cost per opp',
+        id: 'my-campaigns', name: 'My Campaigns', icon: '🎯',
+        desc: 'Track the specific campaigns you\'re running right now',
         actions: [
-          { title: 'What is the ROI of each active paid campaign this quarter?', category: 'question', type: 'ask', meta: 'Google Ads + Salesforce + Marketo', tags: ['google-ads','salesforce','marketo'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which campaigns are driving the most pipeline, not just leads?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What is our cost per opportunity by campaign and channel?', category: 'question', type: 'ask', meta: 'Google Ads + Salesforce', tags: ['google-ads','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Push weekly campaign performance summary to marketing Slack', category: 'automation', type: 'auto', meta: 'Google Ads + Marketo + Salesforce + Slack', tags: ['google-ads','marketo','salesforce','slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Pause campaigns with cost per opp above threshold', category: 'action', type: 'act', meta: 'Google Ads', tags: ['google-ads'], multi: false, semantic: false, top: false, rising: true },
-          { title: 'Generate a campaign performance deck for the monthly marketing review', category: 'generator', type: 'ask', meta: 'Google Ads + Marketo + Salesforce', tags: ['google-ads','marketo','salesforce'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'How is my ___ campaign performing?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], template: [{slot: 'campaign name', placeholder: 'e.g. Spring Webinar, SDK Launch Email'}], top: true },
+          { title: 'How many leads from my ___ converted to opps?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], template: [{slot: 'campaign', placeholder: 'campaign name'}], top: true },
+          { title: 'Registration / sign-up count for my ___ this week', category: 'question', type: 'ask', meta: 'Marketo', tags: ['marketo'], template: [{slot: 'event or campaign', placeholder: 'e.g. NYC Dinner, Webinar'}], top: true },
+          { title: 'A/B test results for my ___ experiment', category: 'question', type: 'ask', meta: 'Marketo + GA4', tags: ['marketo','ga4'], template: [{slot: 'test name', placeholder: 'e.g. subject line test, CTA variant'}], top: true },
+          { title: 'Alert me when my ___ hits ___ registrations', category: 'automation', type: 'auto', meta: 'Marketo + Slack', tags: ['marketo','slack'], template: [{slot: 'campaign', placeholder: 'campaign name'}, {slot: 'target', placeholder: '100'}] },
         ]
       },
       {
-        id: 'lead-flow', name: 'Lead Flow', icon: '🔥',
-        desc: 'MQL-to-SQL, lead follow-up, nurture performance',
+        id: 'my-content', name: 'My Content', icon: '✍️',
+        desc: 'How the content YOU wrote is performing',
         actions: [
-          { title: 'What is our MQL-to-SQL conversion rate by source this quarter?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which MQLs are not being followed up by sales within 24 hours?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Which nurture sequences have the highest engagement and conversion?', category: 'question', type: 'ask', meta: 'Marketo', tags: ['marketo'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Auto-route high-intent MQLs to the right SDR by territory', category: 'automation', type: 'auto', meta: 'Marketo + Salesforce + Clearbit', tags: ['marketo','salesforce','clearbit'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Flag leads stuck in nurture for 90+ days with no progression', category: 'action', type: 'act', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], multi: true, semantic: false, top: false, rising: true },
+          { title: 'How is my ___ blog post doing?', category: 'question', type: 'ask', meta: 'GA4', tags: ['ga4'], template: [{slot: 'post title or URL', placeholder: 'e.g. Connector SDK Deep Dive'}], top: true },
+          { title: 'Which of my recent posts drove the most form fills?', category: 'question', type: 'ask', meta: 'GA4 + Marketo', tags: ['ga4','marketo'], top: true },
+          { title: 'Traffic trend for my ___ landing page since launch', category: 'question', type: 'ask', meta: 'GA4', tags: ['ga4'], template: [{slot: 'page', placeholder: 'page URL or name'}], top: true },
+          { title: 'What are customers actually saying about ___ on Gong calls? Help me write about it.', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'topic', placeholder: 'e.g. reverse ETL, connector SDK, data lakes'}], top: true },
+          { title: 'Draft a blog post about ___ using real customer language from Gong', category: 'generator', type: 'ask', meta: 'Gong + Fivetran Docs', tags: ['gong'], template: [{slot: 'topic', placeholder: 'e.g. why companies switch from Airbyte'}] },
         ]
       },
       {
-        id: 'content-seo', name: 'Content & SEO', icon: '✍️',
-        desc: 'Content performance, traffic, form fills',
+        id: 'my-audience', name: 'My Audience', icon: '👥',
+        desc: 'Who should you be targeting based on real signals',
         actions: [
-          { title: 'Which content pieces are driving the most form fills this month?', category: 'question', type: 'ask', meta: 'GA4 + Marketo', tags: ['ga4','marketo'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'What are our top landing pages by organic traffic and conversion?', category: 'question', type: 'ask', meta: 'GA4', tags: ['ga4'], multi: false, semantic: false, top: true, rising: false },
-          { title: 'Which blog posts have declining traffic and need refreshing?', category: 'question', type: 'ask', meta: 'GA4', tags: ['ga4'], multi: false, semantic: false, top: true, rising: true },
-          { title: 'Generate a content performance report with traffic, leads, and pipeline', category: 'generator', type: 'ask', meta: 'GA4 + Marketo + Salesforce', tags: ['ga4','marketo','salesforce'], multi: true, semantic: true, top: true, rising: false },
+          { title: 'Which accounts in ___ segment are showing intent signals this week?', category: 'question', type: 'ask', meta: 'Bombora + Salesforce', tags: ['bombora','salesforce'], template: [{slot: 'segment', placeholder: 'e.g. Enterprise, Mid-Market, Data Teams'}], top: true },
+          { title: 'Build an invite list for my ___ event from accounts with open opps', category: 'action', type: 'act', meta: 'Salesforce', tags: ['salesforce'], template: [{slot: 'event', placeholder: 'e.g. NYC Dinner, Summit'}], top: true },
+          { title: 'Which companies visit our ___ page but haven\'t converted?', category: 'question', type: 'ask', meta: 'GA4 + Clearbit', tags: ['ga4','clearbit'], template: [{slot: 'page', placeholder: 'e.g. pricing, connectors, vs-airbyte'}], top: true },
+          { title: 'Find lookalike accounts to our best ___ customers', category: 'question', type: 'ask', meta: 'Salesforce + Clearbit + AISQL', tags: ['salesforce','clearbit','aisql'], template: [{slot: 'segment or product', placeholder: 'e.g. HVR, database connectors'}], top: true },
         ]
       },
       {
-        id: 'website-intent', name: 'Website & Intent', icon: '🌐',
-        desc: 'Visitor identification, conversion paths, intent signals',
+        id: 'competitive', name: 'Competitive', icon: '⚔️',
+        desc: 'What prospects and customers say about competitors',
         actions: [
-          { title: 'Which companies are visiting our site but have not converted?', category: 'question', type: 'ask', meta: 'Clearbit + GA4', tags: ['clearbit','ga4'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'What pages do high-intent accounts visit before requesting a demo?', category: 'question', type: 'ask', meta: 'GA4 + Salesforce + Clearbit', tags: ['ga4','salesforce','clearbit'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Show me intent signals for target accounts this week', category: 'question', type: 'ask', meta: 'Bombora + Salesforce', tags: ['bombora','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Push weekly intent signal report to sales team Slack', category: 'automation', type: 'auto', meta: 'Bombora + Clearbit + Salesforce + Slack', tags: ['bombora','clearbit','salesforce','slack'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate a visitor intelligence briefing for the sales team', category: 'generator', type: 'ask', meta: 'GA4 + Clearbit + Bombora', tags: ['ga4','clearbit','bombora'], multi: true, semantic: true, top: false, rising: true },
+          { title: 'What are prospects saying about ___ on recent calls?', category: 'question', type: 'ask', meta: 'Gong', tags: ['gong'], template: [{slot: 'competitor', placeholder: 'e.g. Airbyte, Stitch, Matillion'}], top: true },
+          { title: 'How often is ___ coming up in competitive deals this quarter?', category: 'question', type: 'ask', meta: 'Gong + Salesforce + AISQL', tags: ['gong','salesforce','aisql'], template: [{slot: 'competitor', placeholder: 'competitor name'}], top: true },
+          { title: 'Win/loss reasons against ___ from closed deals', category: 'question', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce','gong'], template: [{slot: 'competitor', placeholder: 'competitor name'}], top: true },
+          { title: 'Draft competitive messaging against ___ using real objections from Gong', category: 'generator', type: 'ask', meta: 'Gong + Salesforce', tags: ['gong','salesforce'], template: [{slot: 'competitor', placeholder: 'competitor name'}] },
         ]
       },
       {
-        id: 'abm', name: 'ABM', icon: '🎪',
-        desc: 'Target account engagement, intent scores, personalization',
+        id: 'create', name: 'Create', icon: '🎨',
+        desc: 'Write emails, build decks, craft messaging with real data',
         actions: [
-          { title: 'Which target accounts engaged with marketing this quarter?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce + GA4', tags: ['marketo','salesforce','ga4'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Target accounts with high intent signals but zero sales activity', category: 'question', type: 'ask', meta: 'Bombora + Salesforce', tags: ['bombora','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Push ABM engagement scores to Salesforce weekly', category: 'automation', type: 'auto', meta: 'Marketo + GA4 + Salesforce', tags: ['marketo','ga4','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Generate personalized ABM landing page copy for a target account', category: 'generator', type: 'ask', meta: 'Salesforce + Clearbit + Bombora', tags: ['salesforce','clearbit','bombora'], multi: true, semantic: true, top: false, rising: true },
-        ]
-      },
-      {
-        id: 'reporting-attribution', name: 'Reporting & Attribution', icon: '📊',
-        desc: 'Multi-touch, channel mix, exec reports',
-        actions: [
-          { title: 'Full multi-touch attribution for closed-won deals this quarter', category: 'question', type: 'ask', meta: 'Marketo + Salesforce + Google Ads', tags: ['marketo','salesforce','google-ads'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Which channels contribute most at each funnel stage?', category: 'question', type: 'ask', meta: 'Marketo + Salesforce', tags: ['marketo','salesforce'], multi: true, semantic: true, top: true, rising: false },
-          { title: 'Auto-generate weekly attribution report for leadership', category: 'automation', type: 'auto', meta: 'Marketo + Salesforce + Slack', tags: ['marketo','salesforce','slack'], multi: true, semantic: false, top: true, rising: false },
-          { title: 'Generate a board-ready marketing performance deck', category: 'generator', type: 'ask', meta: 'Google Ads + Marketo + Salesforce + GA4', tags: ['google-ads','marketo','salesforce','ga4'], multi: true, semantic: true, top: true, rising: true },
+          { title: 'Draft an email sequence for ___ campaign', category: 'generator', type: 'ask', meta: 'Salesforce + Gong', tags: ['salesforce','gong'], template: [{slot: 'campaign or audience', placeholder: 'e.g. connector SDK launch, enterprise re-engagement'}], top: true },
+          { title: 'Write product launch copy for ___ using customer pain points', category: 'generator', type: 'ask', meta: 'Gong + Zendesk', tags: ['gong','zendesk'], template: [{slot: 'product/feature', placeholder: 'e.g. Activations, Connector SDK'}], top: true },
+          { title: 'Build a customer evidence slide for ___ from real quotes', category: 'generator', type: 'ask', meta: 'Gong + Salesforce', tags: ['gong','salesforce'], template: [{slot: 'product or use case', placeholder: 'e.g. data lake connectors'}], top: true },
+          { title: 'How many customers use ___? Help me size the opportunity.', category: 'question', type: 'ask', meta: 'AISQL + Salesforce', tags: ['aisql','salesforce'], template: [{slot: 'connector or feature', placeholder: 'e.g. Salesforce connector, HVR'}], top: true },
         ]
       },
     ]
