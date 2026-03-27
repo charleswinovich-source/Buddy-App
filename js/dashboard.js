@@ -1569,38 +1569,8 @@ function initInsights() {
   const typeColors = { important: '#FF6B6B', '1on1': '#A78BFA', recurring: '#60A5FA', break: '#34D399', meeting: '#60A5FA' };
   const catIcons = { enablement: '\uD83D\uDCDA', compliance: '\uD83D\uDD12', task: '\uD83D\uDCCB', okr: '\uD83C\uDFAF' };
 
-  // ═══ 1. MEETINGS ═══
-  const cal = getMockCalendar();
-  const meetingStartIdx = globalIdx;
-  const meetingItems = cal.map((mtg, i) => {
-    const startMins = _parseTime(mtg.time);
-    const endMins = _parseTime(mtg.end);
-    const isPast = endMins <= nowMins;
-    const isCurrent = startMins <= nowMins && endMins > nowMins;
-    const dotColor = typeColors[mtg.type] || '#60A5FA';
-    const showPrep = !isPast && mtg.type !== 'break';
-    const idx = globalIdx++;
-
-    // Build insight data entry
-    const insightEntry = {
-      icon: '\uD83D\uDCC5', iconBg: 'rgba(200,240,49,0.12)', iconColor: '#9DBF10',
-      headline: mtg.title,
-      detail: mtg.people.join(', '),
-      source: 'Google Calendar', time: mtg.time,
-      _meeting: mtg, _isPast: isPast
-    };
-    allInsights.push(insightEntry);
-
-    return `<div class="meeting-item${isPast ? ' past' : ''}${isCurrent ? ' current' : ''}" data-insight-idx="${idx}" onclick="expandInsight(${idx})">
-      <div class="meeting-time">${mtg.time}<br><span style="font-weight:400;font-size:0.68rem;color:#B5AA98;">${mtg.end}</span></div>
-      <div class="meeting-type-dot" style="background:${dotColor};"></div>
-      <div class="meeting-info">
-        <div class="meeting-title">${mtg.title}</div>
-        <div class="meeting-people">${mtg.people.join(', ')}</div>
-      </div>
-      ${showPrep ? `<button class="meeting-prep-btn" onclick="event.stopPropagation(); expandInsight(${idx})">Prep \u2192</button>` : ''}
-    </div>`;
-  });
+  // ═══ 1. MEETINGS — removed, now lives on Calendar tab ═══
+  const meetingItems = [];
 
   // ═══ 2. MESSAGES ═══
   const slack = getMockSlack();
