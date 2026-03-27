@@ -1270,10 +1270,19 @@ let _actionSource = null; // Set when running from Explore Actions
 
 function sheetRunAction(title) {
   closeBottomSheet();
-  _actionSource = 'action'; // Tag this query as coming from an action
-  const inp = document.getElementById('dash-ai-input');
-  if (inp) inp.value = title;
-  dashAskQuestion();
+  // Navigate to chat screen and send the question there
+  goTo('chat');
+  if (typeof initChat === 'function') initChat();
+  // Wait for chat screen to render, then send
+  setTimeout(() => {
+    const chatInput = document.getElementById('chat-input');
+    if (chatInput) {
+      chatInput.value = title;
+      // Trigger the chat send
+      const sendBtn = document.getElementById('chat-send');
+      if (sendBtn) sendBtn.click();
+    }
+  }, 300);
 }
 
 function toggleTemplate(idx) {
