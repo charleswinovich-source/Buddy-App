@@ -30,53 +30,71 @@ function initChat() {
   }
 }
 
-function handleChatInput(text) {
+async function handleChatInput(text) {
   if (!text.trim()) return;
   addMessage('user', text, 'chat-messages');
   STATE.chatHistory.push({ who: 'user', text });
+  saveState();
 
-  // Check if this is a response to a daily question first
+  // Check if this is a daily question response
   const dailyResponse = handleDailyQuestionResponse(text);
-
-  // Show typing indicator, then reveal response
-  const thinkTime = 400 + Math.random() * 400;
-  setTimeout(() => {
+  if (dailyResponse) {
     showTypingIndicator('chat-messages');
-    let response;
-    if (dailyResponse) {
-      // They gave a bs answer to the daily question
-      response = dailyResponse;
-    } else {
-      response = generateBuddyResponse(text);
-      // Cross-reference with calendar/context
-      response = crossReferenceContext(text, response);
-    }
-
-    const typeTime = Math.min(2000, 600 + response.length * 8);
     setTimeout(() => {
       removeTypingIndicator();
-      addMessage('buddy', response, 'chat-messages');
-      STATE.chatHistory.push({ who: 'buddy', text: response });
-      if (STATE.chatHistory.length > 100) STATE.chatHistory = STATE.chatHistory.slice(-100);
+      addMessage('buddy', dailyResponse, 'chat-messages');
+      STATE.chatHistory.push({ who: 'buddy', text: dailyResponse });
       saveState();
+    }, 600);
+    return;
+  }
 
-      // After responding, maybe ask a daily question (30% chance, not every message)
-      if (!STATE.personal?._pendingQuestion && Math.random() < 0.3) {
-        const dailyQ = getNextDailyQuestion();
-        if (dailyQ) {
-          setTimeout(() => {
-            showTypingIndicator('chat-messages');
-            setTimeout(() => {
-              removeTypingIndicator();
-              addMessage('buddy', dailyQ, 'chat-messages');
-              STATE.chatHistory.push({ who: 'buddy', text: dailyQ });
-              saveState();
-            }, 800 + Math.random() * 600);
-          }, 2000 + Math.random() * 1000);
-        }
+  // Call the API for real answers
+  showTypingIndicator('chat-messages');
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        history: (STATE.chatHistory || []).slice(-10),
+        profile: STATE.profile || {},
+        personal: STATE.personal || {},
+      }),
+    });
+    const data = await res.json();
+    removeTypingIndicator();
+
+    if (data.ok && data.reply) {
+      addMessage('buddy', data.reply, 'chat-messages');
+      STATE.chatHistory.push({ who: 'buddy', text: data.reply });
+
+      // Show follow-up suggestions if any
+      if (data.suggestions?.length) {
+        const sugHtml = data.suggestions.map(s =>
+          `<button class="chat-followup" onclick="handleChatInput('${s.replace(/'/g, "\\'")}')">${s}</button>`
+        ).join('');
+        const sugDiv = document.createElement('div');
+        sugDiv.className = 'chat-followups';
+        sugDiv.innerHTML = sugHtml;
+        document.getElementById('chat-messages')?.appendChild(sugDiv);
       }
-    }, typeTime);
-  }, thinkTime);
+    } else {
+      // Fallback to local response
+      const fallback = generateBuddyResponse(text);
+      addMessage('buddy', fallback, 'chat-messages');
+      STATE.chatHistory.push({ who: 'buddy', text: fallback });
+    }
+  } catch (err) {
+    removeTypingIndicator();
+    // Network error — use local fallback
+    const fallback = generateBuddyResponse(text);
+    addMessage('buddy', fallback, 'chat-messages');
+    STATE.chatHistory.push({ who: 'buddy', text: fallback });
+  }
+
+  if (STATE.chatHistory.length > 100) STATE.chatHistory = STATE.chatHistory.slice(-100);
+  saveState();
 }
 
 // ── ACTION INTENTS — detect when user wants to DO something ──
