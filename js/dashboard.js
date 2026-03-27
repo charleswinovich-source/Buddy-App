@@ -1036,16 +1036,29 @@ function renderBottomSheet() {
     html += `</div></div>`;
   }
 
-  // Category grid (focus areas)
-  html += `<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9A96A8;margin-bottom:0.5rem;">FOCUS AREAS</div>`;
-  html += `<div class="dash-sheet-categories" id="sheet-categories">`;
-  roleData.focusAreas.forEach(fa => {
-    html += `<button class="dash-sheet-cat${fa.id === activeFocusId ? ' active' : ''}" onclick="sheetSelectFocus('${fa.id}')">
-      <span class="dash-sheet-cat-icon">${fa.icon}</span>
-      <span class="dash-sheet-cat-name">${fa.name}</span>
-    </button>`;
+  // Category grid (focus areas) — only show areas that have available actions
+  const _AVAILABLE_SRC = new Set(['salesforce','gong','zendesk','slack','slab','jira','github','aisql','fivetran-schema','google-calendar','gmail']);
+  const visibleFocusAreas = roleData.focusAreas.filter(fa => {
+    if (!fa.actions || fa.actions.length === 0) return false;
+    return fa.actions.some(a => !a.tags || a.tags.length === 0 || a.tags.some(t => _AVAILABLE_SRC.has(t)));
   });
-  html += `</div>`;
+
+  if (visibleFocusAreas.length === 0) {
+    html += `<div style="text-align:center;padding:2rem 1rem;color:#9A96A8;font-size:0.9rem;">
+      <div style="font-size:1.5rem;margin-bottom:0.5rem;">🔌</div>
+      No data sources connected for this role yet.<br>Ask your admin to connect the required systems.
+    </div>`;
+  } else {
+    html += `<div style="font-size:0.65rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#9A96A8;margin-bottom:0.5rem;">FOCUS AREAS</div>`;
+    html += `<div class="dash-sheet-categories" id="sheet-categories">`;
+    visibleFocusAreas.forEach(fa => {
+      html += `<button class="dash-sheet-cat${fa.id === activeFocusId ? ' active' : ''}" onclick="sheetSelectFocus('${fa.id}')">
+        <span class="dash-sheet-cat-icon">${fa.icon}</span>
+        <span class="dash-sheet-cat-name">${fa.name}</span>
+      </button>`;
+    });
+    html += `</div>`;
+  }
 
   // Category filter tabs
   html += `<div class="dash-category-tabs" id="sheet-cat-tabs">`;
@@ -1077,8 +1090,16 @@ function renderSheetPrompts() {
   const focusArea = roleData.focusAreas.find(fa => fa.id === activeFocusId) || roleData.focusAreas[0];
   if (!focusArea) return;
 
-  const actions = focusArea.actions || [];
-  const filtered = activeCategory === 'all' ? actions : actions.filter(a => a.category === activeCategory);
+  // Only show actions whose data sources are currently available
+  const AVAILABLE_SOURCES = new Set([
+    'salesforce', 'gong', 'zendesk', 'slack', 'slab', 'jira', 'github',
+    'aisql', 'fivetran-schema', 'google-calendar', 'gmail',
+  ]);
+  const allActions = (focusArea.actions || []).filter(a => {
+    if (!a.tags || a.tags.length === 0) return true; // no tags = always show
+    return a.tags.some(t => AVAILABLE_SOURCES.has(t)); // at least one source available
+  });
+  const filtered = activeCategory === 'all' ? allActions : allActions.filter(a => a.category === activeCategory);
 
   // Stagger animation for prompts
   const staggerPrompts = (el) => {
